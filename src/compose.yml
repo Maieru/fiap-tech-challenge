@@ -1,0 +1,67 @@
+version: '3.9'
+
+# Eu estou deixando as variaveis de ambiente aqui dentro do docker-compose para facilitar a minha vida e dos meus avaliadores. 
+# Em qualquer outro projeto eu utilizaria um arquivo .env. Por favor, não fiquem bravos comigo, ok?
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: FIAP.TechChallenge.Fase1.API/Dockerfile
+    container_name: fiap-techchallenge-api
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=fiap_tech_challenge;Username=postgres;Password=postgres
+
+      Jwt__Key: 8b301d30-2445-45e4-8d75-727c8d4001c2
+      Jwt__Issuer: fiap-techchallenge
+      Jwt__Audience: fiap-techchallenge-client
+    networks:
+      - fiap-techchallenge-network
+
+  db:
+    image: postgres:16
+    container_name: fiap-techchallenge-db
+    restart: always
+    environment:
+      POSTGRES_DB: fiap_tech_challenge
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fiap-techchallenge-network
+
+
+  # Esse daqui é opcional mas ajuda muito a vida.
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: fiap-techchallenge-pgadmin
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - fiap-techchallenge-network
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  fiap-techchallenge-network:
+    driver: bridge
