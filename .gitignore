@@ -560,3 +560,4 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+/src/.sonarqube/conf

@@ -29,7 +29,7 @@ public sealed class Cnpj : IEquatable<Cnpj>
         return Result<Cnpj>.Success(new Cnpj(normalized));
     }
 
-    private static string Normalize(string input) => Regex.Replace(input.Trim().ToUpperInvariant(), @"[^A-Z0-9]", string.Empty);
+    private static string Normalize(string input) => Regex.Replace(input.Trim().ToUpperInvariant(), @"[^A-Z0-9]", string.Empty, RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
     private static Result<bool> IsValid(string cnpj)
     {

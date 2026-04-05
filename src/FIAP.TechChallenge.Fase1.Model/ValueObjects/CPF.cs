@@ -29,7 +29,7 @@ public sealed class Cpf : IEquatable<Cpf>
         return Result<Cpf>.Success(new Cpf(digitsOnly));
     }
 
-    private static string ExtractDigits(string input) => Regex.Replace(input, @"\D", "");
+    private static string ExtractDigits(string input) => Regex.Replace(input, @"\D", "", RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
     private static Result<bool> IsValid(string cpf)
     {

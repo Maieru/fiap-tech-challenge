@@ -126,7 +126,7 @@ internal class CNPJTests
 
         Assert.That(left, Is.Not.Null);
         Assert.That(right, Is.Not.Null);
-        Assert.That(left!.Equals(right), Is.True);
+        Assert.That(left!, Is.EqualTo(right));
     }
 
     [Test]
