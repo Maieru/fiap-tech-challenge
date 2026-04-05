@@ -10,9 +10,12 @@ internal class CNPJTests
     {
         var result = Cnpj.Create(null);
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CNPJ deve ser informado."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CNPJ deve ser informado."));
+        });
     }
 
     [Test]
@@ -20,9 +23,12 @@ internal class CNPJTests
     {
         var result = Cnpj.Create("   ");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CNPJ deve ser informado."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CNPJ deve ser informado."));
+        });
     }
 
     [Test]
@@ -30,9 +36,12 @@ internal class CNPJTests
     {
         var result = Cnpj.Create("1234567890123");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CNPJ precisa ter exatamente 14 caracteres."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CNPJ precisa ter exatamente 14 caracteres."));
+        });
     }
 
     [Test]
@@ -40,9 +49,12 @@ internal class CNPJTests
     {
         var result = Cnpj.Create("ABCDEF1234567A");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("Os dígitos verificadores do CNPJ devem ser numéricos."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("Os dígitos verificadores do CNPJ devem ser numéricos."));
+        });
     }
 
     [Test]
@@ -50,9 +62,12 @@ internal class CNPJTests
     {
         var result = Cnpj.Create("11111111111111");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CNPJ informado é inválido."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CNPJ informado é inválido."));
+        });
     }
 
     [Test]
@@ -60,9 +75,12 @@ internal class CNPJTests
     {
         var result = Cnpj.Create("11444777000101");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CNPJ informado é inválido: o primeiro dígito verificador não confere."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CNPJ informado é inválido: o primeiro dígito verificador não confere."));
+        });
     }
 
     [Test]
@@ -70,9 +88,12 @@ internal class CNPJTests
     {
         var result = Cnpj.Create("11444777000160");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CNPJ informado é inválido: o segundo dígito verificador não confere."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CNPJ informado é inválido: o segundo dígito verificador não confere."));
+        });
     }
 
     [Test]
@@ -80,12 +101,15 @@ internal class CNPJTests
     {
         var result = Cnpj.Create("11.444.777/0001-61");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Error, Is.EqualTo(FIAP.TechChallenge.Fase1.Domain.Abstractions.Error.None));
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.Unformatted, Is.EqualTo("11444777000161"));
-        Assert.That(result.Value.Formatted, Is.EqualTo("11.444.777/0001-61"));
-        Assert.That(result.Value.ToString(), Is.EqualTo("11.444.777/0001-61"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Error, Is.EqualTo(FIAP.TechChallenge.Fase1.Domain.Abstractions.Error.None));
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Unformatted, Is.EqualTo("11444777000161"));
+            Assert.That(result.Value.Formatted, Is.EqualTo("11.444.777/0001-61"));
+            Assert.That(result.Value.ToString(), Is.EqualTo("11.444.777/0001-61"));
+        });
     }
 
     [Test]
@@ -93,9 +117,12 @@ internal class CNPJTests
     {
         var result = Cnpj.Create("11.444.777/0001-61");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.Unformatted, Is.EqualTo("11444777000161"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Unformatted, Is.EqualTo("11444777000161"));
+        });
     }
 
     [Test]
@@ -103,9 +130,12 @@ internal class CNPJTests
     {
         var result = Cnpj.Create("11444777000161");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.Formatted, Is.EqualTo("11.444.777/0001-61"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Formatted, Is.EqualTo("11.444.777/0001-61"));
+        });
     }
 
     [Test]
@@ -113,9 +143,12 @@ internal class CNPJTests
     {
         var result = Cnpj.Create("11444777000161");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.ToString(), Is.EqualTo(result.Value.Formatted));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.ToString(), Is.EqualTo(result.Value.Formatted));
+        });
     }
 
     [Test]
@@ -124,9 +157,12 @@ internal class CNPJTests
         var left = Cnpj.Create("11.444.777/0001-61").Value;
         var right = Cnpj.Create("11444777000161").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left!, Is.EqualTo(right));
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left!, Is.EqualTo(right));
+        });
     }
 
     [Test]
@@ -134,8 +170,11 @@ internal class CNPJTests
     {
         var left = Cnpj.Create("11444777000161").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(left!.Equals(null), Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(left!, Is.Not.Null);
+        });
     }
 
     [Test]
@@ -143,8 +182,11 @@ internal class CNPJTests
     {
         var left = Cnpj.Create("11444777000161").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(left!.Equals(new object()), Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(left!, Is.Not.EqualTo(new object()));
+        });
     }
 
     [Test]
@@ -153,9 +195,12 @@ internal class CNPJTests
         var left = Cnpj.Create("11.444.777/0001-61").Value;
         var right = Cnpj.Create("11444777000161").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left!.GetHashCode(), Is.EqualTo(right!.GetHashCode()));
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left!.GetHashCode(), Is.EqualTo(right!.GetHashCode()));
+        });
     }
 
     [Test]
@@ -164,9 +209,12 @@ internal class CNPJTests
         var left = Cnpj.Create("11.444.777/0001-61").Value;
         var right = Cnpj.Create("11444777000161").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left == right, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left, Is.EqualTo(right));
+        });
     }
 
     [Test]
@@ -175,7 +223,7 @@ internal class CNPJTests
         Cnpj? left = null;
         Cnpj? right = null;
 
-        Assert.That(left == right, Is.True);
+        Assert.That(left, Is.EqualTo(right));
     }
 
     [Test]
@@ -184,8 +232,11 @@ internal class CNPJTests
         var left = Cnpj.Create("11444777000161").Value;
         var right = Cnpj.Create("04252011000110").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left != right, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left, Is.Not.EqualTo(right));
+        });
     }
 }

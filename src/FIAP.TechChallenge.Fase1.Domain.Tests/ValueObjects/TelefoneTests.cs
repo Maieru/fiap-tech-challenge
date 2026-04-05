@@ -11,9 +11,12 @@ internal class TelefoneTests
     {
         var result = Telefone.Create(null);
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O telefone deve ser informado."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O telefone deve ser informado."));
+        });
     }
 
     [Test]
@@ -21,9 +24,12 @@ internal class TelefoneTests
     {
         var result = Telefone.Create("   ");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O telefone deve ser informado."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O telefone deve ser informado."));
+        });
     }
 
     [Test]
@@ -31,9 +37,12 @@ internal class TelefoneTests
     {
         var result = Telefone.Create("(xx) xxxx-xxxx");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O telefone deve ser informado."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O telefone deve ser informado."));
+        });
     }
 
     [Test]
@@ -41,9 +50,12 @@ internal class TelefoneTests
     {
         var result = Telefone.Create("119876543");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O telefone deve ter 10 dígitos para fixo ou 11 dígitos para móvel."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O telefone deve ter 10 dígitos para fixo ou 11 dígitos para móvel."));
+        });
     }
 
     [Test]
@@ -51,9 +63,12 @@ internal class TelefoneTests
     {
         var result = Telefone.Create("01987654321");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O telefone informado possui um DDD inválido."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O telefone informado possui um DDD inválido."));
+        });
     }
 
     [Test]
@@ -61,9 +76,12 @@ internal class TelefoneTests
     {
         var result = Telefone.Create("11887654321");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O telefone móvel informado é inválido: ele deve começar com 9 após o DDD."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O telefone móvel informado é inválido: ele deve começar com 9 após o DDD."));
+        });
     }
 
     [Test]
@@ -71,9 +89,12 @@ internal class TelefoneTests
     {
         var result = Telefone.Create("1198765432");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O telefone fixo informado é inválido."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O telefone fixo informado é inválido."));
+        });
     }
 
     [Test]
@@ -81,9 +102,12 @@ internal class TelefoneTests
     {
         var result = Telefone.Create("99999999999");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O telefone informado é inválido."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O telefone informado é inválido."));
+        });
     }
 
     [Test]
@@ -91,15 +115,18 @@ internal class TelefoneTests
     {
         var result = Telefone.Create("(11) 98765-4321");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Error, Is.EqualTo(FIAP.TechChallenge.Fase1.Domain.Abstractions.Error.None));
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.Unformatted, Is.EqualTo("11987654321"));
-        Assert.That(result.Value.Formatted, Is.EqualTo("(11) 98765-4321"));
-        Assert.That(result.Value.Tipo, Is.EqualTo(TipoTelefone.Movel));
-        Assert.That(result.Value.IsMobile, Is.True);
-        Assert.That(result.Value.IsLandline, Is.False);
-        Assert.That(result.Value.ToString(), Is.EqualTo("(11) 98765-4321"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Error, Is.EqualTo(FIAP.TechChallenge.Fase1.Domain.Abstractions.Error.None));
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Unformatted, Is.EqualTo("11987654321"));
+            Assert.That(result.Value.Formatted, Is.EqualTo("(11) 98765-4321"));
+            Assert.That(result.Value.Tipo, Is.EqualTo(TipoTelefone.Movel));
+            Assert.That(result.Value.IsMobile, Is.True);
+            Assert.That(result.Value.IsLandline, Is.False);
+            Assert.That(result.Value.ToString(), Is.EqualTo("(11) 98765-4321"));
+        });
     }
 
     [Test]
@@ -107,14 +134,17 @@ internal class TelefoneTests
     {
         var result = Telefone.Create("11 3265-4321");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Error, Is.EqualTo(FIAP.TechChallenge.Fase1.Domain.Abstractions.Error.None));
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.Unformatted, Is.EqualTo("1132654321"));
-        Assert.That(result.Value.Formatted, Is.EqualTo("(11) 3265-4321"));
-        Assert.That(result.Value.Tipo, Is.EqualTo(TipoTelefone.Fixo));
-        Assert.That(result.Value.IsMobile, Is.False);
-        Assert.That(result.Value.IsLandline, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Error, Is.EqualTo(FIAP.TechChallenge.Fase1.Domain.Abstractions.Error.None));
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Unformatted, Is.EqualTo("1132654321"));
+            Assert.That(result.Value.Formatted, Is.EqualTo("(11) 3265-4321"));
+            Assert.That(result.Value.Tipo, Is.EqualTo(TipoTelefone.Fixo));
+            Assert.That(result.Value.IsMobile, Is.False);
+            Assert.That(result.Value.IsLandline, Is.True);
+        });
     }
 
     [Test]
@@ -123,9 +153,12 @@ internal class TelefoneTests
         var left = Telefone.Create("(11) 98765-4321").Value;
         var right = Telefone.Create("11987654321").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left!.Equals(right), Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left!, Is.EqualTo(right));
+        });
     }
 
     [Test]
@@ -133,8 +166,11 @@ internal class TelefoneTests
     {
         var left = Telefone.Create("11987654321").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(left!.Equals(null), Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(left!, Is.Not.Null);
+        });
     }
 
     [Test]
@@ -142,8 +178,11 @@ internal class TelefoneTests
     {
         var left = Telefone.Create("11987654321").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(left!.Equals(new object()), Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(left!, Is.Not.EqualTo(new object()));
+        });
     }
 
     [Test]
@@ -152,9 +191,12 @@ internal class TelefoneTests
         var left = Telefone.Create("(11) 98765-4321").Value;
         var right = Telefone.Create("11987654321").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left!.GetHashCode(), Is.EqualTo(right!.GetHashCode()));
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left!.GetHashCode(), Is.EqualTo(right!.GetHashCode()));
+        });
     }
 
     [Test]
@@ -163,9 +205,12 @@ internal class TelefoneTests
         var left = Telefone.Create("(11) 98765-4321").Value;
         var right = Telefone.Create("11987654321").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left == right, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left, Is.EqualTo(right));
+        });
     }
 
     [Test]
@@ -174,7 +219,7 @@ internal class TelefoneTests
         Telefone? left = null;
         Telefone? right = null;
 
-        Assert.That(left == right, Is.True);
+        Assert.That(left, Is.EqualTo(right));
     }
 
     [Test]
@@ -183,8 +228,11 @@ internal class TelefoneTests
         var left = Telefone.Create("11987654321").Value;
         var right = Telefone.Create("1132654321").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left != right, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left, Is.Not.EqualTo(right));
+        });
     }
 }

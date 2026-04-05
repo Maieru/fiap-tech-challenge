@@ -10,9 +10,12 @@ internal class EmailTests
     {
         var result = Email.Create(null!);
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O e-mail é obrigatório."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O e-mail é obrigatório."));
+        });
     }
 
     [Test]
@@ -20,9 +23,12 @@ internal class EmailTests
     {
         var result = Email.Create("   ");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O e-mail é obrigatório."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O e-mail é obrigatório."));
+        });
     }
 
     [Test]
@@ -32,9 +38,12 @@ internal class EmailTests
 
         var result = Email.Create(value);
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O e-mail deve ter no máximo 200 caracteres."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O e-mail deve ter no máximo 200 caracteres."));
+        });
     }
 
     [Test]
@@ -42,9 +51,12 @@ internal class EmailTests
     {
         var result = Email.Create("email-invalido");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O e-mail informado é inválido."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O e-mail informado é inválido."));
+        });
     }
 
     [Test]
@@ -52,11 +64,14 @@ internal class EmailTests
     {
         var result = Email.Create("usuario@exemplo.com");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Error, Is.EqualTo(Abstractions.Error.None));
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.Value, Is.EqualTo("usuario@exemplo.com"));
-        Assert.That(result.Value.ToString(), Is.EqualTo("usuario@exemplo.com"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Error, Is.EqualTo(Abstractions.Error.None));
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Value, Is.EqualTo("usuario@exemplo.com"));
+            Assert.That(result.Value.ToString(), Is.EqualTo("usuario@exemplo.com"));
+        });
     }
 
     [Test]
@@ -64,9 +79,12 @@ internal class EmailTests
     {
         var result = Email.Create("  usuario@exemplo.com  ");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.Value, Is.EqualTo("usuario@exemplo.com"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Value, Is.EqualTo("usuario@exemplo.com"));
+        });
     }
 
     [Test]
@@ -74,9 +92,12 @@ internal class EmailTests
     {
         var result = Email.IsValid(null!);
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.False);
-        Assert.That(result.Error.Description, Is.EqualTo("O e-mail é obrigatório."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.False);
+            Assert.That(result.Error.Description, Is.EqualTo("O e-mail é obrigatório."));
+        });
     }
 
     [Test]
@@ -84,9 +105,12 @@ internal class EmailTests
     {
         var result = Email.IsValid("   ");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.False);
-        Assert.That(result.Error.Description, Is.EqualTo("O e-mail é obrigatório."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.False);
+            Assert.That(result.Error.Description, Is.EqualTo("O e-mail é obrigatório."));
+        });
     }
 
     [Test]
@@ -96,9 +120,12 @@ internal class EmailTests
 
         var result = Email.IsValid(value);
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.False);
-        Assert.That(result.Error.Description, Is.EqualTo("O e-mail deve ter no máximo 200 caracteres."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.False);
+            Assert.That(result.Error.Description, Is.EqualTo("O e-mail deve ter no máximo 200 caracteres."));
+        });
     }
 
     [Test]
@@ -106,9 +133,12 @@ internal class EmailTests
     {
         var result = Email.IsValid("usuario@exemplo.com");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Error, Is.EqualTo(Abstractions.Error.None));
-        Assert.That(result.Value, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Error, Is.EqualTo(Abstractions.Error.None));
+            Assert.That(result.Value, Is.True);
+        });
     }
 
     [Test]
@@ -117,9 +147,12 @@ internal class EmailTests
         var left = Email.Create("usuario@exemplo.com").Value;
         var right = Email.Create("USUARIO@EXEMPLO.COM").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left!.Equals(right), Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left!, Is.EqualTo(right));
+        });
     }
 
     [Test]
@@ -127,8 +160,11 @@ internal class EmailTests
     {
         var left = Email.Create("usuario@exemplo.com").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(left!.Equals(null), Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(left!, Is.Not.Null);
+        });
     }
 
     [Test]
@@ -136,8 +172,11 @@ internal class EmailTests
     {
         var left = Email.Create("usuario@exemplo.com").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(left!.Equals(new object()), Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(left!, Is.Not.EqualTo(new object()));
+        });
     }
 
     [Test]
@@ -146,9 +185,12 @@ internal class EmailTests
         var left = Email.Create("usuario@exemplo.com").Value;
         var right = Email.Create("USUARIO@EXEMPLO.COM").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left!.GetHashCode(), Is.EqualTo(right!.GetHashCode()));
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left!.GetHashCode(), Is.EqualTo(right!.GetHashCode()));
+        });
     }
 
     [Test]
@@ -157,9 +199,12 @@ internal class EmailTests
         var left = Email.Create("usuario@exemplo.com").Value;
         var right = Email.Create("USUARIO@EXEMPLO.COM").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left == right, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left, Is.EqualTo(right));
+        });
     }
 
     [Test]
@@ -168,7 +213,7 @@ internal class EmailTests
         Email? left = null;
         Email? right = null;
 
-        Assert.That(left == right, Is.True);
+        Assert.That(left, Is.EqualTo(right));
     }
 
     [Test]
@@ -177,8 +222,11 @@ internal class EmailTests
         var left = Email.Create("usuario@exemplo.com").Value;
         var right = Email.Create("outro@exemplo.com").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left != right, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left, Is.Not.EqualTo(right));
+        });
     }
 }

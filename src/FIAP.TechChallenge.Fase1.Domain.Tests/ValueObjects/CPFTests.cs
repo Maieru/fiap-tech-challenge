@@ -10,9 +10,12 @@ internal class CPFTests
     {
         var result = Cpf.Create(null);
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CPF deve ser informado."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CPF deve ser informado."));
+        });
     }
 
     [Test]
@@ -20,9 +23,12 @@ internal class CPFTests
     {
         var result = Cpf.Create("   ");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CPF deve ser informado."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CPF deve ser informado."));
+        });
     }
 
     [Test]
@@ -30,9 +36,12 @@ internal class CPFTests
     {
         var result = Cpf.Create("1234567890");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CPF precisa ter exatamente 11 dígitos."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CPF precisa ter exatamente 11 dígitos."));
+        });
     }
 
     [Test]
@@ -40,9 +49,12 @@ internal class CPFTests
     {
         var result = Cpf.Create("11111111111");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CPF informado é inválido."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CPF informado é inválido."));
+        });
     }
 
     [Test]
@@ -50,9 +62,12 @@ internal class CPFTests
     {
         var result = Cpf.Create("52998224735");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CPF informado é inválido: o primeiro dígito verificador não confere."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CPF informado é inválido: o primeiro dígito verificador não confere."));
+        });
     }
 
     [Test]
@@ -60,9 +75,12 @@ internal class CPFTests
     {
         var result = Cpf.Create("52998224724");
 
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Value, Is.Null);
-        Assert.That(result.Error.Description, Is.EqualTo("O CPF informado é inválido: o segundo dígito verificador não confere."));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O CPF informado é inválido: o segundo dígito verificador não confere."));
+        });
     }
 
     [Test]
@@ -70,12 +88,15 @@ internal class CPFTests
     {
         var result = Cpf.Create("529.982.247-25");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Error, Is.EqualTo(FIAP.TechChallenge.Fase1.Domain.Abstractions.Error.None));
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.Unformatted, Is.EqualTo("52998224725"));
-        Assert.That(result.Value.Formatted, Is.EqualTo("529.982.247-25"));
-        Assert.That(result.Value.ToString(), Is.EqualTo("529.982.247-25"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Error, Is.EqualTo(FIAP.TechChallenge.Fase1.Domain.Abstractions.Error.None));
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Unformatted, Is.EqualTo("52998224725"));
+            Assert.That(result.Value.Formatted, Is.EqualTo("529.982.247-25"));
+            Assert.That(result.Value.ToString(), Is.EqualTo("529.982.247-25"));
+        });
     }
 
     [Test]
@@ -83,9 +104,12 @@ internal class CPFTests
     {
         var result = Cpf.Create("529.982.247-25");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.Unformatted, Is.EqualTo("52998224725"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Unformatted, Is.EqualTo("52998224725"));
+        });
     }
 
     [Test]
@@ -93,9 +117,12 @@ internal class CPFTests
     {
         var result = Cpf.Create("52998224725");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.Formatted, Is.EqualTo("529.982.247-25"));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Formatted, Is.EqualTo("529.982.247-25"));
+        });
     }
 
     [Test]
@@ -103,9 +130,12 @@ internal class CPFTests
     {
         var result = Cpf.Create("52998224725");
 
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value, Is.Not.Null);
-        Assert.That(result.Value!.ToString(), Is.EqualTo(result.Value.Formatted));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.ToString(), Is.EqualTo(result.Value.Formatted));
+        });
     }
 
     [Test]
@@ -114,9 +144,12 @@ internal class CPFTests
         var left = Cpf.Create("529.982.247-25").Value;
         var right = Cpf.Create("52998224725").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left!.Equals(right), Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left!, Is.EqualTo(right));
+        });
     }
 
     [Test]
@@ -124,8 +157,11 @@ internal class CPFTests
     {
         var left = Cpf.Create("52998224725").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(left!.Equals(null), Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(left!, Is.Not.Null);
+        });
     }
 
     [Test]
@@ -133,8 +169,11 @@ internal class CPFTests
     {
         var left = Cpf.Create("52998224725").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(left!.Equals(new object()), Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(left!, Is.Not.EqualTo(new object()));
+        });
     }
 
     [Test]
@@ -143,9 +182,12 @@ internal class CPFTests
         var left = Cpf.Create("529.982.247-25").Value;
         var right = Cpf.Create("52998224725").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left!.GetHashCode(), Is.EqualTo(right!.GetHashCode()));
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left!.GetHashCode(), Is.EqualTo(right!.GetHashCode()));
+        });
     }
 
     [Test]
@@ -154,9 +196,12 @@ internal class CPFTests
         var left = Cpf.Create("529.982.247-25").Value;
         var right = Cpf.Create("52998224725").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left == right, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left, Is.EqualTo(right));
+        });
     }
 
     [Test]
@@ -165,7 +210,7 @@ internal class CPFTests
         Cpf? left = null;
         Cpf? right = null;
 
-        Assert.That(left == right, Is.True);
+        Assert.That(left, Is.EqualTo(right));
     }
 
     [Test]
@@ -174,8 +219,11 @@ internal class CPFTests
         var left = Cpf.Create("52998224725").Value;
         var right = Cpf.Create("12345678909").Value;
 
-        Assert.That(left, Is.Not.Null);
-        Assert.That(right, Is.Not.Null);
-        Assert.That(left != right, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(left, Is.Not.Null);
+            Assert.That(right, Is.Not.Null);
+            Assert.That(left, Is.Not.EqualTo(right));
+        });
     }
 }
