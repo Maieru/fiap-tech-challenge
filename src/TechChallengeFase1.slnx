@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="FIAP.TechChallenge.Fase1.API/FIAP.TechChallenge.Fase1.API.csproj" />
+  <Project Path="FIAP.TechChallenge.Fase1.Model/FIAP.TechChallenge.Fase1.Domain.csproj" Id="a65d3266-579d-4203-bd59-25c30227f081" />
+</Solution>
