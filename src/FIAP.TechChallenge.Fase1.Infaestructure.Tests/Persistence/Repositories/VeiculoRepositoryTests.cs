@@ -11,6 +11,60 @@ namespace FIAP.TechChallenge.Fase1.Infaestructure.Tests.Persistence.Repositories
 internal sealed class VeiculoRepositoryTests
 {
     [Test]
+    public async Task GetByIdAsync_ShouldReturnSuccess_WhenVeiculoExists()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var veiculo = CreateVeiculo();
+
+        await using var context = CreateContext(databaseName);
+        _ = context.Veiculos.Add(new VeiculoEntity
+        {
+            Id = veiculo.Id,
+            ClienteId = veiculo.ClienteId,
+            Placa = veiculo.Placa.Unformatted,
+            Marca = veiculo.Marca,
+            Modelo = veiculo.Modelo,
+            Ano = veiculo.Ano
+        });
+        _ = await context.SaveChangesAsync();
+
+        var repository = new VeiculoRepository(context);
+
+        var result = await repository.GetByIdAsync(veiculo.Id);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Error, Is.EqualTo(FIAP.TechChallenge.Fase1.Domain.Abstractions.Error.None));
+            Assert.That(result.Value!.Id, Is.EqualTo(veiculo.Id));
+            Assert.That(result.Value.ClienteId, Is.EqualTo(veiculo.ClienteId));
+            Assert.That(result.Value.Placa.Unformatted, Is.EqualTo(veiculo.Placa.Unformatted));
+            Assert.That(result.Value.Marca, Is.EqualTo(veiculo.Marca));
+            Assert.That(result.Value.Modelo, Is.EqualTo(veiculo.Modelo));
+            Assert.That(result.Value.Ano, Is.EqualTo(veiculo.Ano));
+        });
+    }
+
+    [Test]
+    public async Task GetByIdAsync_ShouldReturnFailure_WhenVeiculoDoesNotExist()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+        var repository = new VeiculoRepository(context);
+
+        var result = await repository.GetByIdAsync(Guid.NewGuid());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("Veículo não encontrado."));
+        });
+    }
+
+    [Test]
     public async Task ExistsByPlacaAsync_ShouldReturnTrue_WhenPlacaExists()
     {
         var databaseName = Guid.NewGuid().ToString();
@@ -69,6 +123,38 @@ internal sealed class VeiculoRepositoryTests
             Assert.That(saved.Marca, Is.EqualTo(veiculo.Marca));
             Assert.That(saved.Modelo, Is.EqualTo(veiculo.Modelo));
             Assert.That(saved.Ano, Is.EqualTo(veiculo.Ano));
+        });
+    }
+
+    [Test]
+    public async Task UpdateAsync_ShouldPersistChanges()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var veiculo = CreateVeiculo();
+        var novaPlaca = Placa.Create("BRA2E19").Value!;
+
+        await using var context = CreateContext(databaseName);
+        var repository = new VeiculoRepository(context);
+        await repository.AddAsync(veiculo);
+
+        context.ChangeTracker.Clear();
+
+        _ = veiculo.UpdatePlaca(novaPlaca);
+        _ = veiculo.UpdateMarca("Honda");
+        _ = veiculo.UpdateModelo("Civic");
+        _ = veiculo.UpdateAno(2024);
+
+        await repository.UpdateAsync(veiculo);
+
+        var saved = await context.Veiculos.AsNoTracking().FirstOrDefaultAsync(x => x.Id == veiculo.Id);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(saved, Is.Not.Null);
+            Assert.That(saved!.Placa, Is.EqualTo("BRA2E19"));
+            Assert.That(saved.Marca, Is.EqualTo("Honda"));
+            Assert.That(saved.Modelo, Is.EqualTo("Civic"));
+            Assert.That(saved.Ano, Is.EqualTo(2024));
         });
     }
 
