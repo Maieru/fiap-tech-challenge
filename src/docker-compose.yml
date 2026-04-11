@@ -4,7 +4,7 @@ version: '3.9'
 # Em qualquer outro projeto eu utilizaria um arquivo .env. Por favor, não fiquem bravos comigo, ok?
 
 services:
-  api:
+  fiap.techchallenge.fase1.api:
     build:
       context: .
       dockerfile: FIAP.TechChallenge.Fase1.API/Dockerfile

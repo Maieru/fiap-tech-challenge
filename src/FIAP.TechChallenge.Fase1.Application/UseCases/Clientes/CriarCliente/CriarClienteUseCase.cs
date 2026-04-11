@@ -11,18 +11,8 @@ public sealed class CriarClienteUseCase(IClienteRepository clienteRepository) : 
 
     public async Task<Result<CriarClienteResponse>> ExecuteAsync(CriarClienteCommand command, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(command.Nome))
-            return Result<CriarClienteResponse>.Failure(new Error("O nome do cliente é obrigatório."));
-
         var cpfInformado = !string.IsNullOrWhiteSpace(command.Cpf);
         var cnpjInformado = !string.IsNullOrWhiteSpace(command.Cnpj);
-
-        if (cpfInformado && cnpjInformado)
-            return Result<CriarClienteResponse>.Failure(new Error("Informe somente um documento: CPF ou CNPJ."));
-
-        if (!cpfInformado && !cnpjInformado)
-            return Result<CriarClienteResponse>.Failure(new Error("Informe ao menos um documento: CPF ou CNPJ."));
-
         var telefoneResult = Telefone.Create(command.Telefone);
 
         if (!telefoneResult.IsSuccess || telefoneResult.Value is null)

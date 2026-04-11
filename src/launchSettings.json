@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "composeLaunchAction": "None",
+      "composeLaunchServiceName": "fiap.techchallenge.fase1.api",
+      "serviceActions": {
+        "fiap.techchallenge.fase1.api": "StartDebugging",
+        "db": "StartWithoutDebugging",
+        "pgadmin": "StartWithoutDebugging"
+      }
+    }
+  }
+}

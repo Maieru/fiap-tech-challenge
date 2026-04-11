@@ -2,6 +2,9 @@
   <Folder Name="/Tests/">
     <Project Path="FIAP.TechChallenge.Fase1.Domain.Tests/FIAP.TechChallenge.Fase1.Domain.Tests.csproj" Id="2c4bfd3b-5fee-4fd7-ba31-0fbd525b2041" />
   </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
   <Project Path="FIAP.TechChallenge.Fase1.API/FIAP.TechChallenge.Fase1.API.csproj" />
   <Project Path="FIAP.TechChallenge.Fase1.Application/FIAP.TechChallenge.Fase1.Application.csproj" Id="ad665f56-f667-4fd7-bf69-9defdb2f2546" />
   <Project Path="FIAP.TechChallenge.Fase1.Infrastructure/FIAP.TechChallenge.Fase1.Infrastructure.csproj" Id="29a51a8e-c155-4d71-8cbb-045b497f1c75" />
