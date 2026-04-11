@@ -57,15 +57,20 @@ public sealed class OrdemServico
         if (!validacaoConsistenciaFluxoResult.IsSuccess)
             return Result<OrdemServico>.Failure(validacaoConsistenciaFluxoResult.Error);
 
-        var ordemServico = Create(snapshot.Id, snapshot.ClienteId, snapshot.VeiculoId, snapshot.DescricaoProblema, snapshot.Status, snapshot.DataCriacao);
+        var ordemServicoResult = Create(snapshot.Id, snapshot.ClienteId, snapshot.VeiculoId, snapshot.DescricaoProblema, snapshot.Status, snapshot.DataCriacao);
 
-        ordemServico!.Value!.DataInicioDiagnostico = snapshot.DataInicioDiagnostico;
-        ordemServico!.Value!.DataEnvioAprovacao = snapshot.DataEnvioAprovacao;
-        ordemServico!.Value!.DataInicioExecucao = snapshot.DataInicioExecucao;
-        ordemServico!.Value!.DataFinalizacao = snapshot.DataFinalizacao;
-        ordemServico!.Value!.DataEntrega = snapshot.DataEntrega;
+        if (!ordemServicoResult.IsSuccess)
+            return Result<OrdemServico>.Failure(ordemServicoResult.Error);
 
-        return ordemServico;
+        var ordemServico = ordemServicoResult.Value!;
+
+        ordemServico.DataInicioDiagnostico = snapshot.DataInicioDiagnostico;
+        ordemServico.DataEnvioAprovacao = snapshot.DataEnvioAprovacao;
+        ordemServico.DataInicioExecucao = snapshot.DataInicioExecucao;
+        ordemServico.DataFinalizacao = snapshot.DataFinalizacao;
+        ordemServico.DataEntrega = snapshot.DataEntrega;
+
+        return Result<OrdemServico>.Success(ordemServico);
     }
 
     private static Result<OrdemServico> Create(Guid id, Guid clienteId, Guid veiculoId, string descricaoProblema, StatusOrdemServico status, DateTime dataCriacao)
