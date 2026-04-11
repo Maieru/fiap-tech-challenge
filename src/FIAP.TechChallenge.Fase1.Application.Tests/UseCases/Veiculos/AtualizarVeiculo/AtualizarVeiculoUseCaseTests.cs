@@ -16,7 +16,7 @@ internal sealed class AtualizarVeiculoUseCaseTests
         var veiculoRepositoryMock = new Mock<IVeiculoRepository>();
         _ = veiculoRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Veiculo>.Failure(new Error("Veículo não encontrado.")));
+            .ReturnsAsync(Result<Veiculo>.Failure(new Error("Veiculo não encontrado.")));
 
         var useCase = new AtualizarVeiculoUseCase(veiculoRepositoryMock.Object);
         var command = CreateCommand();
@@ -27,7 +27,7 @@ internal sealed class AtualizarVeiculoUseCaseTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("Veículo não encontrado."));
+            Assert.That(result.Error.Description, Is.EqualTo("Veiculo não encontrado."));
         });
 
         veiculoRepositoryMock.Verify(x => x.ExistsByPlacaAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);

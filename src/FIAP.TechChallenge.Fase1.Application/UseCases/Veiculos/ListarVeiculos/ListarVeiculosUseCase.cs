@@ -18,6 +18,9 @@ public sealed class ListarVeiculosUseCase(IVeiculoRepository veiculoRepository) 
 
         var filtersCount = 0;
 
+        if (command.Id.HasValue)
+            filtersCount++;
+
         if (!string.IsNullOrWhiteSpace(command.Placa))
             filtersCount++;
 
@@ -25,7 +28,10 @@ public sealed class ListarVeiculosUseCase(IVeiculoRepository veiculoRepository) 
             filtersCount++;
 
         if (filtersCount > 1)
-            return Result<ListarVeiculosResponse>.Failure(new Error("Informe apenas um filtro por vez: placa ou clienteId."));
+            return Result<ListarVeiculosResponse>.Failure(new Error("Informe apenas um filtro por vez: id, placa ou clienteId."));
+
+        if (command.Id.HasValue)
+            return await GetByIdAsync(command.Id.Value, cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(command.Placa))
             return await GetByPlacaAsync(command.Placa, cancellationToken);
@@ -55,6 +61,19 @@ public sealed class ListarVeiculosUseCase(IVeiculoRepository veiculoRepository) 
             return Result<ListarVeiculosResponse>.Failure(placaResult.Error);
 
         var veiculoResult = await _veiculoRepository.GetByPlacaAsync(placaResult.Value.Unformatted, cancellationToken);
+
+        if (!veiculoResult.IsSuccess || veiculoResult.Value is null)
+            return Result<ListarVeiculosResponse>.Failure(veiculoResult.Error);
+
+        return Result<ListarVeiculosResponse>.Success(CreateSingleItemResponse(veiculoResult.Value));
+    }
+
+    private async Task<Result<ListarVeiculosResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        if (id == Guid.Empty)
+            return Result<ListarVeiculosResponse>.Failure(new Error("O identificador do Veiculo deve ser válido."));
+
+        var veiculoResult = await _veiculoRepository.GetByIdAsync(id, cancellationToken);
 
         if (!veiculoResult.IsSuccess || veiculoResult.Value is null)
             return Result<ListarVeiculosResponse>.Failure(veiculoResult.Error);

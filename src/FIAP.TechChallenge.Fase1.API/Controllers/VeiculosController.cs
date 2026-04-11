@@ -15,6 +15,7 @@ public sealed class VeiculosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get(
         [FromServices] IListarVeiculosUseCase useCase,
+        [FromQuery] Guid? id,
         [FromQuery] string? placa,
         [FromQuery] Guid? clienteId,
         [FromQuery] int pageNumber = 1,
@@ -23,6 +24,7 @@ public sealed class VeiculosController : ControllerBase
     {
         var command = new ListarVeiculosCommand
         {
+            Id = id,
             Placa = placa,
             ClienteId = clienteId,
             PageNumber = pageNumber,
@@ -33,14 +35,14 @@ public sealed class VeiculosController : ControllerBase
 
         if (!result.IsSuccess)
         {
-            if (result.Error.Description.Contains("Veículo", StringComparison.OrdinalIgnoreCase)
+            if (result.Error.Description.Contains("Veiculo", StringComparison.OrdinalIgnoreCase)
                 && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
                 return NotFound(new { error = result.Error.Description });
 
             return BadRequest(new { error = result.Error.Description });
         }
 
-        if (!string.IsNullOrWhiteSpace(placa))
+        if (id.HasValue || !string.IsNullOrWhiteSpace(placa))
             return Ok(result.Value!.Veiculos.First());
 
         return Ok(result.Value);
@@ -85,7 +87,7 @@ public sealed class VeiculosController : ControllerBase
 
         if (!result.IsSuccess)
         {
-            if (result.Error.Description.Contains("Veí­culo", StringComparison.OrdinalIgnoreCase)
+            if (result.Error.Description.Contains("Veiculo", StringComparison.OrdinalIgnoreCase)
                 && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
                 return NotFound(new { error = result.Error.Description });
 

@@ -171,7 +171,7 @@ public sealed class VeiculosControllerTests
         {
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
-            _ = error!.Error.Should().Be("Veí­culo não encontrado.");
+            _ = error!.Error.Should().Be("Veiculo não encontrado.");
         });
     }
 
@@ -203,7 +203,7 @@ public sealed class VeiculosControllerTests
     }
 
     [Test]
-    public async Task Get_ShouldListAllGetByPlacaAndGetByClienteId_WhenFiltersAreValid()
+    public async Task Get_ShouldListAllGetByIdGetByPlacaAndGetByClienteId_WhenFiltersAreValid()
     {
         var cliente1 = await CreateClientAsync(7005);
         var cliente2 = await CreateClientAsync(7006);
@@ -218,6 +218,9 @@ public sealed class VeiculosControllerTests
         var getByPlacaResponse = await _client.GetAsync($"/api/veiculos?placa={veiculo2.Placa}");
         var byPlaca = await getByPlacaResponse.Content.ReadFromJsonAsync<VeiculoResponse>();
 
+        var getByIdResponse = await _client.GetAsync($"/api/veiculos?id={veiculo1.Id}");
+        var byId = await getByIdResponse.Content.ReadFromJsonAsync<VeiculoResponse>();
+
         var getByClienteResponse = await _client.GetAsync($"/api/veiculos?clienteId={cliente1.Id}");
         var byCliente = await getByClienteResponse.Content.ReadFromJsonAsync<ListarVeiculosResponse>();
 
@@ -231,6 +234,11 @@ public sealed class VeiculosControllerTests
             _ = byPlaca.Should().NotBeNull();
             _ = byPlaca!.Id.Should().Be(veiculo2.Id);
             _ = byPlaca.ClienteId.Should().Be(cliente1.Id);
+
+            _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = byId.Should().NotBeNull();
+            _ = byId!.Id.Should().Be(veiculo1.Id);
+            _ = byId.ClienteId.Should().Be(cliente1.Id);
 
             _ = getByClienteResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             _ = byCliente.Should().NotBeNull();
@@ -268,7 +276,7 @@ public sealed class VeiculosControllerTests
         {
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
-            _ = error!.Error.Should().Be("Informe apenas um filtro por vez: placa ou clienteId.");
+            _ = error!.Error.Should().Be("Informe apenas um filtro por vez: id, placa ou clienteId.");
         });
     }
 

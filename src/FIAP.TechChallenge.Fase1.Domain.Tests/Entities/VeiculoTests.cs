@@ -15,7 +15,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O veículo deve estar associado a um cliente válido."));
+            Assert.That(result.Error.Description, Is.EqualTo("O Veiculo deve estar associado a um cliente válido."));
         });
     }
 
@@ -28,7 +28,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A placa do veículo é obrigatória."));
+            Assert.That(result.Error.Description, Is.EqualTo("A placa do Veiculo é obrigatória."));
         });
     }
 
@@ -41,7 +41,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A marca do veículo é obrigatória."));
+            Assert.That(result.Error.Description, Is.EqualTo("A marca do Veiculo é obrigatória."));
         });
     }
 
@@ -54,7 +54,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O modelo do veículo é obrigatório."));
+            Assert.That(result.Error.Description, Is.EqualTo("O modelo do Veiculo é obrigatório."));
         });
     }
 
@@ -67,7 +67,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A marca do veículo deve ter pelo menos 2 caracteres."));
+            Assert.That(result.Error.Description, Is.EqualTo("A marca do Veiculo deve ter pelo menos 2 caracteres."));
         });
     }
 
@@ -80,7 +80,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A marca do veículo deve ter no máximo 100 caracteres."));
+            Assert.That(result.Error.Description, Is.EqualTo("A marca do Veiculo deve ter no máximo 100 caracteres."));
         });
     }
 
@@ -93,7 +93,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O modelo do veículo deve ter pelo menos 2 caracteres."));
+            Assert.That(result.Error.Description, Is.EqualTo("O modelo do Veiculo deve ter pelo menos 2 caracteres."));
         });
     }
 
@@ -106,7 +106,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O modelo do veículo deve ter no máximo 100 caracteres."));
+            Assert.That(result.Error.Description, Is.EqualTo("O modelo do Veiculo deve ter no máximo 100 caracteres."));
         });
     }
 
@@ -119,7 +119,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O ano do veículo é inválido."));
+            Assert.That(result.Error.Description, Is.EqualTo("O ano do Veiculo é inválido."));
         });
     }
 
@@ -132,7 +132,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O ano do veículo não pode ser maior que o próximo ano."));
+            Assert.That(result.Error.Description, Is.EqualTo("O ano do Veiculo não pode ser maior que o próximo ano."));
         });
     }
 
@@ -173,7 +173,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O id do veículo é inválido."));
+            Assert.That(result.Error.Description, Is.EqualTo("O id do Veiculo é inválido."));
         });
     }
 
@@ -217,7 +217,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("A marca do veículo é obrigatória."));
+            Assert.That(result.Error.Description, Is.EqualTo("A marca do Veiculo é obrigatória."));
             Assert.That(veiculo.Marca, Is.EqualTo("Marca Inicial"));
         });
     }
@@ -249,7 +249,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("O modelo do veículo é obrigatório."));
+            Assert.That(result.Error.Description, Is.EqualTo("O modelo do Veiculo é obrigatório."));
             Assert.That(veiculo.Modelo, Is.EqualTo("Modelo Inicial"));
         });
     }
@@ -281,7 +281,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("O ano do veículo não pode ser maior que o próximo ano."));
+            Assert.That(result.Error.Description, Is.EqualTo("O ano do Veiculo não pode ser maior que o próximo ano."));
             Assert.That(veiculo.Ano, Is.EqualTo(2020));
         });
     }
@@ -314,7 +314,7 @@ internal class VeiculoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("A placa do veículo é obrigatória."));
+            Assert.That(result.Error.Description, Is.EqualTo("A placa do Veiculo é obrigatória."));
             Assert.That(veiculo.Placa, Is.EqualTo(placaInicial));
         });
     }

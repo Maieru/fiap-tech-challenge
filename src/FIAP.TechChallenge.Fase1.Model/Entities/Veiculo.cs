@@ -30,7 +30,7 @@ public sealed class Veiculo
     public static Result<Veiculo> Rehydrate(Guid id, Guid clienteId, Placa placa, string marca, string modelo, int ano)
     {
         if (id == Guid.Empty)
-            return Result<Veiculo>.Failure(new Error("O id do veículo é inválido."));
+            return Result<Veiculo>.Failure(new Error("O id do Veiculo é inválido."));
 
         return Create(id, clienteId, placa, marca, modelo, ano);
     }
@@ -38,16 +38,16 @@ public sealed class Veiculo
     private static Result<Veiculo> Create(Guid id, Guid clienteId, Placa placa, string marca, string modelo, int ano)
     {
         if (clienteId == Guid.Empty)
-            return Result<Veiculo>.Failure(new Error("O veículo deve estar associado a um cliente válido."));
+            return Result<Veiculo>.Failure(new Error("O Veiculo deve estar associado a um cliente válido."));
 
         if (placa is null)
-            return Result<Veiculo>.Failure(new Error("A placa do veículo é obrigatória."));
+            return Result<Veiculo>.Failure(new Error("A placa do Veiculo é obrigatória."));
 
         if (string.IsNullOrWhiteSpace(marca))
-            return Result<Veiculo>.Failure(new Error("A marca do veículo é obrigatória."));
+            return Result<Veiculo>.Failure(new Error("A marca do Veiculo é obrigatória."));
 
         if (string.IsNullOrWhiteSpace(modelo))
-            return Result<Veiculo>.Failure(new Error("O modelo do veículo é obrigatório."));
+            return Result<Veiculo>.Failure(new Error("O modelo do Veiculo é obrigatório."));
 
         marca = marca.Trim();
         modelo = modelo.Trim();
@@ -75,7 +75,7 @@ public sealed class Veiculo
     public Result<bool> UpdateMarca(string marca)
     {
         if (string.IsNullOrWhiteSpace(marca))
-            return Result<bool>.Failure(new Error("A marca do veículo é obrigatória."));
+            return Result<bool>.Failure(new Error("A marca do Veiculo é obrigatória."));
 
         marca = marca.Trim();
 
@@ -91,7 +91,7 @@ public sealed class Veiculo
     public Result<bool> UpdateModelo(string modelo)
     {
         if (string.IsNullOrWhiteSpace(modelo))
-            return Result<bool>.Failure(new Error("O modelo do veículo é obrigatório."));
+            return Result<bool>.Failure(new Error("O modelo do Veiculo é obrigatório."));
 
         modelo = modelo.Trim();
 
@@ -118,7 +118,7 @@ public sealed class Veiculo
     public Result<bool> UpdatePlaca(Placa placa)
     {
         if (placa is null)
-            return Result<bool>.Failure(new Error("A placa do veículo é obrigatória."));
+            return Result<bool>.Failure(new Error("A placa do Veiculo é obrigatória."));
 
         Placa = placa;
         return Result<bool>.Success(true);
@@ -127,10 +127,10 @@ public sealed class Veiculo
     private static Result<bool> IsMarcaValid(string marca)
     {
         if (marca.Length < 2)
-            return Result<bool>.Failure(new Error("A marca do veículo deve ter pelo menos 2 caracteres."));
+            return Result<bool>.Failure(new Error("A marca do Veiculo deve ter pelo menos 2 caracteres."));
 
         if (marca.Length > 100)
-            return Result<bool>.Failure(new Error("A marca do veículo deve ter no máximo 100 caracteres."));
+            return Result<bool>.Failure(new Error("A marca do Veiculo deve ter no máximo 100 caracteres."));
 
         return Result<bool>.Success(true);
     }
@@ -138,10 +138,10 @@ public sealed class Veiculo
     private static Result<bool> IsModeloValid(string modelo)
     {
         if (modelo.Length < 2)
-            return Result<bool>.Failure(new Error("O modelo do veículo deve ter pelo menos 2 caracteres."));
+            return Result<bool>.Failure(new Error("O modelo do Veiculo deve ter pelo menos 2 caracteres."));
 
         if (modelo.Length > 100)
-            return Result<bool>.Failure(new Error("O modelo do veículo deve ter no máximo 100 caracteres."));
+            return Result<bool>.Failure(new Error("O modelo do Veiculo deve ter no máximo 100 caracteres."));
 
         return Result<bool>.Success(true);
     }
@@ -151,10 +151,10 @@ public sealed class Veiculo
         var anoAtual = DateTime.UtcNow.Year + 1;
 
         if (ano < DateTime.MinValue.Year)
-            return Result<bool>.Failure(new Error("O ano do veículo é inválido."));
+            return Result<bool>.Failure(new Error("O ano do Veiculo é inválido."));
 
         if (ano > anoAtual)
-            return Result<bool>.Failure(new Error("O ano do veículo não pode ser maior que o próximo ano."));
+            return Result<bool>.Failure(new Error("O ano do Veiculo não pode ser maior que o próximo ano."));
 
         return Result<bool>.Success(true);
     }
