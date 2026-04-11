@@ -1,5 +1,6 @@
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.AtualizarVeiculo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.CriarVeiculo;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.ListarVeiculos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
@@ -8,6 +9,43 @@ namespace FIAP.TechChallenge.Fase1.API.Controllers;
 [Route("api/[controller]")]
 public sealed class VeiculosController : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType(typeof(ListarVeiculosResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Get(
+        [FromServices] IListarVeiculosUseCase useCase,
+        [FromQuery] string? placa,
+        [FromQuery] Guid? clienteId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new ListarVeiculosCommand
+        {
+            Placa = placa,
+            ClienteId = clienteId,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Description.Contains("Veículo", StringComparison.OrdinalIgnoreCase)
+                && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = result.Error.Description });
+
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        if (!string.IsNullOrWhiteSpace(placa))
+            return Ok(result.Value!.Veiculos.First());
+
+        return Ok(result.Value);
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(CriarVeiculoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -47,7 +85,7 @@ public sealed class VeiculosController : ControllerBase
 
         if (!result.IsSuccess)
         {
-            if (result.Error.Description.Contains("Veículo", StringComparison.OrdinalIgnoreCase)
+            if (result.Error.Description.Contains("Veí­culo", StringComparison.OrdinalIgnoreCase)
                 && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
                 return NotFound(new { error = result.Error.Description });
 

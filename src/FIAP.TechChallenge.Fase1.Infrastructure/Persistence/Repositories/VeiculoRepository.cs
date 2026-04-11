@@ -1,6 +1,7 @@
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
+using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,9 +19,56 @@ public sealed class VeiculoRepository(AppDbContext context) : IVeiculoRepository
         var veiculo = await context.Veiculos.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (veiculo == null)
-            return Result<Veiculo>.Failure(new Error("Veículo não encontrado."));
+            return Result<Veiculo>.Failure(new Error("Veí­culo não encontrado."));
 
         return VeiculoMapper.ToDomain(veiculo);
+    }
+
+    public async Task<Result<Veiculo>> GetByPlacaAsync(string placa, CancellationToken cancellationToken = default)
+    {
+        var veiculo = await context.Veiculos.AsNoTracking().FirstOrDefaultAsync(x => x.Placa == placa, cancellationToken);
+
+        if (veiculo == null)
+            return Result<Veiculo>.Failure(new Error("Veí­culo não encontrado."));
+
+        return VeiculoMapper.ToDomain(veiculo);
+    }
+
+    public async Task<Result<(IReadOnlyCollection<Veiculo> Veiculos, int TotalItems)>> GetByClienteIdAsync(Guid clienteId, CancellationToken cancellationToken = default)
+    {
+        var totalItems = await context.Veiculos.CountAsync(x => x.ClienteId == clienteId, cancellationToken);
+
+        var veiculosEntity = await context.Veiculos
+            .AsNoTracking()
+            .Where(x => x.ClienteId == clienteId)
+            .OrderBy(x => x.Placa)
+            .ToListAsync(cancellationToken);
+
+        var veiculosResult = MapToDomainCollection(veiculosEntity);
+
+        if (!veiculosResult.IsSuccess || veiculosResult.Value is null)
+            return Result<(IReadOnlyCollection<Veiculo> Veiculos, int TotalItems)>.Failure(veiculosResult.Error);
+
+        return Result<(IReadOnlyCollection<Veiculo> Veiculos, int TotalItems)>.Success((veiculosResult.Value, totalItems));
+    }
+
+    public async Task<Result<(IReadOnlyCollection<Veiculo> Veiculos, int TotalItems)>> GetPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var totalItems = await context.Veiculos.CountAsync(cancellationToken);
+
+        var veiculosEntity = await context.Veiculos
+            .AsNoTracking()
+            .OrderBy(x => x.Placa)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var veiculosResult = MapToDomainCollection(veiculosEntity);
+
+        if (!veiculosResult.IsSuccess || veiculosResult.Value is null)
+            return Result<(IReadOnlyCollection<Veiculo> Veiculos, int TotalItems)>.Failure(veiculosResult.Error);
+
+        return Result<(IReadOnlyCollection<Veiculo> Veiculos, int TotalItems)>.Success((veiculosResult.Value, totalItems));
     }
 
     public async Task AddAsync(Veiculo veiculo, CancellationToken cancellationToken = default)
@@ -35,5 +83,22 @@ public sealed class VeiculoRepository(AppDbContext context) : IVeiculoRepository
         var veiculoEntity = VeiculoMapper.ToEntity(veiculo);
         _ = context.Veiculos.Update(veiculoEntity);
         _ = await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private static Result<IReadOnlyCollection<Veiculo>> MapToDomainCollection(IReadOnlyCollection<VeiculoEntity> veiculosEntity)
+    {
+        var veiculos = new List<Veiculo>(veiculosEntity.Count);
+
+        foreach (var entity in veiculosEntity)
+        {
+            var veiculoResult = VeiculoMapper.ToDomain(entity);
+
+            if (!veiculoResult.IsSuccess || veiculoResult.Value is null)
+                return Result<IReadOnlyCollection<Veiculo>>.Failure(veiculoResult.Error);
+
+            veiculos.Add(veiculoResult.Value);
+        }
+
+        return Result<IReadOnlyCollection<Veiculo>>.Success(veiculos);
     }
 }

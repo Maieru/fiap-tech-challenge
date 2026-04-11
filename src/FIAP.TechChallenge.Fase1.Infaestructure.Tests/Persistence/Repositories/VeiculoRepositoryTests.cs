@@ -60,7 +60,7 @@ internal sealed class VeiculoRepositoryTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("Veículo não encontrado."));
+            Assert.That(result.Error.Description, Is.EqualTo("Veí­culo não encontrado."));
         });
     }
 

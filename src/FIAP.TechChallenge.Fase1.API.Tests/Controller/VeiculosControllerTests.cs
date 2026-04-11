@@ -171,7 +171,7 @@ public sealed class VeiculosControllerTests
         {
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
-            _ = error!.Error.Should().Be("Veículo não encontrado.");
+            _ = error!.Error.Should().Be("Veí­culo não encontrado.");
         });
     }
 
@@ -199,6 +199,76 @@ public sealed class VeiculosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("Ja existe um veiculo cadastrado com esta placa.");
+        });
+    }
+
+    [Test]
+    public async Task Get_ShouldListAllGetByPlacaAndGetByClienteId_WhenFiltersAreValid()
+    {
+        var cliente1 = await CreateClientAsync(7005);
+        var cliente2 = await CreateClientAsync(7006);
+
+        var veiculo1 = await CreateVehicleAsync(cliente1.Id, GenerateValidPlaca(8), "Toyota", "Corolla", 2021);
+        var veiculo2 = await CreateVehicleAsync(cliente1.Id, GenerateValidPlaca(9), "Honda", "Civic", 2022);
+        _ = await CreateVehicleAsync(cliente2.Id, GenerateValidPlaca(10), "Ford", "Focus", 2020);
+
+        var getAllResponse = await _client.GetAsync("/api/veiculos?pageNumber=1&pageSize=10");
+        var allResult = await getAllResponse.Content.ReadFromJsonAsync<ListarVeiculosResponse>();
+
+        var getByPlacaResponse = await _client.GetAsync($"/api/veiculos?placa={veiculo2.Placa}");
+        var byPlaca = await getByPlacaResponse.Content.ReadFromJsonAsync<VeiculoResponse>();
+
+        var getByClienteResponse = await _client.GetAsync($"/api/veiculos?clienteId={cliente1.Id}");
+        var byCliente = await getByClienteResponse.Content.ReadFromJsonAsync<ListarVeiculosResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = getAllResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = allResult.Should().NotBeNull();
+            _ = allResult!.Veiculos.Count.Should().Be(3);
+
+            _ = getByPlacaResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = byPlaca.Should().NotBeNull();
+            _ = byPlaca!.Id.Should().Be(veiculo2.Id);
+            _ = byPlaca.ClienteId.Should().Be(cliente1.Id);
+
+            _ = getByClienteResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = byCliente.Should().NotBeNull();
+            _ = byCliente!.Veiculos.Count.Should().Be(2);
+            _ = byCliente.Veiculos.Any(x => x.Id == veiculo1.Id).Should().BeTrue();
+            _ = byCliente.Veiculos.Any(x => x.Id == veiculo2.Id).Should().BeTrue();
+            _ = byCliente.Veiculos.All(x => x.ClienteId == cliente1.Id).Should().BeTrue();
+        });
+    }
+
+    [Test]
+    public async Task GetByPlaca_ShouldReturnNotFound_WhenVehicleDoesNotExist()
+    {
+        var response = await _client.GetAsync("/api/veiculos?placa=ZZZ9999");
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("encontrado");
+        });
+    }
+
+    [Test]
+    public async Task Get_ShouldReturnBadRequest_WhenMoreThanOneFilterIsProvided()
+    {
+        var cliente = await CreateClientAsync(7007);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(11), "Nissan", "Versa", 2023);
+
+        var response = await _client.GetAsync($"/api/veiculos?placa={veiculo.Placa}&clienteId={cliente.Id}");
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Be("Informe apenas um filtro por vez: placa ou clienteId.");
         });
     }
 
@@ -252,8 +322,8 @@ public sealed class VeiculosControllerTests
     {
         const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-        var first = alphabet[(seed / 676) % 26];
-        var second = alphabet[(seed / 26) % 26];
+        var first = alphabet[seed / 676 % 26];
+        var second = alphabet[seed / 26 % 26];
         var third = alphabet[seed % 26];
         var digits = (seed % 10000).ToString("D4");
 
@@ -299,6 +369,14 @@ public sealed class VeiculosControllerTests
         public string Marca { get; set; } = string.Empty;
         public string Modelo { get; set; } = string.Empty;
         public int Ano { get; set; }
+    }
+
+    private sealed class ListarVeiculosResponse
+    {
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalItems { get; set; }
+        public IReadOnlyCollection<VeiculoResponse> Veiculos { get; set; } = [];
     }
 
     private sealed class ErrorResponse
