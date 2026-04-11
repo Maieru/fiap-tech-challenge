@@ -11,6 +11,7 @@ Implementar um novo caso de uso de ponta a ponta, mantendo padrao arquitetural e
 1. Application (use case)
 2. Infrastructure (repository, quando aplicavel)
 3. API (controller/endpoint, quando aplicavel)
+4. API.Tests (integracao HTTP, quando aplicavel)
 
 ---
 
@@ -96,7 +97,14 @@ Criar suite `<Entidade>RepositoryTests` com, no minimo:
 - Persistencia (`Add`/`Update`/`Delete`, conforme contrato), verificando campos chave.
 - Usar `AppDbContext` com `UseInMemoryDatabase`.
 
-### 4.3 Regras de estilo de teste
+### 4.3 API.Tests (integracao)
+Criar/ajustar suite de integracao em `FIAP.TechChallenge.Fase1.API.Tests`, com:
+- testes por endpoint afetado (ex.: `Controller/<Controller>Tests.cs`)
+- bootstrap da API via `CustomWebApplicationFactory`
+- verificacao de status code (`200/201/400/404`) e payload
+- pelo menos 1 cenario feliz e 1 cenario de erro por endpoint alterado
+
+### 4.4 Regras de estilo de teste
 - Arrange/Act/Assert claro.
 - `Assert.Multiple` para multiplas validacoes independentes.
 - Metodos helper para montar entidades/comandos validos.
@@ -111,10 +119,12 @@ Criar suite `<Entidade>RepositoryTests` com, no minimo:
 # Testes direcionados da feature
 dotnet test <Application.Tests.csproj> --filter "<NomeCasoDeUso>UseCaseTests" -v minimal
 dotnet test <Infrastructure.Tests.csproj> --filter "<Entidade>RepositoryTests" -v minimal
+dotnet test <API.Tests.csproj> --filter "<Controller>Tests" -v minimal
 
 # Suites completas para regressao
 dotnet test <Application.Tests.csproj> -v minimal
 dotnet test <Infrastructure.Tests.csproj> -v minimal
+dotnet test <API.Tests.csproj> -v minimal
 ```
 
 ### 5.2 Checklist de aceite
@@ -124,6 +134,7 @@ dotnet test <Infrastructure.Tests.csproj> -v minimal
 - Endpoint API criado/atualizado (se no escopo).
 - Testes de use case cobrindo falha e sucesso.
 - Testes de repository cobrindo consulta e persistencia.
+- Testes de integracao da API cobrindo sucesso e erro dos endpoints alterados.
 - Suites de teste da camada sem regressao.
 
 ---
