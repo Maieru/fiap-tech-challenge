@@ -3,6 +3,7 @@ using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
+using Moq;
 
 namespace FIAP.TechChallenge.Fase1.Application.Tests.UseCases.Clientes.AtualizarCliente;
 
@@ -12,8 +13,12 @@ internal class AtualizarClienteUseCaseTests
     [Test]
     public async Task ExecuteAsync_ShouldFail_WhenClienteIsNotFound()
     {
-        var repository = new FakeClienteRepository();
-        var useCase = new AtualizarClienteUseCase(repository);
+        var repositoryMock = new Mock<IClienteRepository>();
+        _ = repositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<Cliente>.Failure(new Error("Cliente não encontrado.")));
+
+        var useCase = new AtualizarClienteUseCase(repositoryMock.Object);
         var command = CreateCommand();
 
         var result = await useCase.ExecuteAsync(command);
@@ -23,19 +28,20 @@ internal class AtualizarClienteUseCaseTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error.Description, Is.EqualTo("Cliente não encontrado."));
-            Assert.That(repository.UpdateCalls, Is.EqualTo(0));
         });
+
+        repositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Cliente>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
     public async Task ExecuteAsync_ShouldFail_WhenTelefoneIsInvalid()
     {
-        var repository = new FakeClienteRepository
-        {
-            GetByIdResult = Result<Cliente>.Success(CreateCliente())
-        };
+        var repositoryMock = new Mock<IClienteRepository>();
+        _ = repositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<Cliente>.Success(CreateCliente()));
 
-        var useCase = new AtualizarClienteUseCase(repository);
+        var useCase = new AtualizarClienteUseCase(repositoryMock.Object);
         var command = CreateCommand(telefone: "123");
 
         var result = await useCase.ExecuteAsync(command);
@@ -45,19 +51,20 @@ internal class AtualizarClienteUseCaseTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error, Is.Not.EqualTo(Error.None));
-            Assert.That(repository.UpdateCalls, Is.EqualTo(0));
         });
+
+        repositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Cliente>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
     public async Task ExecuteAsync_ShouldFail_WhenEmailIsInvalid()
     {
-        var repository = new FakeClienteRepository
-        {
-            GetByIdResult = Result<Cliente>.Success(CreateCliente())
-        };
+        var repositoryMock = new Mock<IClienteRepository>();
+        _ = repositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<Cliente>.Success(CreateCliente()));
 
-        var useCase = new AtualizarClienteUseCase(repository);
+        var useCase = new AtualizarClienteUseCase(repositoryMock.Object);
         var command = CreateCommand(email: "email-invalido");
 
         var result = await useCase.ExecuteAsync(command);
@@ -67,19 +74,20 @@ internal class AtualizarClienteUseCaseTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error, Is.Not.EqualTo(Error.None));
-            Assert.That(repository.UpdateCalls, Is.EqualTo(0));
         });
+
+        repositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Cliente>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
     public async Task ExecuteAsync_ShouldFail_WhenNameIsInvalid()
     {
-        var repository = new FakeClienteRepository
-        {
-            GetByIdResult = Result<Cliente>.Success(CreateCliente())
-        };
+        var repositoryMock = new Mock<IClienteRepository>();
+        _ = repositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<Cliente>.Success(CreateCliente()));
 
-        var useCase = new AtualizarClienteUseCase(repository);
+        var useCase = new AtualizarClienteUseCase(repositoryMock.Object);
         var command = CreateCommand(nome: "  ");
 
         var result = await useCase.ExecuteAsync(command);
@@ -89,20 +97,27 @@ internal class AtualizarClienteUseCaseTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error.Description, Is.EqualTo("O nome do cliente é obrigatório."));
-            Assert.That(repository.UpdateCalls, Is.EqualTo(0));
         });
+
+        repositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Cliente>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
     public async Task ExecuteAsync_ShouldSucceed_WhenCommandIsValid()
     {
-        var repository = new FakeClienteRepository
-        {
-            GetByIdResult = Result<Cliente>.Success(CreateCliente())
-        };
-
-        var useCase = new AtualizarClienteUseCase(repository);
+        var repositoryMock = new Mock<IClienteRepository>();
+        Cliente? updatedCliente = null;
         var command = CreateCommand();
+
+        _ = repositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<Cliente>.Success(CreateCliente(command.Id)));
+        _ = repositoryMock
+            .Setup(x => x.UpdateAsync(It.IsAny<Cliente>(), It.IsAny<CancellationToken>()))
+            .Callback<Cliente, CancellationToken>((cliente, _) => updatedCliente = cliente)
+            .Returns(Task.CompletedTask);
+
+        var useCase = new AtualizarClienteUseCase(repositoryMock.Object);
 
         var result = await useCase.ExecuteAsync(command);
 
@@ -111,9 +126,11 @@ internal class AtualizarClienteUseCaseTests
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Error, Is.EqualTo(Error.None));
             Assert.That(result.Value, Is.Not.Null);
-            Assert.That(repository.UpdateCalls, Is.EqualTo(1));
-            Assert.That(repository.UpdatedCliente, Is.Not.Null);
+            Assert.That(updatedCliente, Is.Not.Null);
         });
+
+        repositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+        repositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Cliente>(), It.IsAny<CancellationToken>()), Times.Once);
 
         var response = result.Value!;
 
@@ -141,7 +158,7 @@ internal class AtualizarClienteUseCaseTests
             Email = email
         };
 
-    private static Cliente CreateCliente()
+    private static Cliente CreateCliente(Guid? id = null)
     {
         var telefoneResult = Telefone.Create("11987654321");
         var cpfResult = Cpf.Create("52998224725");
@@ -155,7 +172,7 @@ internal class AtualizarClienteUseCaseTests
         });
 
         var clienteResult = Cliente.Rehydrate(
-            Guid.NewGuid(),
+            id ?? Guid.NewGuid(),
             "Cliente Inicial",
             cpfResult.Value,
             null,
@@ -171,27 +188,4 @@ internal class AtualizarClienteUseCaseTests
         return clienteResult.Value!;
     }
 
-    private sealed class FakeClienteRepository : IClienteRepository
-    {
-        public Result<Cliente> GetByIdResult { get; init; } = Result<Cliente>.Failure(new Error("Cliente não encontrado."));
-        public int UpdateCalls { get; private set; }
-        public Cliente? UpdatedCliente { get; private set; }
-
-        public Task<bool> ExistsByCpfAsync(string cpf, CancellationToken cancellationToken = default) => Task.FromResult(false);
-
-        public Task<bool> ExistsByCnpjAsync(string cnpj, CancellationToken cancellationToken = default) => Task.FromResult(false);
-
-        public Task<Result<Cliente>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult(GetByIdResult);
-
-        public Task AddAsync(Cliente cliente, CancellationToken cancellationToken = default) => Task.CompletedTask;
-
-        public Task UpdateAsync(Cliente cliente, CancellationToken cancellationToken = default)
-        {
-            UpdateCalls++;
-            UpdatedCliente = cliente;
-            return Task.CompletedTask;
-        }
-
-        public Task DeleteAsync(Cliente cliente, CancellationToken cancellationToken = default) => Task.CompletedTask;
-    }
 }
