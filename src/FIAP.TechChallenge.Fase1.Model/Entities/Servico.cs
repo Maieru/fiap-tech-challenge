@@ -49,7 +49,7 @@ public sealed class Servico
         if (quantidade <= 0)
             return Result<Servico>.Failure(new Error("A quantidade do serviço deve ser maior que zero."));
 
-        var item = new Servico(Guid.NewGuid(), ordemServicoId, descricao, valorUnitario, quantidade);
+        var item = new Servico(id, ordemServicoId, descricao, valorUnitario, quantidade);
         return Result<Servico>.Success(item);
     }
 }
