@@ -47,7 +47,7 @@ public sealed class ClienteControllerTests
             _ = created.Nome.Should().Be("Maria Silva");
         });
 
-        var getResponse = await _client.GetAsync($"/api/clientes?id={created.Id}");
+        var getResponse = await _client.GetAsync($"/api/clientes?id={created!.Id}");
         _ = getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var cliente = await getResponse.Content.ReadFromJsonAsync<ClienteResponse>();
@@ -104,7 +104,7 @@ public sealed class ClienteControllerTests
             _ = created!.Id.Should().NotBeEmpty();
         });
 
-        var getByCpfResponse = await _client.GetAsync($"/api/clientes?cpf={created.Cpf}");
+        var getByCpfResponse = await _client.GetAsync($"/api/clientes?cpf={created!.Cpf}");
         var byCpf = await getByCpfResponse.Content.ReadFromJsonAsync<ClienteResponse>();
 
         Assert.Multiple(() =>
