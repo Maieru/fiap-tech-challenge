@@ -11,10 +11,11 @@ public static class InfraestructureDependecyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' não foi configurada.");
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-        _ = services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+        if (!string.IsNullOrWhiteSpace(connectionString))
+            _ = services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+
         _ = services.AddScoped<IClienteRepository, ClienteRepository>();
         _ = services.AddScoped<IVeiculoRepository, VeiculoRepository>();
 

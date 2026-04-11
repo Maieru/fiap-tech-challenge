@@ -20,7 +20,9 @@ if (app.Environment.IsDevelopment())
     _ = app.MapOpenApi();
 }
 
-await app.ApplyMigrationsAsync();
+if (!app.Environment.IsEnvironment("Testing"))
+    await app.ApplyMigrationsAsync();
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
