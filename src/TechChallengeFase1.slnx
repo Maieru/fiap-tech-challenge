@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Tests/">
+    <Project Path="../FIAP.TechChallenge.Fase1.Application.Tests/FIAP.TechChallenge.Fase1.Application.Tests.csproj" Id="fd91235f-79a6-4b70-8855-a4d5ec3b33a8" />
     <Project Path="FIAP.TechChallenge.Fase1.Domain.Tests/FIAP.TechChallenge.Fase1.Domain.Tests.csproj" Id="2c4bfd3b-5fee-4fd7-ba31-0fbd525b2041" />
   </Folder>
   <Project Path="docker-compose.dcproj">
