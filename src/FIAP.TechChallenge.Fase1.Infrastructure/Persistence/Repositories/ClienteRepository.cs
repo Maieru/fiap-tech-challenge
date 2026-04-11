@@ -20,7 +20,7 @@ public sealed class ClienteRepository(AppDbContext context) : IClienteRepository
 
     public async Task<Result<Cliente>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var cliente = await context.Clientes.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var cliente = await context.Clientes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (cliente == null)
             return Result<Cliente>.Failure(new Error("Cliente não encontrado."));
