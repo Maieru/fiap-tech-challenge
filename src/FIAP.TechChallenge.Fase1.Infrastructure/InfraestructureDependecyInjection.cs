@@ -16,6 +16,7 @@ public static class InfraestructureDependecyInjection
 
         _ = services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
         _ = services.AddScoped<IClienteRepository, ClienteRepository>();
+        _ = services.AddScoped<IVeiculoRepository, VeiculoRepository>();
 
         return services;
     }
