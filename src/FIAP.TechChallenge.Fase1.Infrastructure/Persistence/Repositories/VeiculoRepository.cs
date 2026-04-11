@@ -85,7 +85,7 @@ public sealed class VeiculoRepository(AppDbContext context) : IVeiculoRepository
         _ = await context.SaveChangesAsync(cancellationToken);
     }
 
-    private static Result<IReadOnlyCollection<Veiculo>> MapToDomainCollection(IReadOnlyCollection<VeiculoEntity> veiculosEntity)
+    private static Result<List<Veiculo>> MapToDomainCollection(List<VeiculoEntity> veiculosEntity)
     {
         var veiculos = new List<Veiculo>(veiculosEntity.Count);
 
@@ -94,11 +94,11 @@ public sealed class VeiculoRepository(AppDbContext context) : IVeiculoRepository
             var veiculoResult = VeiculoMapper.ToDomain(entity);
 
             if (!veiculoResult.IsSuccess || veiculoResult.Value is null)
-                return Result<IReadOnlyCollection<Veiculo>>.Failure(veiculoResult.Error);
+                return Result<List<Veiculo>>.Failure(veiculoResult.Error);
 
             veiculos.Add(veiculoResult.Value);
         }
 
-        return Result<IReadOnlyCollection<Veiculo>>.Success(veiculos);
+        return Result<List<Veiculo>>.Success(veiculos);
     }
 }
