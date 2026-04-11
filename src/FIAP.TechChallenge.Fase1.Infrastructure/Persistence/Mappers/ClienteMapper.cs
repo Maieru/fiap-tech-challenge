@@ -60,6 +60,6 @@ public static class ClienteMapper
             email = emailResult.Value;
         }
 
-        return Cliente.Create(entity.Nome, cpf, cnpj, telefoneResult.Value!, email);
+        return Cliente.Rehydrate(entity.Id, entity.Nome, cpf, cnpj, telefoneResult.Value!, email);
     }
 }

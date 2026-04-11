@@ -31,6 +31,19 @@ public sealed class Cliente
 
     public static Result<Cliente> Create(string nome, Cpf? cpf, Cnpj? cnpj, Telefone telefone, Email? email)
     {
+        return Create(Guid.NewGuid(), nome, cpf, cnpj, telefone, email);
+    }
+
+    public static Result<Cliente> Rehydrate(Guid id, string nome, Cpf? cpf, Cnpj? cnpj, Telefone telefone, Email? email)
+    {
+        if (id == Guid.Empty)
+            return Result<Cliente>.Failure(new Error("O id do cliente é inválido."));
+
+        return Create(id, nome, cpf, cnpj, telefone, email);
+    }
+
+    private static Result<Cliente> Create(Guid id, string nome, Cpf? cpf, Cnpj? cnpj, Telefone telefone, Email? email)
+    {
         if (string.IsNullOrWhiteSpace(nome))
             return Result<Cliente>.Failure(new Error("O nome do cliente é obrigatório."));
 
@@ -47,7 +60,7 @@ public sealed class Cliente
         if (cpf is not null && cnpj is not null)
             return Result<Cliente>.Failure(new Error("O cliente não pode possuir CPF e CNPJ ao mesmo tempo."));
 
-        var cliente = new Cliente(Guid.NewGuid(), nome, cpf, cnpj, telefone, email);
+        var cliente = new Cliente(id, nome, cpf, cnpj, telefone, email);
         return Result<Cliente>.Success(cliente);
     }
 

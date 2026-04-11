@@ -153,6 +153,67 @@ internal class ClienteTests
     }
 
     [Test]
+    public void Rehydrate_ShouldFail_WhenIdIsEmpty()
+    {
+        var telefone = CreateTelefoneValido();
+
+        var result = Cliente.Rehydrate(Guid.Empty, "Cliente Teste", CreateCpfValido(), null, telefone, null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O id do cliente é inválido."));
+        });
+    }
+
+    [Test]
+    public void Rehydrate_ShouldSucceed_WhenInputIsValidForPessoaFisica()
+    {
+        var id = Guid.NewGuid();
+        var telefone = CreateTelefoneValido();
+        var email = CreateEmailValido();
+
+        var result = Cliente.Rehydrate(id, "  Cliente Rehidratado  ", CreateCpfValido(), null, telefone, email);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Error, Is.EqualTo(Abstractions.Error.None));
+            Assert.That(result.Value, Is.Not.Null);
+        });
+
+        var cliente = result.Value!;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(cliente.Id, Is.EqualTo(id));
+            Assert.That(cliente.Nome, Is.EqualTo("Cliente Rehidratado"));
+            Assert.That(cliente.Cpf, Is.Not.Null);
+            Assert.That(cliente.Cnpj, Is.Null);
+            Assert.That(cliente.Telefone, Is.EqualTo(telefone));
+            Assert.That(cliente.Email, Is.EqualTo(email));
+            Assert.That(cliente.TipoPessoa, Is.EqualTo(TipoPessoa.Fisica));
+        });
+    }
+
+    [Test]
+    public void Rehydrate_ShouldFail_WhenCpfAndCnpjAreNull()
+    {
+        var id = Guid.NewGuid();
+        var telefone = CreateTelefoneValido();
+
+        var result = Cliente.Rehydrate(id, "Cliente Teste", null, null, telefone, null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O cliente deve possuir CPF ou CNPJ."));
+        });
+    }
+
+    [Test]
     public void UpdateName_ShouldFail_WhenNameIsWhitespace()
     {
         var cliente = CreateClienteFisico();
