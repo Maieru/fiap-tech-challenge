@@ -99,6 +99,149 @@ internal sealed class ClienteRepositoryTests
     }
 
     [Test]
+    public async Task GetByCpfAsync_ShouldReturnFailure_WhenClienteDoesNotExist()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+        var repository = new ClienteRepository(context);
+
+        var result = await repository.GetByCpfAsync("52998224725");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("Cliente não encontrado."));
+        });
+    }
+
+    [Test]
+    public async Task GetByCpfAsync_ShouldReturnSuccess_WhenClienteExists()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var clienteId = Guid.NewGuid();
+
+        await using var context = CreateContext(databaseName);
+        _ = context.Clientes.Add(new ClienteEntity
+        {
+            Id = clienteId,
+            Nome = "Cliente CPF",
+            Cpf = "52998224725",
+            Telefone = "11987654321",
+            Email = "cliente.cpf@exemplo.com"
+        });
+        _ = await context.SaveChangesAsync();
+
+        var repository = new ClienteRepository(context);
+
+        var result = await repository.GetByCpfAsync("52998224725");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Id, Is.EqualTo(clienteId));
+            Assert.That(result.Value.Cpf, Is.Not.Null);
+            Assert.That(result.Value.Cpf!.Unformatted, Is.EqualTo("52998224725"));
+            Assert.That(result.Value.Email!.Value, Is.EqualTo("cliente.cpf@exemplo.com"));
+        });
+    }
+
+    [Test]
+    public async Task GetByCnpjAsync_ShouldReturnSuccess_WhenClienteExists()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var clienteId = Guid.NewGuid();
+
+        await using var context = CreateContext(databaseName);
+        _ = context.Clientes.Add(new ClienteEntity
+        {
+            Id = clienteId,
+            Nome = "Cliente CNPJ",
+            Cnpj = "11444777000161",
+            Telefone = "11987654321"
+        });
+        _ = await context.SaveChangesAsync();
+
+        var repository = new ClienteRepository(context);
+
+        var result = await repository.GetByCnpjAsync("11444777000161");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Id, Is.EqualTo(clienteId));
+            Assert.That(result.Value.Cnpj, Is.Not.Null);
+            Assert.That(result.Value.Cnpj!.Unformatted, Is.EqualTo("11444777000161"));
+            Assert.That(result.Value.Cpf, Is.Null);
+        });
+    }
+
+    [Test]
+    public async Task GetByCnpjAsync_ShouldReturnFailure_WhenClienteDoesNotExist()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+        var repository = new ClienteRepository(context);
+
+        var result = await repository.GetByCnpjAsync("11444777000161");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("Cliente não encontrado."));
+        });
+    }
+
+    [Test]
+    public async Task GetPagedAsync_ShouldReturnPagedDataAndTotal_WhenClientesExist()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+        context.Clientes.AddRange(
+            new ClienteEntity
+            {
+                Id = Guid.NewGuid(),
+                Nome = "Bruno",
+                Cpf = "52998224725",
+                Telefone = "11987654321"
+            },
+            new ClienteEntity
+            {
+                Id = Guid.NewGuid(),
+                Nome = "Ana",
+                Cpf = "39053344705",
+                Telefone = "21987654321"
+            },
+            new ClienteEntity
+            {
+                Id = Guid.NewGuid(),
+                Nome = "Carlos",
+                Cnpj = "11444777000161",
+                Telefone = "11999888777"
+            });
+        _ = await context.SaveChangesAsync();
+
+        var repository = new ClienteRepository(context);
+
+        var result = await repository.GetPagedAsync(1, 2);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value.Clientes, Has.Count.EqualTo(2));
+            Assert.That(result.Value.TotalItems, Is.EqualTo(3));
+            Assert.That(result.Value.Clientes.ElementAt(0).Nome, Is.EqualTo("Ana"));
+            Assert.That(result.Value.Clientes.ElementAt(1).Nome, Is.EqualTo("Bruno"));
+        });
+    }
+
+    [Test]
     public async Task GetByIdAsync_ShouldReturnSuccess_WhenClienteExists()
     {
         var databaseName = Guid.NewGuid().ToString();
