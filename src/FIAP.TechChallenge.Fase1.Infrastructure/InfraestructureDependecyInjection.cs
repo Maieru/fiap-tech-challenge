@@ -19,6 +19,7 @@ public static class InfraestructureDependecyInjection
         _ = services.AddScoped<IClienteRepository, ClienteRepository>();
         _ = services.AddScoped<IVeiculoRepository, VeiculoRepository>();
         _ = services.AddScoped<IOrdemServicoRepository, OrdemServicoRepository>();
+        _ = services.AddScoped<IPecaInsumoRepository, PecaInsumoRepository>();
 
         return services;
     }

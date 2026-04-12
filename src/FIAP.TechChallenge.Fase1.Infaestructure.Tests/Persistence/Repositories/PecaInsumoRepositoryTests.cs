@@ -1,0 +1,120 @@
+using FIAP.TechChallenge.Fase1.Domain.Entities;
+using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
+using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
+using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Repositories;
+using Microsoft.EntityFrameworkCore;
+
+namespace FIAP.TechChallenge.Fase1.Infaestructure.Tests.Persistence.Repositories;
+
+[TestFixture]
+internal sealed class PecaInsumoRepositoryTests
+{
+    [Test]
+    public async Task GetByIdAsync_ShouldReturnSuccess_WhenPecaInsumoExists()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var entity = CreateEntity();
+
+        await using var context = CreateContext(databaseName);
+        _ = context.PecasInsumos.Add(entity);
+        _ = await context.SaveChangesAsync();
+
+        var repository = new PecaInsumoRepository(context);
+
+        var result = await repository.GetByIdAsync(entity.Id);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Error, Is.EqualTo(FIAP.TechChallenge.Fase1.Domain.Abstractions.Error.None));
+            Assert.That(result.Value!.Id, Is.EqualTo(entity.Id));
+            Assert.That(result.Value.Nome, Is.EqualTo(entity.Nome));
+            Assert.That(result.Value.Codigo, Is.EqualTo(entity.Codigo));
+            Assert.That(result.Value.Descricao, Is.EqualTo(entity.Descricao));
+            Assert.That(result.Value.PrecoUnitario, Is.EqualTo(entity.PrecoUnitario));
+            Assert.That(result.Value.QuantidadeEstoque, Is.EqualTo(entity.QuantidadeEstoque));
+            Assert.That(result.Value.Ativo, Is.EqualTo(entity.Ativo));
+        });
+    }
+
+    [Test]
+    public async Task GetByIdAsync_ShouldReturnFailure_WhenPecaInsumoDoesNotExist()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+        var repository = new PecaInsumoRepository(context);
+
+        var result = await repository.GetByIdAsync(Guid.NewGuid());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("Peca ou insumo nao encontrado."));
+        });
+    }
+
+    [Test]
+    public async Task AddAsync_ShouldPersistPecaInsumo()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+        var repository = new PecaInsumoRepository(context);
+        var pecaInsumo = CreatePecaInsumo();
+
+        await repository.AddAsync(pecaInsumo);
+
+        var saved = await context.PecasInsumos.AsNoTracking().FirstOrDefaultAsync(x => x.Id == pecaInsumo.Id);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(saved, Is.Not.Null);
+            Assert.That(saved!.Id, Is.EqualTo(pecaInsumo.Id));
+            Assert.That(saved.Nome, Is.EqualTo(pecaInsumo.Nome));
+            Assert.That(saved.Codigo, Is.EqualTo(pecaInsumo.Codigo));
+            Assert.That(saved.Descricao, Is.EqualTo(pecaInsumo.Descricao));
+            Assert.That(saved.PrecoUnitario, Is.EqualTo(pecaInsumo.PrecoUnitario));
+            Assert.That(saved.QuantidadeEstoque, Is.EqualTo(pecaInsumo.QuantidadeEstoque));
+            Assert.That(saved.Ativo, Is.True);
+        });
+    }
+
+    private static AppDbContext CreateContext(string databaseName)
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(databaseName)
+            .Options;
+
+        return new AppDbContext(options);
+    }
+
+    private static PecaInsumoEntity CreateEntity()
+    {
+        return new PecaInsumoEntity
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Pastilha de freio",
+            Codigo = "PST-045",
+            Descricao = "Jogo dianteiro",
+            PrecoUnitario = 179.90m,
+            QuantidadeEstoque = 8,
+            Ativo = true
+        };
+    }
+
+    private static PecaInsumo CreatePecaInsumo()
+    {
+        var pecaInsumoResult = PecaInsumo.Create("Filtro de cabine", "fcb-010", "Filtro de cabine com carvao ativado", 69.5m, 15);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(pecaInsumoResult.IsSuccess, Is.True);
+            Assert.That(pecaInsumoResult.Value, Is.Not.Null);
+        });
+
+        return pecaInsumoResult.Value!;
+    }
+}
