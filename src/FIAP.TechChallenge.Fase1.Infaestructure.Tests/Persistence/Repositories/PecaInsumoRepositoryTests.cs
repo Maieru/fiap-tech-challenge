@@ -57,6 +57,98 @@ internal sealed class PecaInsumoRepositoryTests
     }
 
     [Test]
+    public async Task GetByCodigoAsync_ShouldReturnSuccess_WhenPecaInsumoExists()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var entity = CreateEntity();
+
+        await using var context = CreateContext(databaseName);
+        _ = context.PecasInsumos.Add(entity);
+        _ = await context.SaveChangesAsync();
+
+        var repository = new PecaInsumoRepository(context);
+
+        var result = await repository.GetByCodigoAsync(entity.Codigo);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Id, Is.EqualTo(entity.Id));
+            Assert.That(result.Value.Codigo, Is.EqualTo(entity.Codigo));
+        });
+    }
+
+    [Test]
+    public async Task GetByCodigoAsync_ShouldReturnFailure_WhenPecaInsumoDoesNotExist()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+        var repository = new PecaInsumoRepository(context);
+
+        var result = await repository.GetByCodigoAsync("NAO-EXISTE");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("Peca ou insumo nao encontrado."));
+        });
+    }
+
+    [Test]
+    public async Task GetPagedAsync_ShouldReturnPagedItemsAndTotalCount()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+        _ = context.PecasInsumos.Add(new PecaInsumoEntity
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Pastilha de freio",
+            Codigo = "PST-010",
+            Descricao = "Conjunto dianteiro",
+            PrecoUnitario = 100m,
+            QuantidadeEstoque = 5,
+            Ativo = true
+        });
+        _ = context.PecasInsumos.Add(new PecaInsumoEntity
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Filtro de ar",
+            Codigo = "FLT-001",
+            Descricao = "Elemento filtrante",
+            PrecoUnitario = 30m,
+            QuantidadeEstoque = 12,
+            Ativo = true
+        });
+        _ = context.PecasInsumos.Add(new PecaInsumoEntity
+        {
+            Id = Guid.NewGuid(),
+            Nome = "Oleo 5W30",
+            Codigo = "OLE-500",
+            Descricao = "Lubrificante sintetico",
+            PrecoUnitario = 60m,
+            QuantidadeEstoque = 20,
+            Ativo = true
+        });
+        _ = await context.SaveChangesAsync();
+
+        var repository = new PecaInsumoRepository(context);
+
+        var result = await repository.GetPagedAsync(pageNumber: 1, pageSize: 2);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value.PecasInsumos, Has.Count.EqualTo(2));
+            Assert.That(result.Value.TotalItems, Is.EqualTo(3));
+            Assert.That(result.Value.PecasInsumos.Select(x => x.Codigo), Is.EqualTo(new[] { "FLT-001", "OLE-500" }));
+        });
+    }
+
+    [Test]
     public async Task AddAsync_ShouldPersistPecaInsumo()
     {
         var databaseName = Guid.NewGuid().ToString();
