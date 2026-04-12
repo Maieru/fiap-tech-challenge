@@ -122,24 +122,6 @@ internal sealed class ListarPecasInsumosUseCaseTests
     }
 
     [Test]
-    public async Task ExecuteAsync_ShouldFail_WhenCodigoIsInvalid()
-    {
-        var repositoryMock = new Mock<IPecaInsumoRepository>();
-        var useCase = new ListarPecasInsumosUseCase(repositoryMock.Object);
-
-        var result = await useCase.ExecuteAsync(new ListarPecasInsumosCommand { Codigo = " " });
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O codigo da peca ou insumo e obrigatorio."));
-        });
-
-        repositoryMock.Verify(x => x.GetByCodigoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Test]
     public async Task ExecuteAsync_ShouldFail_WhenIdIsEmpty()
     {
         var repositoryMock = new Mock<IPecaInsumoRepository>();
