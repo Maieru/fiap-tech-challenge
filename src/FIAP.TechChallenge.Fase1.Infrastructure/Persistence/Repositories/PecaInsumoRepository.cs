@@ -29,4 +29,11 @@ public sealed class PecaInsumoRepository(AppDbContext context) : IPecaInsumoRepo
         _ = await context.PecasInsumos.AddAsync(pecaInsumoEntity, cancellationToken);
         _ = await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task UpdateAsync(PecaInsumo pecaInsumo, CancellationToken cancellationToken = default)
+    {
+        var pecaInsumoEntity = PecaInsumoMapper.ToEntity(pecaInsumo);
+        _ = context.PecasInsumos.Update(pecaInsumoEntity);
+        _ = await context.SaveChangesAsync(cancellationToken);
+    }
 }
