@@ -3,8 +3,9 @@
     "Docker Compose": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
-      "composeLaunchAction": "None",
+      "composeLaunchAction": "LaunchBrowser",
       "composeLaunchServiceName": "fiap.techchallenge.fase1.api",
+      "composeLaunchUrl": "http://localhost:8080/scalar/v1",
       "serviceActions": {
         "fiap.techchallenge.fase1.api": "StartDebugging",
         "db": "StartWithoutDebugging",
