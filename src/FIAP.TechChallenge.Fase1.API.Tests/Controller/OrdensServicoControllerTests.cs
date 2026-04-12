@@ -146,6 +146,85 @@ public sealed class OrdensServicoControllerTests
         });
     }
 
+    [Test]
+    public async Task AddServico_ShouldSucceed_WhenRequestIsValid()
+    {
+        var cliente = await CreateClientAsync(9006);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(34), "Chevrolet", "Onix", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Troca de bateria");
+        var servico = await CreateServicoAsync("Instalacao de bateria", 320m);
+
+        var request = new
+        {
+            ServicoId = servico.Id,
+            Quantidade = 2
+        };
+
+        var response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addservico", request);
+        var created = await response.Content.ReadFromJsonAsync<ServicoDaOrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Id.Should().NotBeEmpty();
+            _ = created.OrdemServicoId.Should().Be(ordemServico.Id);
+            _ = created.ServicoId.Should().Be(servico.Id);
+            _ = created.Descricao.Should().Be("Instalacao de bateria");
+            _ = created.ValorUnitario.Should().Be(320m);
+            _ = created.Quantidade.Should().Be(2);
+            _ = created.ValorTotal.Should().Be(640m);
+        });
+    }
+
+    [Test]
+    public async Task AddServico_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
+    {
+        var servico = await CreateServicoAsync("Higienizacao do ar", 180m);
+
+        var request = new
+        {
+            ServicoId = servico.Id,
+            Quantidade = 1
+        };
+
+        var response = await _client.PostAsJsonAsync($"/api/ordensservico/{Guid.NewGuid()}/addservico", request);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("Ordem");
+            _ = error.Error.Should().Contain("encontrada");
+        });
+    }
+
+    [Test]
+    public async Task AddServico_ShouldReturnBadRequest_WhenQuantidadeIsInvalid()
+    {
+        var cliente = await CreateClientAsync(9007);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(35), "Volkswagen", "Polo", 2023);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Revisao de 10.000 km");
+        var servico = await CreateServicoAsync("Troca de filtro de oleo", 70m);
+
+        var request = new
+        {
+            ServicoId = servico.Id,
+            Quantidade = 0
+        };
+
+        var response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addservico", request);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("quantidade");
+        });
+    }
+
     private async Task<ClienteResponse> CreateClientAsync(int seed)
     {
         var request = new
@@ -182,6 +261,49 @@ public sealed class OrdensServicoControllerTests
 
         var response = await _client.PostAsJsonAsync("/api/veiculos", request);
         var created = await response.Content.ReadFromJsonAsync<VeiculoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Id.Should().NotBeEmpty();
+        });
+
+        return created!;
+    }
+
+    private async Task<OrdemServicoResponse> CreateOrdemServicoAsync(Guid clienteId, Guid veiculoId, string descricaoProblema)
+    {
+        var request = new
+        {
+            ClienteId = clienteId,
+            VeiculoId = veiculoId,
+            DescricaoProblema = descricaoProblema
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/ordensservico", request);
+        var created = await response.Content.ReadFromJsonAsync<OrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Id.Should().NotBeEmpty();
+        });
+
+        return created!;
+    }
+
+    private async Task<ServicoResponse> CreateServicoAsync(string descricao, decimal valorUnitario)
+    {
+        var request = new
+        {
+            Descricao = descricao,
+            ValorUnitario = valorUnitario
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/servicos", request);
+        var created = await response.Content.ReadFromJsonAsync<ServicoResponse>();
 
         Assert.Multiple(() =>
         {
@@ -249,6 +371,22 @@ public sealed class OrdensServicoControllerTests
         public string DescricaoProblema { get; set; } = string.Empty;
         public int Status { get; set; }
         public DateTime DataCriacao { get; set; }
+    }
+
+    private sealed class ServicoResponse
+    {
+        public Guid Id { get; set; }
+    }
+
+    private sealed class ServicoDaOrdemServicoResponse
+    {
+        public Guid Id { get; set; }
+        public Guid OrdemServicoId { get; set; }
+        public Guid ServicoId { get; set; }
+        public string Descricao { get; set; } = string.Empty;
+        public decimal ValorUnitario { get; set; }
+        public int Quantidade { get; set; }
+        public decimal ValorTotal { get; set; }
     }
 
     private sealed class ErrorResponse
