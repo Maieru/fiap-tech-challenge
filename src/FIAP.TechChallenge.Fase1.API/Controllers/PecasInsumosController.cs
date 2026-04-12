@@ -1,5 +1,5 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.EntradaEstoquePecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaInsumo;
+using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.EntradaEstoquePecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.IncluirPecaInsumo;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,11 +26,7 @@ public sealed class PecasInsumosController : ControllerBase
     [ProducesResponseType(typeof(EntradaEstoquePecaInsumoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> PutEntradaEstoque(
-        [FromRoute] Guid id,
-        [FromServices] IEntradaEstoquePecaInsumoUseCase useCase,
-        [FromBody] EntradaEstoquePecaInsumoCommand command,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> PutEntradaEstoque([FromRoute] Guid id, [FromServices] IEntradaEstoquePecaInsumoUseCase useCase, [FromBody] EntradaEstoquePecaInsumoCommand command, CancellationToken cancellationToken)
     {
         var entradaEstoqueCommand = new EntradaEstoquePecaInsumoCommand
         {
