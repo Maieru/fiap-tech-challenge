@@ -111,6 +111,105 @@ public sealed class PecasInsumosControllerTests
     }
 
     [Test]
+    public async Task Get_ShouldListAllGetByIdAndGetByCodigo_WhenFiltersAreValid()
+    {
+        var firstCreateRequest = new
+        {
+            Nome = "Filtro de oleo",
+            Codigo = "flt-500",
+            Descricao = "Filtro para primeira listagem",
+            PrecoUnitario = 45.90m,
+            QuantidadeEstoque = 20
+        };
+
+        var secondCreateRequest = new
+        {
+            Nome = "Pastilha de freio",
+            Codigo = "pst-501",
+            Descricao = "Pastilha dianteira",
+            PrecoUnitario = 120m,
+            QuantidadeEstoque = 8
+        };
+
+        var firstCreateResponse = await _client.PostAsJsonAsync("/api/pecasinsumos", firstCreateRequest);
+        var secondCreateResponse = await _client.PostAsJsonAsync("/api/pecasinsumos", secondCreateRequest);
+        var firstCreated = await firstCreateResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+        var secondCreated = await secondCreateResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        var getAllResponse = await _client.GetAsync("/api/pecasinsumos?pageNumber=1&pageSize=10");
+        var allResult = await getAllResponse.Content.ReadFromJsonAsync<ListarPecasInsumosResponse>();
+
+        var getByIdResponse = await _client.GetAsync($"/api/pecasinsumos?id={firstCreated!.Id}");
+        var byId = await getByIdResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        var getByCodigoResponse = await _client.GetAsync("/api/pecasinsumos?codigo=pst-501");
+        var byCodigo = await getByCodigoResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = firstCreateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = secondCreateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            _ = getAllResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = allResult.Should().NotBeNull();
+            _ = allResult!.PecasInsumos.Count.Should().BeGreaterThanOrEqualTo(2);
+            _ = allResult.PecasInsumos.Any(x => x.Id == firstCreated.Id).Should().BeTrue();
+            _ = allResult.PecasInsumos.Any(x => x.Id == secondCreated!.Id).Should().BeTrue();
+
+            _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = byId.Should().NotBeNull();
+            _ = byId!.Id.Should().Be(firstCreated.Id);
+            _ = byId.Codigo.Should().Be("FLT-500");
+
+            _ = getByCodigoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = byCodigo.Should().NotBeNull();
+            _ = byCodigo!.Id.Should().Be(secondCreated.Id);
+            _ = byCodigo.Codigo.Should().Be("PST-501");
+        });
+    }
+
+    [Test]
+    public async Task GetByCodigo_ShouldReturnNotFound_WhenPecaInsumoDoesNotExist()
+    {
+        var response = await _client.GetAsync("/api/pecasinsumos?codigo=nao-existe");
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("encontrado");
+        });
+    }
+
+    [Test]
+    public async Task Get_ShouldReturnBadRequest_WhenMoreThanOneFilterIsProvided()
+    {
+        var createRequest = new
+        {
+            Nome = "Filtro de ar",
+            Codigo = "flt-777",
+            Descricao = "Filtro para teste",
+            PrecoUnitario = 35m,
+            QuantidadeEstoque = 9
+        };
+
+        var createResponse = await _client.PostAsJsonAsync("/api/pecasinsumos", createRequest);
+        var created = await createResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        var response = await _client.GetAsync($"/api/pecasinsumos?id={created!.Id}&codigo={created.Codigo}");
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Be("Informe apenas um filtro por vez: id ou codigo.");
+        });
+    }
+
+    [Test]
     public async Task Update_ShouldSucceed_AndShouldNotChangeStock_WhenRequestContainsExtraStockField()
     {
         var createRequest = new
@@ -238,5 +337,13 @@ public sealed class PecasInsumosControllerTests
     private sealed class ErrorResponse
     {
         public string Error { get; set; } = string.Empty;
+    }
+
+    private sealed class ListarPecasInsumosResponse
+    {
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalItems { get; set; }
+        public IReadOnlyCollection<PecaInsumoResponse> PecasInsumos { get; set; } = [];
     }
 }

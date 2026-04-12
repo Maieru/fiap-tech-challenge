@@ -1,5 +1,6 @@
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.IncluirPecaInsumo;
+using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.ListarPecasInsumos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
@@ -8,6 +9,43 @@ namespace FIAP.TechChallenge.Fase1.API.Controllers;
 [Route("api/[controller]")]
 public sealed class PecasInsumosController : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType(typeof(ListarPecasInsumosResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Get(
+        [FromServices] IListarPecasInsumosUseCase useCase,
+        [FromQuery] Guid? id,
+        [FromQuery] string? codigo,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new ListarPecasInsumosCommand
+        {
+            Id = id,
+            Codigo = codigo,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Description.Contains("Peca ou insumo", StringComparison.OrdinalIgnoreCase)
+                && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = result.Error.Description });
+
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        if (id.HasValue || !string.IsNullOrWhiteSpace(codigo))
+            return Ok(result.Value!.PecasInsumos.First());
+
+        return Ok(result.Value);
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(IncluirPecaInsumoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
