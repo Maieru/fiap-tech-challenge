@@ -104,6 +104,12 @@ Criar/ajustar suite de integracao em `FIAP.TechChallenge.Fase1.API.Tests`, com:
 - verificacao de status code (`200/201/400/404`) e payload
 - pelo menos 1 cenario feliz e 1 cenario de erro por endpoint alterado
 
+### 4.3.1 Regra obrigatoria para testes de controller
+- Testes de controller SEMPRE devem chamar endpoints reais via `HttpClient` (`_client.Get/Post/Put/DeleteAsJsonAsync`).
+- Nao mockar nada em testes de controller: proibido mock de use case, service, repository, `DbContext` ou client HTTP.
+- Quando precisar preparar estado, fazer setup pelo proprio contrato HTTP (ex.: criar recurso com `POST` antes de validar `PUT`/`DELETE`).
+- Validar sempre status code + payload retornado (`ReadFromJsonAsync<T>`), no mesmo padrao de testes de integracao ponta a ponta.
+
 ### 4.4 Regras de estilo de teste
 - Arrange/Act/Assert claro.
 - `Assert.Multiple` para multiplas validacoes independentes.

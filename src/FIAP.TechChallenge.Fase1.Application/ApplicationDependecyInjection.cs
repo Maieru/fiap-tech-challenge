@@ -9,6 +9,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServ
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.AtualizarVeiculo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.CriarVeiculo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.ListarVeiculos;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FIAP.TechChallenge.Fase1.Application;
@@ -28,6 +29,7 @@ public static class ApplicationDependecyInjection
         _ = services.AddScoped<IEntradaEstoquePecaInsumoUseCase, EntradaEstoquePecaInsumoUseCase>();
         _ = services.AddScoped<IAtualizarPecaInsumoUseCase, AtualizarPecaInsumoUseCase>();
         _ = services.AddScoped<IListarPecasInsumosUseCase, ListarPecasInsumosUseCase>();
+        _ = services.AddScoped<ICadastrarServicoUseCase, CadastrarServicoUseCase>();
         return services;
     }
 }

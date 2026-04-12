@@ -5,39 +5,31 @@ namespace FIAP.TechChallenge.Fase1.Domain.Entities;
 public sealed class Servico
 {
     public Guid Id { get; private set; }
-    public Guid OrdemServicoId { get; private set; }
     public string Descricao { get; private set; }
     public decimal ValorUnitario { get; private set; }
-    public int Quantidade { get; private set; }
-    public decimal ValorTotal => ValorUnitario * Quantidade;
 
-    private Servico(Guid id, Guid ordemServicoId, string descricao, decimal valorUnitario, int quantidade)
+    private Servico(Guid id, string descricao, decimal valorUnitario)
     {
         Id = id;
-        OrdemServicoId = ordemServicoId;
         Descricao = descricao;
         ValorUnitario = valorUnitario;
-        Quantidade = quantidade;
     }
 
-    public static Result<Servico> Create(Guid ordemServicoId, string descricao, decimal valorUnitario, int quantidade)
+    public static Result<Servico> Create(string descricao, decimal valorUnitario)
     {
-        return Create(Guid.NewGuid(), ordemServicoId, descricao, valorUnitario, quantidade);
+        return Create(Guid.NewGuid(), descricao, valorUnitario);
     }
 
-    public static Result<Servico> Rehydrate(Guid id, Guid ordemServicoId, string descricao, decimal valorUnitario, int quantidade)
+    public static Result<Servico> Rehydrate(Guid id, string descricao, decimal valorUnitario)
     {
         if (id == Guid.Empty)
             return Result<Servico>.Failure(new Error("O id do serviço é inválido."));
 
-        return Create(id, ordemServicoId, descricao, valorUnitario, quantidade);
+        return Create(id, descricao, valorUnitario);
     }
 
-    private static Result<Servico> Create(Guid id, Guid ordemServicoId, string descricao, decimal valorUnitario, int quantidade)
+    private static Result<Servico> Create(Guid id, string descricao, decimal valorUnitario)
     {
-        if (ordemServicoId == Guid.Empty)
-            return Result<Servico>.Failure(new Error("A ordem de serviço informada é inválida."));
-
         if (string.IsNullOrWhiteSpace(descricao))
             return Result<Servico>.Failure(new Error("A descrição do serviço é obrigatória."));
 
@@ -46,10 +38,10 @@ public sealed class Servico
         if (valorUnitario < 0)
             return Result<Servico>.Failure(new Error("O valor do serviço não pode ser negativo."));
 
-        if (quantidade <= 0)
-            return Result<Servico>.Failure(new Error("A quantidade do serviço deve ser maior que zero."));
+        if (descricao.Length > 1000)
+            return Result<Servico>.Failure(new Error("A descrição do serviço deve conter no máximo 1000 caracteres."));
 
-        var item = new Servico(id, ordemServicoId, descricao, valorUnitario, quantidade);
+        var item = new Servico(id, descricao, valorUnitario);
         return Result<Servico>.Success(item);
     }
 }

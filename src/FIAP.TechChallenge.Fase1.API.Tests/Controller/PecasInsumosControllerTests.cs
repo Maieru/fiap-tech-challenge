@@ -163,7 +163,7 @@ public sealed class PecasInsumosControllerTests
 
             _ = getByCodigoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             _ = byCodigo.Should().NotBeNull();
-            _ = byCodigo!.Id.Should().Be(secondCreated.Id);
+            _ = byCodigo!.Id.Should().Be(secondCreated!.Id);
             _ = byCodigo.Codigo.Should().Be("PST-501");
         });
     }

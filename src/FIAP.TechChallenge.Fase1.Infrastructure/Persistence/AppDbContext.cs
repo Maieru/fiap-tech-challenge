@@ -9,6 +9,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<VeiculoEntity> Veiculos { get; set; }
     public DbSet<OrdemServicoEntity> OrdensServico { get; set; }
     public DbSet<PecaInsumoEntity> PecasInsumos { get; set; }
+    public DbSet<ServicoEntity> Servicos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
