@@ -34,6 +34,12 @@ public sealed class OrdemServicoEntity
     public DateTime? DataFinalizacao { get; set; }
     public DateTime? DataEntrega { get; set; }
 
+    [ForeignKey(nameof(ClienteId))]
+    public ClienteEntity Cliente { get; set; } = null!;
+
+    [ForeignKey(nameof(VeiculoId))]
+    public VeiculoEntity Veiculo { get; set; } = null!;
+
     public ICollection<ServicoDaOrdemDeServicoEntity> Servicos { get; set; } = new List<ServicoDaOrdemDeServicoEntity>();
     public ICollection<PecaOuInsumoDaOrdemDeServicoEntity> PecasOuInsumos { get; set; } = new List<PecaOuInsumoDaOrdemDeServicoEntity>();
 }

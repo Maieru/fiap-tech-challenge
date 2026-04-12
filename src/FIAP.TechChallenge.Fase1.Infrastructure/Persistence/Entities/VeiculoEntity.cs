@@ -27,4 +27,7 @@ public sealed class VeiculoEntity
 
     [Required]
     public int Ano { get; set; }
+
+    [ForeignKey(nameof(ClienteId))]
+    public ClienteEntity Cliente { get; set; } = null!;
 }
