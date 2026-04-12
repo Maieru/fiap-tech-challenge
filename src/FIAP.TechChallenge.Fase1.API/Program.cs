@@ -1,6 +1,7 @@
 using FIAP.TechChallenge.Fase1.Application;
 using FIAP.TechChallenge.Fase1.Infrastructure;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     _ = app.MapOpenApi();
+    _ = app.MapScalarApiReference();
 }
 
 if (!app.Environment.IsEnvironment("Testing"))
