@@ -2,6 +2,10 @@
 
 namespace FIAP.TechChallenge.Fase1.Domain.Entities;
 
+/// <summary>
+/// Representa uma peça ou insumo do catálogo administrativo.
+/// Não pertence diretamente a uma ordem de serviço.
+/// </summary>
 public sealed class PecaInsumo
 {
     public Guid Id { get; private set; }

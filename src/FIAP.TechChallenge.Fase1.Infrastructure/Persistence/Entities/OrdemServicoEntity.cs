@@ -33,4 +33,7 @@ public sealed class OrdemServicoEntity
     public DateTime? DataInicioExecucao { get; set; }
     public DateTime? DataFinalizacao { get; set; }
     public DateTime? DataEntrega { get; set; }
+
+    public ICollection<ServicoDaOrdemDeServicoEntity> Servicos { get; set; } = new List<ServicoDaOrdemDeServicoEntity>();
+    public ICollection<PecaOuInsumoDaOrdemDeServicoEntity> PecasOuInsumos { get; set; } = new List<PecaOuInsumoDaOrdemDeServicoEntity>();
 }

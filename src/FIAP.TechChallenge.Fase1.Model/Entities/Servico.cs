@@ -2,6 +2,10 @@
 
 namespace FIAP.TechChallenge.Fase1.Domain.Entities;
 
+/// <summary>
+/// Representa um serviço do catálogo administrativo.
+/// Não pertence diretamente a uma ordem de serviço.
+/// </summary>
 public sealed class Servico
 {
     public Guid Id { get; private set; }
