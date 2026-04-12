@@ -34,18 +34,60 @@ public sealed class Servico
 
     private static Result<Servico> Create(Guid id, string descricao, decimal valorUnitario)
     {
+        var descricaoResult = ValidateDescricao(descricao);
+
+        if (!descricaoResult.IsSuccess || descricaoResult.Value is null)
+            return Result<Servico>.Failure(descricaoResult.Error);
+
+        var valorUnitarioResult = ValidateValorUnitario(valorUnitario);
+
+        if (!valorUnitarioResult.IsSuccess)
+            return Result<Servico>.Failure(valorUnitarioResult.Error);
+
+        var item = new Servico(id, descricaoResult.Value, valorUnitario);
+        return Result<Servico>.Success(item);
+    }
+
+    public Result<bool> UpdateDescricao(string descricao)
+    {
+        var descricaoResult = ValidateDescricao(descricao);
+
+        if (!descricaoResult.IsSuccess || descricaoResult.Value is null)
+            return Result<bool>.Failure(descricaoResult.Error);
+
+        Descricao = descricaoResult.Value;
+        return Result<bool>.Success(true);
+    }
+
+    public Result<bool> UpdateValorUnitario(decimal valorUnitario)
+    {
+        var valorUnitarioResult = ValidateValorUnitario(valorUnitario);
+
+        if (!valorUnitarioResult.IsSuccess)
+            return Result<bool>.Failure(valorUnitarioResult.Error);
+
+        ValorUnitario = valorUnitario;
+        return Result<bool>.Success(true);
+    }
+
+    private static Result<string> ValidateDescricao(string descricao)
+    {
         if (string.IsNullOrWhiteSpace(descricao))
-            return Result<Servico>.Failure(new Error("A descrição do serviço é obrigatória."));
+            return Result<string>.Failure(new Error("A descrição do serviço é obrigatória."));
 
         descricao = descricao.Trim();
 
-        if (valorUnitario < 0)
-            return Result<Servico>.Failure(new Error("O valor do serviço não pode ser negativo."));
-
         if (descricao.Length > 1000)
-            return Result<Servico>.Failure(new Error("A descrição do serviço deve conter no máximo 1000 caracteres."));
+            return Result<string>.Failure(new Error("A descrição do serviço deve conter no máximo 1000 caracteres."));
 
-        var item = new Servico(id, descricao, valorUnitario);
-        return Result<Servico>.Success(item);
+        return Result<string>.Success(descricao);
+    }
+
+    private static Result<bool> ValidateValorUnitario(decimal valorUnitario)
+    {
+        if (valorUnitario < 0)
+            return Result<bool>.Failure(new Error("O valor do serviço não pode ser negativo."));
+
+        return Result<bool>.Success(true);
     }
 }

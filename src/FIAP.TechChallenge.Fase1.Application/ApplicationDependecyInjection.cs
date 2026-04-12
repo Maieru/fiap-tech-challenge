@@ -10,6 +10,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.AtualizarVeiculo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.CriarVeiculo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.ListarVeiculos;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FIAP.TechChallenge.Fase1.Application;
@@ -30,6 +31,7 @@ public static class ApplicationDependecyInjection
         _ = services.AddScoped<IAtualizarPecaInsumoUseCase, AtualizarPecaInsumoUseCase>();
         _ = services.AddScoped<IListarPecasInsumosUseCase, ListarPecasInsumosUseCase>();
         _ = services.AddScoped<ICadastrarServicoUseCase, CadastrarServicoUseCase>();
+        _ = services.AddScoped<IAtualizarServicoUseCase, AtualizarServicoUseCase>();
         return services;
     }
 }

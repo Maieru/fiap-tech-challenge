@@ -103,4 +103,53 @@ internal sealed class ServicoTests
             Assert.That(servico.ValorUnitario, Is.EqualTo(199.9m));
         });
     }
+
+    [Test]
+    public void UpdateDescricao_ShouldFail_WhenDescricaoIsWhitespace()
+    {
+        var servico = Servico.Create("Troca de oleo", 120m).Value!;
+
+        var result = servico.UpdateDescricao(" ");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.False);
+            Assert.That(result.Error, Is.Not.EqualTo(Error.None));
+            Assert.That(servico.Descricao, Is.EqualTo("Troca de oleo"));
+        });
+    }
+
+    [Test]
+    public void UpdateValorUnitario_ShouldFail_WhenValorIsNegative()
+    {
+        var servico = Servico.Create("Troca de oleo", 120m).Value!;
+
+        var result = servico.UpdateValorUnitario(-1m);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.False);
+            Assert.That(result.Error.Description.Contains("negativo", StringComparison.OrdinalIgnoreCase), Is.True);
+            Assert.That(servico.ValorUnitario, Is.EqualTo(120m));
+        });
+    }
+
+    [Test]
+    public void Update_ShouldSucceed_WhenInputIsValid()
+    {
+        var servico = Servico.Create("Troca de oleo", 120m).Value!;
+
+        var updateDescricaoResult = servico.UpdateDescricao(" Balanceamento ");
+        var updateValorResult = servico.UpdateValorUnitario(180m);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(updateDescricaoResult.IsSuccess, Is.True);
+            Assert.That(updateValorResult.IsSuccess, Is.True);
+            Assert.That(servico.Descricao, Is.EqualTo("Balanceamento"));
+            Assert.That(servico.ValorUnitario, Is.EqualTo(180m));
+        });
+    }
 }
