@@ -8,4 +8,5 @@ public interface IPecaInsumoRepository
     Task<bool> ExistsByCodigoAsync(string codigo, CancellationToken cancellationToken = default);
     Task<Result<PecaInsumo>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task AddAsync(PecaInsumo pecaInsumo, CancellationToken cancellationToken = default);
+    Task UpdateAsync(PecaInsumo pecaInsumo, CancellationToken cancellationToken = default);
 }

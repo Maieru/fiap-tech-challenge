@@ -110,6 +110,120 @@ public sealed class PecasInsumosControllerTests
         });
     }
 
+    [Test]
+    public async Task Update_ShouldSucceed_AndShouldNotChangeStock_WhenRequestContainsExtraStockField()
+    {
+        var createRequest = new
+        {
+            Nome = "Filtro de oleo",
+            Codigo = "flt-200",
+            Descricao = "Item para atualizacao",
+            PrecoUnitario = 39.90m,
+            QuantidadeEstoque = 20
+        };
+
+        var createResponse = await _client.PostAsJsonAsync("/api/pecasinsumos", createRequest);
+        var created = await createResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        var updateRequest = new
+        {
+            Nome = "Filtro de oleo premium",
+            Codigo = "flt-201",
+            Descricao = "Descricao atualizada",
+            PrecoUnitario = 49.90m,
+            Ativo = false,
+            QuantidadeEstoque = 999
+        };
+
+        var updateResponse = await _client.PutAsJsonAsync($"/api/pecasinsumos/{created!.Id}", updateRequest);
+        var updated = await updateResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = updated.Should().NotBeNull();
+            _ = updated!.Id.Should().Be(created.Id);
+            _ = updated.Nome.Should().Be("Filtro de oleo premium");
+            _ = updated.Codigo.Should().Be("FLT-201");
+            _ = updated.Descricao.Should().Be("Descricao atualizada");
+            _ = updated.PrecoUnitario.Should().Be(49.90m);
+            _ = updated.QuantidadeEstoque.Should().Be(20);
+            _ = updated.Ativo.Should().BeFalse();
+        });
+    }
+
+    [Test]
+    public async Task Update_ShouldReturnNotFound_WhenPecaInsumoDoesNotExist()
+    {
+        var request = new
+        {
+            Nome = "Filtro inexistente",
+            Codigo = "FLT-909",
+            Descricao = "Item inexistente",
+            PrecoUnitario = 29.90m,
+            Ativo = true
+        };
+
+        var response = await _client.PutAsJsonAsync($"/api/pecasinsumos/{Guid.NewGuid()}", request);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("encontrado");
+        });
+    }
+
+    [Test]
+    public async Task Update_ShouldReturnBadRequest_WhenCodigoAlreadyExists()
+    {
+        var firstRequest = new
+        {
+            Nome = "Pastilha de freio",
+            Codigo = "PST-100",
+            Descricao = "Primeiro item",
+            PrecoUnitario = 120m,
+            QuantidadeEstoque = 7
+        };
+
+        var secondRequest = new
+        {
+            Nome = "Disco de freio",
+            Codigo = "DSC-200",
+            Descricao = "Segundo item",
+            PrecoUnitario = 300m,
+            QuantidadeEstoque = 4
+        };
+
+        var firstResponse = await _client.PostAsJsonAsync("/api/pecasinsumos", firstRequest);
+        var secondResponse = await _client.PostAsJsonAsync("/api/pecasinsumos", secondRequest);
+        var secondCreated = await secondResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        var updateRequest = new
+        {
+            Nome = "Disco de freio",
+            Codigo = "pst-100",
+            Descricao = "Tentativa com codigo duplicado",
+            PrecoUnitario = 300m,
+            Ativo = true
+        };
+
+        var updateResponse = await _client.PutAsJsonAsync($"/api/pecasinsumos/{secondCreated!.Id}", updateRequest);
+        var error = await updateResponse.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = firstResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = secondResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = secondCreated.Should().NotBeNull();
+            _ = updateResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("codigo");
+        });
+    }
+
     private sealed class PecaInsumoResponse
     {
         public Guid Id { get; set; }

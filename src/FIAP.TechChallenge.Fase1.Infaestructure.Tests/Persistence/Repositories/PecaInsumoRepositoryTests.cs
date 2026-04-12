@@ -82,6 +82,40 @@ internal sealed class PecaInsumoRepositoryTests
         });
     }
 
+    [Test]
+    public async Task UpdateAsync_ShouldPersistAllowedChanges_AndKeepStockValue()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+        var repository = new PecaInsumoRepository(context);
+        var pecaInsumo = CreatePecaInsumo();
+
+        await repository.AddAsync(pecaInsumo);
+        context.ChangeTracker.Clear();
+
+        _ = pecaInsumo.UpdateNome("Filtro de cabine premium");
+        _ = pecaInsumo.UpdateCodigo("FCB-999");
+        _ = pecaInsumo.UpdateDescricao("Filtro com maior capacidade de retencao");
+        _ = pecaInsumo.UpdatePrecoUnitario(89.9m);
+        _ = pecaInsumo.Inactivate();
+
+        await repository.UpdateAsync(pecaInsumo);
+
+        var saved = await context.PecasInsumos.AsNoTracking().FirstOrDefaultAsync(x => x.Id == pecaInsumo.Id);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(saved, Is.Not.Null);
+            Assert.That(saved!.Nome, Is.EqualTo("Filtro de cabine premium"));
+            Assert.That(saved.Codigo, Is.EqualTo("FCB-999"));
+            Assert.That(saved.Descricao, Is.EqualTo("Filtro com maior capacidade de retencao"));
+            Assert.That(saved.PrecoUnitario, Is.EqualTo(89.9m));
+            Assert.That(saved.QuantidadeEstoque, Is.EqualTo(15));
+            Assert.That(saved.Ativo, Is.False);
+        });
+    }
+
     private static AppDbContext CreateContext(string databaseName)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
