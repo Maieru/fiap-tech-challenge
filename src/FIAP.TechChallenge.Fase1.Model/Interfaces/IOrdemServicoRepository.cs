@@ -7,4 +7,5 @@ public interface IOrdemServicoRepository
 {
     Task<Result<OrdemServico>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task AddAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default);
+    Task UpdateAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default);
 }

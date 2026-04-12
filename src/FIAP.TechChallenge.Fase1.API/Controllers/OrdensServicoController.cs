@@ -1,5 +1,6 @@
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnosticoOrdemServico;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
@@ -65,5 +66,36 @@ public sealed class OrdensServicoController : ControllerBase
         }
 
         return CreatedAtAction(nameof(AddServico), new { id = result.Value!.OrdemServicoId, servicoDaOrdemServicoId = result.Value.Id }, result.Value);
+    }
+
+    [HttpPut("{id:guid}/iniciar-diagnostico")]
+    [ProducesResponseType(typeof(IniciarDiagnosticoOrdemServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PutIniciarDiagnostico(
+        [FromRoute] Guid id,
+        [FromServices] IIniciarDiagnosticoOrdemServicoUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new IniciarDiagnosticoOrdemServicoCommand
+        {
+            OrdemServicoId = id
+        };
+
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            var errorDescription = result.Error.Description;
+            var isNotFound = errorDescription.Contains("encontrad", StringComparison.OrdinalIgnoreCase)
+                && errorDescription.Contains("Ordem", StringComparison.OrdinalIgnoreCase);
+
+            if (isNotFound)
+                return NotFound(new { error = errorDescription });
+
+            return BadRequest(new { error = errorDescription });
+        }
+
+        return Ok(result.Value);
     }
 }

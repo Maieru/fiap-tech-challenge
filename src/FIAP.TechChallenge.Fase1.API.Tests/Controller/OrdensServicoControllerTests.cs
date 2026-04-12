@@ -153,6 +153,9 @@ public sealed class OrdensServicoControllerTests
         var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(34), "Chevrolet", "Onix", 2024);
         var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Troca de bateria");
         var servico = await CreateServicoAsync("Instalacao de bateria", 320m);
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var request = new
         {
@@ -207,6 +210,9 @@ public sealed class OrdensServicoControllerTests
         var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(35), "Volkswagen", "Polo", 2023);
         var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Revisao de 10.000 km");
         var servico = await CreateServicoAsync("Troca de filtro de oleo", 70m);
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var request = new
         {
@@ -247,6 +253,63 @@ public sealed class OrdensServicoControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("diagnostico");
+        });
+    }
+
+    [Test]
+    public async Task IniciarDiagnostico_ShouldSucceed_WhenOrdemServicoIsRecebida()
+    {
+        var cliente = await CreateClientAsync(9009);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(37), "Hyundai", "HB20", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Falha intermitente no motor");
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+        var updated = await response.Content.ReadFromJsonAsync<IniciarDiagnosticoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = updated.Should().NotBeNull();
+            _ = updated!.Id.Should().Be(ordemServico.Id);
+            _ = updated.Status.Should().Be(2);
+            _ = updated.DataInicioDiagnostico.Should().BeAfter(DateTime.UtcNow.AddMinutes(-5));
+        });
+    }
+
+    [Test]
+    public async Task IniciarDiagnostico_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
+    {
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{Guid.NewGuid()}/iniciar-diagnostico", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("Ordem");
+            _ = error.Error.Should().Contain("encontrada");
+        });
+    }
+
+    [Test]
+    public async Task IniciarDiagnostico_ShouldReturnBadRequest_WhenOrdemServicoIsNotRecebida()
+    {
+        var cliente = await CreateClientAsync(9010);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(38), "Fiat", "Argo", 2023);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Cheiro de queimado");
+
+        var primeiraTentativaResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+
+        _ = primeiraTentativaResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var segundaTentativaResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+        var error = await segundaTentativaResponse.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = segundaTentativaResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("recebidas");
         });
     }
 
@@ -412,6 +475,13 @@ public sealed class OrdensServicoControllerTests
         public decimal ValorUnitario { get; set; }
         public int Quantidade { get; set; }
         public decimal ValorTotal { get; set; }
+    }
+
+    private sealed class IniciarDiagnosticoResponse
+    {
+        public Guid Id { get; set; }
+        public int Status { get; set; }
+        public DateTime DataInicioDiagnostico { get; set; }
     }
 
     private sealed class ErrorResponse

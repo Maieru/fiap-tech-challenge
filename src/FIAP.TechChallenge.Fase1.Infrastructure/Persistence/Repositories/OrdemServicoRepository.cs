@@ -24,4 +24,11 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
         _ = await context.OrdensServico.AddAsync(ordemServicoEntity, cancellationToken);
         _ = await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task UpdateAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default)
+    {
+        var ordemServicoEntity = OrdemServicoMapper.ToEntity(ordemServico);
+        _ = context.OrdensServico.Update(ordemServicoEntity);
+        _ = await context.SaveChangesAsync(cancellationToken);
+    }
 }

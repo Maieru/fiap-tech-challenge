@@ -81,6 +81,38 @@ internal sealed class OrdemServicoRepositoryTests
         });
     }
 
+    [Test]
+    public async Task UpdateAsync_ShouldPersistOrdemServicoChanges()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+        var repository = new OrdemServicoRepository(context);
+        var ordemServico = CreateOrdemServico();
+
+        await repository.AddAsync(ordemServico);
+        context.ChangeTracker.Clear();
+
+        var iniciarDiagnosticoResult = ordemServico.IniciarDiagnostico();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(iniciarDiagnosticoResult.IsSuccess, Is.True);
+            Assert.That(iniciarDiagnosticoResult.Value, Is.True);
+        });
+
+        await repository.UpdateAsync(ordemServico);
+
+        var saved = await context.OrdensServico.AsNoTracking().FirstOrDefaultAsync(x => x.Id == ordemServico.Id);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(saved, Is.Not.Null);
+            Assert.That(saved!.Status, Is.EqualTo(StatusOrdemServico.EmDiagnostico));
+            Assert.That(saved.DataInicioDiagnostico, Is.Not.Null);
+        });
+    }
+
     private static AppDbContext CreateContext(string databaseName)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
