@@ -155,6 +155,14 @@ public sealed class OrdemServico
         return Result<bool>.Success(true);
     }
 
+    public Result<bool> ValidarAdicaoServico()
+    {
+        if (Status != StatusOrdemServico.EmDiagnostico)
+            return Result<bool>.Failure(new Error("Somente ordens de servico em diagnostico podem receber servicos."));
+
+        return Result<bool>.Success(true);
+    }
+
     private static Result<bool> IsStatusValid(StatusOrdemServico status, DateTime? dataInicioDiagnostico, DateTime? dataEnvioAprovacao, DateTime? dataInicioExecucao, DateTime? dataFinalizacao, DateTime? dataEntrega)
     {
         if (status >= StatusOrdemServico.EmDiagnostico && dataInicioDiagnostico is null)

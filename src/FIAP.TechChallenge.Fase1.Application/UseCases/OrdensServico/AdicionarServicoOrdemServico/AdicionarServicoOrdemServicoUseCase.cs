@@ -20,6 +20,11 @@ public sealed class AdicionarServicoOrdemServicoUseCase(
         if (!ordemServicoResult.IsSuccess || ordemServicoResult.Value is null)
             return Result<AdicionarServicoOrdemServicoResponse>.Failure(ordemServicoResult.Error);
 
+        var validacaoAdicaoServicoResult = ordemServicoResult.Value.ValidarAdicaoServico();
+
+        if (!validacaoAdicaoServicoResult.IsSuccess)
+            return Result<AdicionarServicoOrdemServicoResponse>.Failure(validacaoAdicaoServicoResult.Error);
+
         var servicoResult = await _servicoRepository.GetByIdAsync(command.ServicoId, cancellationToken);
 
         if (!servicoResult.IsSuccess || servicoResult.Value is null)

@@ -225,6 +225,31 @@ public sealed class OrdensServicoControllerTests
         });
     }
 
+    [Test]
+    public async Task AddServico_ShouldReturnBadRequest_WhenOrdemServicoIsNotEmDiagnostico()
+    {
+        var cliente = await CreateClientAsync(9008);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(36), "Renault", "Kwid", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Ruido na direcao");
+        var servico = await CreateServicoAsync("Alinhamento", 150m);
+
+        var request = new
+        {
+            ServicoId = servico.Id,
+            Quantidade = 1
+        };
+
+        var response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addservico", request);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("diagnostico");
+        });
+    }
+
     private async Task<ClienteResponse> CreateClientAsync(int seed)
     {
         var request = new

@@ -71,6 +71,36 @@ internal sealed class AdicionarServicoOrdemServicoUseCaseTests
     }
 
     [Test]
+    public async Task ExecuteAsync_ShouldFail_WhenOrdemServicoIsNotEmDiagnostico()
+    {
+        var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var servicoRepositoryMock = new Mock<IServicoRepository>();
+        var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
+        var ordemServico = CreateOrdemServico(emDiagnostico: false);
+
+        _ = ordemServicoRepositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+
+        var useCase = new AdicionarServicoOrdemServicoUseCase(
+            ordemServicoRepositoryMock.Object,
+            servicoRepositoryMock.Object,
+            servicoDaOrdemRepositoryMock.Object);
+
+        var result = await useCase.ExecuteAsync(CreateCommand(ordemServicoId: ordemServico.Id));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de servico em diagnostico podem receber servicos."));
+        });
+
+        servicoRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        servicoDaOrdemRepositoryMock.Verify(x => x.AddAsync(It.IsAny<ServicoDaOrdemDeServico>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
     public async Task ExecuteAsync_ShouldFail_WhenQuantidadeIsInvalid()
     {
         var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
@@ -166,7 +196,7 @@ internal sealed class AdicionarServicoOrdemServicoUseCaseTests
             Quantidade = quantidade
         };
 
-    private static OrdemServico CreateOrdemServico()
+    private static OrdemServico CreateOrdemServico(bool emDiagnostico = true)
     {
         var ordemResult = OrdemServico.Create(Guid.NewGuid(), Guid.NewGuid(), "Falha no ar-condicionado");
 
@@ -176,7 +206,20 @@ internal sealed class AdicionarServicoOrdemServicoUseCaseTests
             Assert.That(ordemResult.Value, Is.Not.Null);
         });
 
-        return ordemResult.Value!;
+        var ordemServico = ordemResult.Value!;
+
+        if (emDiagnostico)
+        {
+            var iniciarDiagnosticoResult = ordemServico.IniciarDiagnostico();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(iniciarDiagnosticoResult.IsSuccess, Is.True);
+                Assert.That(iniciarDiagnosticoResult.Value, Is.True);
+            });
+        }
+
+        return ordemServico;
     }
 
     private static Servico CreateServico()
