@@ -1,5 +1,6 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
+﻿using FIAP.TechChallenge.Fase1.API.Extensions;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaInsumoOrdemServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnosticoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensServico;
@@ -36,41 +37,18 @@ public sealed class OrdensServicoController : ControllerBase
 
         var result = await useCase.ExecuteAsync(command, cancellationToken);
 
-        if (!result.IsSuccess)
-            return BadRequest(new { error = result.Error.Description });
-
-        return Ok(result.Value);
+        return result.ToActionResult(this);
     }
 
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(RecuperarOrdemServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetById(
-        [FromRoute] Guid id,
-        [FromServices] IRecuperarOrdemServicoUseCase useCase,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetById([FromRoute] Guid id, [FromServices] IRecuperarOrdemServicoUseCase useCase, CancellationToken cancellationToken = default)
     {
-        var command = new RecuperarOrdemServicoCommand
-        {
-            OrdemServicoId = id
-        };
-
+        var command = new RecuperarOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            var errorDescription = result.Error.Description;
-            var isNotFound = errorDescription.Contains("encontrad", StringComparison.OrdinalIgnoreCase)
-                && errorDescription.Contains("Ordem", StringComparison.OrdinalIgnoreCase);
-
-            if (isNotFound)
-                return NotFound(new { error = errorDescription });
-
-            return BadRequest(new { error = errorDescription });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult(this);
     }
 
     [HttpPost]
@@ -80,32 +58,14 @@ public sealed class OrdensServicoController : ControllerBase
     public async Task<IActionResult> Post([FromServices] ICriarOrdemServicoUseCase useCase, [FromBody] CriarOrdemServicoCommand command, CancellationToken cancellationToken)
     {
         var result = await useCase.ExecuteAsync(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            var errorDescription = result.Error.Description;
-            var isNotFound = errorDescription.Contains("encontrado", StringComparison.OrdinalIgnoreCase)
-                && (errorDescription.Contains("Cliente", StringComparison.OrdinalIgnoreCase)
-                    || errorDescription.Contains("Veiculo", StringComparison.OrdinalIgnoreCase));
-
-            if (isNotFound)
-                return NotFound(new { error = errorDescription });
-
-            return BadRequest(new { error = errorDescription });
-        }
-
-        return CreatedAtAction(nameof(Post), new { id = result.Value!.Id }, result.Value);
+        return result.ToActionResult(this, value => CreatedAtAction(nameof(Post), new { id = value.Id }, value));
     }
 
     [HttpPost("{id:guid}/addservico")]
     [ProducesResponseType(typeof(AdicionarServicoOrdemServicoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> AddServico(
-        [FromRoute] Guid id,
-        [FromServices] IAdicionarServicoOrdemServicoUseCase useCase,
-        [FromBody] AdicionarServicoOrdemServicoCommand command,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> AddServico([FromRoute] Guid id, [FromServices] IAdicionarServicoOrdemServicoUseCase useCase, [FromBody] AdicionarServicoOrdemServicoCommand command, CancellationToken cancellationToken)
     {
         var addCommand = new AdicionarServicoOrdemServicoCommand
         {
@@ -115,21 +75,7 @@ public sealed class OrdensServicoController : ControllerBase
         };
 
         var result = await useCase.ExecuteAsync(addCommand, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            var errorDescription = result.Error.Description;
-            var isNotFound = errorDescription.Contains("encontrad", StringComparison.OrdinalIgnoreCase)
-                && (errorDescription.Contains("Ordem", StringComparison.OrdinalIgnoreCase)
-                    || errorDescription.Contains("Servico", StringComparison.OrdinalIgnoreCase));
-
-            if (isNotFound)
-                return NotFound(new { error = errorDescription });
-
-            return BadRequest(new { error = errorDescription });
-        }
-
-        return CreatedAtAction(nameof(AddServico), new { id = result.Value!.OrdemServicoId, servicoDaOrdemServicoId = result.Value.Id }, result.Value);
+        return result.ToActionResult(this, value => CreatedAtAction(nameof(AddServico), new { id = value.OrdemServicoId, servicoDaOrdemServicoId = value.Id }, value));
     }
 
     [HttpPost("{id:guid}/addpecainsumo")]
@@ -150,21 +96,7 @@ public sealed class OrdensServicoController : ControllerBase
         };
 
         var result = await useCase.ExecuteAsync(addCommand, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            var errorDescription = result.Error.Description;
-            var isNotFound = errorDescription.Contains("encontrad", StringComparison.OrdinalIgnoreCase)
-                && (errorDescription.Contains("Ordem", StringComparison.OrdinalIgnoreCase)
-                    || errorDescription.Contains("Peca ou insumo", StringComparison.OrdinalIgnoreCase));
-
-            if (isNotFound)
-                return NotFound(new { error = errorDescription });
-
-            return BadRequest(new { error = errorDescription });
-        }
-
-        return CreatedAtAction(nameof(AddPecaInsumo), new { id = result.Value!.OrdemServicoId, pecaOuInsumoDaOrdemServicoId = result.Value.Id }, result.Value);
+        return result.ToActionResult(this, value => CreatedAtAction(nameof(AddPecaInsumo), new { id = value.OrdemServicoId, pecaOuInsumoDaOrdemServicoId = value.Id }, value));
     }
 
     [HttpPut("{id:guid}/iniciar-diagnostico")]
@@ -176,25 +108,8 @@ public sealed class OrdensServicoController : ControllerBase
         [FromServices] IIniciarDiagnosticoOrdemServicoUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var command = new IniciarDiagnosticoOrdemServicoCommand
-        {
-            OrdemServicoId = id
-        };
-
+        var command = new IniciarDiagnosticoOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            var errorDescription = result.Error.Description;
-            var isNotFound = errorDescription.Contains("encontrad", StringComparison.OrdinalIgnoreCase)
-                && errorDescription.Contains("Ordem", StringComparison.OrdinalIgnoreCase);
-
-            if (isNotFound)
-                return NotFound(new { error = errorDescription });
-
-            return BadRequest(new { error = errorDescription });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult(this);
     }
 }

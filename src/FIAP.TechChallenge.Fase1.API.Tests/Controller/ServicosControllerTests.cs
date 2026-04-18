@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -81,6 +81,7 @@ public sealed class ServicosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("obrigat");
+            _ = error.ErrorCode.Should().Be("BadRequest");
         });
     }
 
@@ -121,6 +122,7 @@ public sealed class ServicosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("Servico nao encontrado.");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -152,6 +154,7 @@ public sealed class ServicosControllerTests
             _ = putResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("obrigat");
+            _ = error.ErrorCode.Should().Be("BadRequest");
         });
     }
 
@@ -165,5 +168,7 @@ public sealed class ServicosControllerTests
     private sealed class ErrorResponse
     {
         public string Error { get; set; } = string.Empty;
+        public string ErrorCode { get; set; } = string.Empty;
     }
 }
+

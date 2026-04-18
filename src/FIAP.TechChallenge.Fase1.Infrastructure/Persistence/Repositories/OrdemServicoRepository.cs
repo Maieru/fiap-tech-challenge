@@ -15,7 +15,7 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
         var ordemServico = await context.OrdensServico.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (ordemServico == null)
-            return Result<OrdemServico>.Failure(new Error("Ordem de servico nao encontrada."));
+            return Result<OrdemServico>.Failure(new Error("Ordem de servico nao encontrada.", ErrorCode.NotFound));
 
         return OrdemServicoMapper.ToDomain(ordemServico);
     }

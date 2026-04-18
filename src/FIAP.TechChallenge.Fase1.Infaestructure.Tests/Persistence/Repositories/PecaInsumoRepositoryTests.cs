@@ -1,3 +1,4 @@
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
@@ -53,6 +54,7 @@ internal sealed class PecaInsumoRepositoryTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error.Description, Is.EqualTo("Peca ou insumo nao encontrado."));
+            Assert.That(result.Error.Code, Is.EqualTo(ErrorCode.NotFound));
         });
     }
 
@@ -94,6 +96,7 @@ internal sealed class PecaInsumoRepositoryTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error.Description, Is.EqualTo("Peca ou insumo nao encontrado."));
+            Assert.That(result.Error.Code, Is.EqualTo(ErrorCode.NotFound));
         });
     }
 
@@ -244,3 +247,5 @@ internal sealed class PecaInsumoRepositoryTests
         return pecaInsumoResult.Value!;
     }
 }
+
+

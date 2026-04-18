@@ -1,3 +1,4 @@
+﻿using FIAP.TechChallenge.Fase1.API.Extensions;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.EntradaEstoquePecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.IncluirPecaInsumo;
@@ -31,19 +32,13 @@ public sealed class PecasInsumosController : ControllerBase
 
         var result = await useCase.ExecuteAsync(command, cancellationToken);
 
-        if (!result.IsSuccess)
+        return result.ToActionResult(this, value =>
         {
-            if (result.Error.Description.Contains("Peca ou insumo", StringComparison.OrdinalIgnoreCase)
-                && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
-                return NotFound(new { error = result.Error.Description });
+            if (!string.IsNullOrWhiteSpace(codigo))
+                return Ok(value.PecasInsumos.First());
 
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        if (!string.IsNullOrWhiteSpace(codigo))
-            return Ok(result.Value!.PecasInsumos.First());
-
-        return Ok(result.Value);
+            return Ok(value);
+        });
     }
 
     [HttpGet("{id:guid}")]
@@ -58,17 +53,7 @@ public sealed class PecasInsumosController : ControllerBase
         };
 
         var result = await useCase.ExecuteAsync(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Description.Contains("Peca ou insumo", StringComparison.OrdinalIgnoreCase)
-                && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
-                return NotFound(new { error = result.Error.Description });
-
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult(this);
     }
 
     [HttpPost]
@@ -78,10 +63,7 @@ public sealed class PecasInsumosController : ControllerBase
     {
         var result = await useCase.ExecuteAsync(command, cancellationToken);
 
-        if (!result.IsSuccess)
-            return BadRequest(new { error = result.Error.Description });
-
-        return CreatedAtAction(nameof(Post), new { id = result.Value!.Id }, result.Value);
+        return result.ToActionResult(this, value => CreatedAtAction(nameof(Post), new { id = value.Id }, value));
     }
 
     [HttpPut("{id:guid}/entrada-estoque")]
@@ -97,18 +79,7 @@ public sealed class PecasInsumosController : ControllerBase
         };
 
         var result = await useCase.ExecuteAsync(entradaEstoqueCommand, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Description.Contains("Peca ou insumo", StringComparison.OrdinalIgnoreCase)
-                && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
-
-                return NotFound(new { error = result.Error.Description });
-
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult(this);
     }
 
     [HttpPut("{id:guid}")]
@@ -128,17 +99,6 @@ public sealed class PecasInsumosController : ControllerBase
         };
 
         var result = await useCase.ExecuteAsync(updateCommand, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Description.Contains("Peca ou insumo", StringComparison.OrdinalIgnoreCase)
-                && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
-
-                return NotFound(new { error = result.Error.Description });
-
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult(this);
     }
 }

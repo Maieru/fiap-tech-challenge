@@ -1,5 +1,6 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
+﻿using FIAP.TechChallenge.Fase1.API.Extensions;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
@@ -15,11 +16,7 @@ public sealed class ServicosController : ControllerBase
     public async Task<IActionResult> Post([FromServices] ICadastrarServicoUseCase useCase, [FromBody] CadastrarServicoCommand command, CancellationToken cancellationToken)
     {
         var result = await useCase.ExecuteAsync(command, cancellationToken);
-
-        if (!result.IsSuccess)
-            return BadRequest(new { error = result.Error.Description });
-
-        return CreatedAtAction(nameof(Post), new { id = result.Value!.Id }, result.Value);
+        return result.ToActionResult(this, value => CreatedAtAction(nameof(Post), new { id = value.Id }, value));
     }
 
     [HttpPut("{id:guid}")]
@@ -36,16 +33,6 @@ public sealed class ServicosController : ControllerBase
         };
 
         var result = await useCase.ExecuteAsync(updateCommand, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Description.Contains("Servico", StringComparison.OrdinalIgnoreCase)
-                && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
-                return NotFound(new { error = result.Error.Description });
-
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult(this);
     }
 }

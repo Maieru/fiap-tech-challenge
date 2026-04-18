@@ -223,6 +223,7 @@ public sealed class ClienteControllerTests
             _ = invalidPutResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("Cliente não encontrado.");
+            _ = error.ErrorCode.Should().Be("NotFound");
             _ = getOriginalResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             _ = original.Should().NotBeNull();
             _ = original!.Id.Should().Be(created.Id);
@@ -245,6 +246,7 @@ public sealed class ClienteControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("Cliente não encontrado.");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -268,6 +270,7 @@ public sealed class ClienteControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("Cliente não encontrado.");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -363,6 +366,7 @@ public sealed class ClienteControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("Cliente não encontrado.");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -377,6 +381,7 @@ public sealed class ClienteControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("O número da página deve ser maior que zero.");
+            _ = error.ErrorCode.Should().Be("BadRequest");
         });
     }
 
@@ -441,5 +446,6 @@ public sealed class ClienteControllerTests
     private sealed class ErrorResponse
     {
         public string Error { get; set; } = string.Empty;
+        public string ErrorCode { get; set; } = string.Empty;
     }
 }

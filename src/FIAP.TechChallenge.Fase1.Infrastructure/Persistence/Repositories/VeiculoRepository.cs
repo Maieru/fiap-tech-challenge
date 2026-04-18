@@ -19,7 +19,7 @@ public sealed class VeiculoRepository(AppDbContext context) : IVeiculoRepository
         var veiculo = await context.Veiculos.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (veiculo == null)
-            return Result<Veiculo>.Failure(new Error("Veiculo não encontrado."));
+            return Result<Veiculo>.Failure(new Error("Veiculo não encontrado.", ErrorCode.NotFound));
 
         return VeiculoMapper.ToDomain(veiculo);
     }
@@ -29,7 +29,7 @@ public sealed class VeiculoRepository(AppDbContext context) : IVeiculoRepository
         var veiculo = await context.Veiculos.AsNoTracking().FirstOrDefaultAsync(x => x.Placa == placa, cancellationToken);
 
         if (veiculo == null)
-            return Result<Veiculo>.Failure(new Error("Veiculo não encontrado."));
+            return Result<Veiculo>.Failure(new Error("Veiculo não encontrado.", ErrorCode.NotFound));
 
         return VeiculoMapper.ToDomain(veiculo);
     }

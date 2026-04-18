@@ -7,3 +7,4 @@ dotnet-coverage collect dotnet test .\TechChallengeFase1.slnx -f xml  -o coverag
 dotnet sonarscanner end /d:sonar.token="sqp_c65ca74097e6cb83cf48141072f915825b122f7a"
 
 del coverage.xml
+pause

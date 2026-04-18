@@ -1,14 +1,18 @@
-﻿namespace FIAP.TechChallenge.Fase1.Domain.Abstractions;
+namespace FIAP.TechChallenge.Fase1.Domain.Abstractions;
 
-public record Error(string Description)
+public record Error(string Description, ErrorCode Code = ErrorCode.BadRequest)
 {
-    public static Error None { get; } = new("No error occurred.");
+    public static Error None { get; } = new("No error occurred.", ErrorCode.None);
 
-    public static Error InvalidId(string entity) => new Error($"Invalid {entity} id.");
+    public static Error InvalidId(string entity) => new($"Invalid {entity} id.", ErrorCode.BadRequest);
 
-    public static Error NotFound(string entity) => new Error($"{entity} not found.");
+    public static Error NotFound(string entity) => new($"{entity} not found.", ErrorCode.NotFound);
 
-    public static Error NoAccess(string entity) => new Error($"You do not have access to this {entity}.");
+    public static Error NoAccess(string entity) => new($"You do not have access to this {entity}.", ErrorCode.Forbidden);
 
-    public static Error InvalidValue(string entity, string field, string value) => new Error($"Invalid value '{value}' for field '{field}' in {entity}.");
+    public static Error Unauthorized(string description) => new(description, ErrorCode.Unauthorized);
+
+    public static Error Conflict(string description) => new(description, ErrorCode.Conflict);
+
+    public static Error InvalidValue(string entity, string field, string value) => new($"Invalid value '{value}' for field '{field}' in {entity}.", ErrorCode.BadRequest);
 }

@@ -19,7 +19,7 @@ public sealed class PecaInsumoRepository(AppDbContext context) : IPecaInsumoRepo
         var pecaInsumo = await context.PecasInsumos.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (pecaInsumo == null)
-            return Result<PecaInsumo>.Failure(new Error("Peca ou insumo nao encontrado."));
+            return Result<PecaInsumo>.Failure(new Error("Peca ou insumo nao encontrado.", ErrorCode.NotFound));
 
         return PecaInsumoMapper.ToDomain(pecaInsumo);
     }
@@ -29,7 +29,7 @@ public sealed class PecaInsumoRepository(AppDbContext context) : IPecaInsumoRepo
         var pecaInsumo = await context.PecasInsumos.AsNoTracking().FirstOrDefaultAsync(x => x.Codigo == codigo, cancellationToken);
 
         if (pecaInsumo == null)
-            return Result<PecaInsumo>.Failure(new Error("Peca ou insumo nao encontrado."));
+            return Result<PecaInsumo>.Failure(new Error("Peca ou insumo nao encontrado.", ErrorCode.NotFound));
 
         return PecaInsumoMapper.ToDomain(pecaInsumo);
     }

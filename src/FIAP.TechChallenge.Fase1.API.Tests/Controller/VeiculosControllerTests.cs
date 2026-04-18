@@ -97,6 +97,7 @@ public sealed class VeiculosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("Cliente não encontrado.");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -172,6 +173,7 @@ public sealed class VeiculosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("Veiculo não encontrado.");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -260,6 +262,7 @@ public sealed class VeiculosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("encontrado");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -277,6 +280,7 @@ public sealed class VeiculosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("Informe apenas um filtro por vez: placa ou clienteId.");
+            _ = error.ErrorCode.Should().Be("BadRequest");
         });
     }
 
@@ -390,5 +394,8 @@ public sealed class VeiculosControllerTests
     private sealed class ErrorResponse
     {
         public string Error { get; set; } = string.Empty;
+        public string ErrorCode { get; set; } = string.Empty;
     }
 }
+
+

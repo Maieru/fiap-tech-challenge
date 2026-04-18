@@ -1,3 +1,4 @@
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
@@ -95,6 +96,7 @@ internal sealed class ClienteRepositoryTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error.Description, Is.EqualTo("Cliente não encontrado."));
+            Assert.That(result.Error.Code, Is.EqualTo(ErrorCode.NotFound));
         });
     }
 
@@ -113,6 +115,7 @@ internal sealed class ClienteRepositoryTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error.Description, Is.EqualTo("Cliente não encontrado."));
+            Assert.That(result.Error.Code, Is.EqualTo(ErrorCode.NotFound));
         });
     }
 
@@ -194,6 +197,7 @@ internal sealed class ClienteRepositoryTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error.Description, Is.EqualTo("Cliente não encontrado."));
+            Assert.That(result.Error.Code, Is.EqualTo(ErrorCode.NotFound));
         });
     }
 
@@ -369,3 +373,5 @@ internal sealed class ClienteRepositoryTests
         return Cliente.Create("Cliente Teste", cpf, null, telefone, email).Value!;
     }
 }
+
+

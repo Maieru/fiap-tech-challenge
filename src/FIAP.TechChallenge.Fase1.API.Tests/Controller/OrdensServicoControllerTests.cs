@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -71,6 +71,7 @@ public sealed class OrdensServicoControllerTests
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("Cliente");
             _ = error.Error.Should().Contain("encontrado");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -94,6 +95,7 @@ public sealed class OrdensServicoControllerTests
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("Veiculo");
             _ = error.Error.Should().Contain("encontrado");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -119,6 +121,7 @@ public sealed class OrdensServicoControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("O veiculo informado nao pertence ao cliente informado.");
+            _ = error.ErrorCode.Should().Be("BadRequest");
         });
     }
 
@@ -200,6 +203,7 @@ public sealed class OrdensServicoControllerTests
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("Ordem");
             _ = error.Error.Should().Contain("encontrada");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -374,6 +378,7 @@ public sealed class OrdensServicoControllerTests
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("Ordem");
             _ = error.Error.Should().Contain("encontrada");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -388,6 +393,7 @@ public sealed class OrdensServicoControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("O numero da pagina deve ser maior que zero.");
+            _ = error.ErrorCode.Should().Be("BadRequest");
         });
     }
 
@@ -447,6 +453,7 @@ public sealed class OrdensServicoControllerTests
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("Ordem");
             _ = error.Error.Should().Contain("encontrada");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -535,6 +542,7 @@ public sealed class OrdensServicoControllerTests
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("Ordem");
             _ = error.Error.Should().Contain("encontrada");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -817,5 +825,7 @@ public sealed class OrdensServicoControllerTests
     private sealed class ErrorResponse
     {
         public string Error { get; set; } = string.Empty;
+        public string ErrorCode { get; set; } = string.Empty;
     }
 }
+

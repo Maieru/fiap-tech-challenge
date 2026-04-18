@@ -13,7 +13,7 @@ public sealed class ServicoRepository(AppDbContext context) : IServicoRepository
         var servicoEntity = await context.Servicos.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (servicoEntity == null)
-            return Result<Servico>.Failure(new Error("Servico nao encontrado."));
+            return Result<Servico>.Failure(new Error("Servico nao encontrado.", ErrorCode.NotFound));
 
         return ServicoMapper.ToDomain(servicoEntity);
     }

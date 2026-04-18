@@ -179,6 +179,7 @@ public sealed class PecasInsumosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("encontrado");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -193,6 +194,7 @@ public sealed class PecasInsumosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("O numero da pagina deve ser maior que zero.");
+            _ = error.ErrorCode.Should().Be("BadRequest");
         });
     }
 
@@ -259,6 +261,7 @@ public sealed class PecasInsumosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("encontrado");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -362,6 +365,7 @@ public sealed class PecasInsumosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("nao encontrado");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -411,6 +415,7 @@ public sealed class PecasInsumosControllerTests
     private sealed class ErrorResponse
     {
         public string Error { get; set; } = string.Empty;
+        public string ErrorCode { get; set; } = string.Empty;
     }
 
     private sealed class ListarPecasInsumosResponse
@@ -430,3 +435,5 @@ public sealed class PecasInsumosControllerTests
         public int QuantidadeEstoque { get; set; }
     }
 }
+
+

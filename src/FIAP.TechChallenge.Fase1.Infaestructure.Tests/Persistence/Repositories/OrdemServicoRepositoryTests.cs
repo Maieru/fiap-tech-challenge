@@ -1,3 +1,4 @@
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
@@ -53,6 +54,7 @@ internal sealed class OrdemServicoRepositoryTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error.Description, Is.EqualTo("Ordem de servico nao encontrada."));
+            Assert.That(result.Error.Code, Is.EqualTo(ErrorCode.NotFound));
         });
     }
 
@@ -242,3 +244,4 @@ internal sealed class OrdemServicoRepositoryTests
         return ordemServicoResult.Value!;
     }
 }
+

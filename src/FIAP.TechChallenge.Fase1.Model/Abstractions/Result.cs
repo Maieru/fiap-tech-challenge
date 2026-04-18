@@ -12,14 +12,14 @@ public class Result<T>
     [JsonConstructor]
     private Result(bool isSuccess, T? value, Error error)
     {
-        if (isSuccess && error != Error.None)
-            throw new JsonException("IsSuccess=true exige Error.None.");
+        if (isSuccess && error.Code != ErrorCode.None)
+            throw new JsonException("IsSuccess=true exige ErrorCode.None.");
 
         if (!isSuccess && value is not null)
             throw new JsonException("IsSuccess=false exige Value=null.");
 
-        if (!isSuccess && error == Error.None)
-            throw new JsonException("IsSuccess=false exige um erro diferente de Error.None.");
+        if (!isSuccess && error.Code == ErrorCode.None)
+            throw new JsonException("IsSuccess=false exige um erro com ErrorCode diferente de None.");
 
         IsSuccess = isSuccess;
         Value = value;

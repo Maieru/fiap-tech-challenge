@@ -23,7 +23,7 @@ public sealed class ClienteRepository(AppDbContext context) : IClienteRepository
         var cliente = await context.Clientes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (cliente == null)
-            return Result<Cliente>.Failure(new Error("Cliente não encontrado."));
+            return Result<Cliente>.Failure(new Error("Cliente não encontrado.", ErrorCode.NotFound));
 
         return ClienteMapper.ToDomain(cliente);
     }
@@ -33,7 +33,7 @@ public sealed class ClienteRepository(AppDbContext context) : IClienteRepository
         var cliente = await context.Clientes.AsNoTracking().FirstOrDefaultAsync(x => x.Cpf == cpf, cancellationToken);
 
         if (cliente == null)
-            return Result<Cliente>.Failure(new Error("Cliente não encontrado."));
+            return Result<Cliente>.Failure(new Error("Cliente não encontrado.", ErrorCode.NotFound));
 
         return ClienteMapper.ToDomain(cliente);
     }
@@ -43,7 +43,7 @@ public sealed class ClienteRepository(AppDbContext context) : IClienteRepository
         var cliente = await context.Clientes.AsNoTracking().FirstOrDefaultAsync(x => x.Cnpj == cnpj, cancellationToken);
 
         if (cliente == null)
-            return Result<Cliente>.Failure(new Error("Cliente não encontrado."));
+            return Result<Cliente>.Failure(new Error("Cliente não encontrado.", ErrorCode.NotFound));
 
         return ClienteMapper.ToDomain(cliente);
     }

@@ -1,3 +1,4 @@
+ï»¿using FIAP.TechChallenge.Fase1.API.Extensions;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.AtualizarCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.CriarCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ListarClientes;
@@ -32,18 +33,13 @@ public sealed class ClientesController : ControllerBase
 
         var result = await useCase.ExecuteAsync(command, cancellationToken);
 
-        if (!result.IsSuccess)
+        return result.ToActionResult(this, value =>
         {
-            if (result.Error.Description == "Cliente não encontrado.")
-                return NotFound(new { error = result.Error.Description });
+            if (!string.IsNullOrWhiteSpace(cpf) || !string.IsNullOrWhiteSpace(cnpj))
+                return Ok(value.Clientes.First());
 
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        if (!string.IsNullOrWhiteSpace(cpf) || !string.IsNullOrWhiteSpace(cnpj))
-            return Ok(result.Value!.Clientes.First());
-
-        return Ok(result.Value);
+            return Ok(value);
+        });
     }
 
     [HttpGet("{id:guid}")]
@@ -52,22 +48,9 @@ public sealed class ClientesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById([FromRoute] Guid id, [FromServices] IRecuperarClienteUseCase useCase, CancellationToken cancellationToken = default)
     {
-        var command = new RecuperarClienteCommand
-        {
-            ClienteId = id
-        };
-
+        var command = new RecuperarClienteCommand { ClienteId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Description == "Cliente não encontrado.")
-                return NotFound(new { error = result.Error.Description });
-
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult(this);
     }
 
     [HttpPost]
@@ -76,11 +59,7 @@ public sealed class ClientesController : ControllerBase
     public async Task<IActionResult> Post([FromServices] ICriarClienteUseCase useCase, [FromBody] CriarClienteCommand command, CancellationToken cancellationToken)
     {
         var result = await useCase.ExecuteAsync(command, cancellationToken);
-
-        if (!result.IsSuccess)
-            return BadRequest(new { error = result.Error.Description });
-
-        return CreatedAtAction(nameof(Post), new { id = result.Value!.Id }, result.Value);
+        return result.ToActionResult(this, value => CreatedAtAction(nameof(Post), new { id = value.Id }, value));
     }
 
     [HttpPut("{id:guid}")]
@@ -98,15 +77,6 @@ public sealed class ClientesController : ControllerBase
         };
 
         var result = await useCase.ExecuteAsync(updateCommand, cancellationToken);
-
-        if (!result.IsSuccess)
-        {
-            if (result.Error.Description == "Cliente não encontrado.")
-                return NotFound(new { error = result.Error.Description });
-
-            return BadRequest(new { error = result.Error.Description });
-        }
-
-        return Ok(result.Value);
+        return result.ToActionResult(this);
     }
 }
