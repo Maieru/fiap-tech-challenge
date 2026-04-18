@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -218,7 +218,7 @@ public sealed class VeiculosControllerTests
         var getByPlacaResponse = await _client.GetAsync($"/api/veiculos?placa={veiculo2.Placa}");
         var byPlaca = await getByPlacaResponse.Content.ReadFromJsonAsync<VeiculoResponse>();
 
-        var getByIdResponse = await _client.GetAsync($"/api/veiculos?id={veiculo1.Id}");
+        var getByIdResponse = await _client.GetAsync($"/api/veiculos/{veiculo1.Id}");
         var byId = await getByIdResponse.Content.ReadFromJsonAsync<VeiculoResponse>();
 
         var getByClienteResponse = await _client.GetAsync($"/api/veiculos?clienteId={cliente1.Id}");
@@ -276,7 +276,7 @@ public sealed class VeiculosControllerTests
         {
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
-            _ = error!.Error.Should().Be("Informe apenas um filtro por vez: id, placa ou clienteId.");
+            _ = error!.Error.Should().Be("Informe apenas um filtro por vez: placa ou clienteId.");
         });
     }
 

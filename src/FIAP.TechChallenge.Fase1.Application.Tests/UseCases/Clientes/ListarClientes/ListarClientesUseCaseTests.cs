@@ -34,13 +34,13 @@ internal sealed class ListarClientesUseCaseTests
         var repositoryMock = new Mock<IClienteRepository>();
         var useCase = new ListarClientesUseCase(repositoryMock.Object);
 
-        var result = await useCase.ExecuteAsync(new ListarClientesCommand { Id = Guid.NewGuid(), Cpf = "52998224725" });
+        var result = await useCase.ExecuteAsync(new ListarClientesCommand { Cpf = "52998224725", Cnpj = "11444777000161" });
 
         Assert.Multiple(() =>
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("Informe apenas um filtro por vez: id, cpf ou cnpj."));
+            Assert.That(result.Error.Description, Is.EqualTo("Informe apenas um filtro por vez: cpf ou cnpj."));
         });
     }
 
@@ -95,54 +95,6 @@ internal sealed class ListarClientesUseCaseTests
         });
 
         repositoryMock.Verify(x => x.GetByCpfAsync("52998224725", It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task ExecuteAsync_ShouldSucceed_WhenGettingById()
-    {
-        var repositoryMock = new Mock<IClienteRepository>();
-        var cliente = CreateClienteComCpf();
-
-        _ = repositoryMock
-            .Setup(x => x.GetByIdAsync(cliente.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Cliente>.Success(cliente));
-
-        var useCase = new ListarClientesUseCase(repositoryMock.Object);
-
-        var result = await useCase.ExecuteAsync(new ListarClientesCommand { Id = cliente.Id });
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.Value, Is.Not.Null);
-            Assert.That(result.Value!.Clientes, Has.Count.EqualTo(1));
-            Assert.That(result.Value.Clientes.First().Id, Is.EqualTo(cliente.Id));
-            Assert.That(result.Value.Clientes.First().Nome, Is.EqualTo("Cliente CPF"));
-        });
-
-        repositoryMock.Verify(x => x.GetByIdAsync(cliente.Id, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task ExecuteAsync_ShouldFail_WhenIdDoesNotExist()
-    {
-        var repositoryMock = new Mock<IClienteRepository>();
-        var clienteId = Guid.NewGuid();
-
-        _ = repositoryMock
-            .Setup(x => x.GetByIdAsync(clienteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Cliente>.Failure(new Error("Cliente não encontrado.")));
-
-        var useCase = new ListarClientesUseCase(repositoryMock.Object);
-
-        var result = await useCase.ExecuteAsync(new ListarClientesCommand { Id = clienteId });
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("Cliente não encontrado."));
-        });
     }
 
     [Test]

@@ -15,20 +15,6 @@ public sealed class ListarPecasInsumosUseCase(IPecaInsumoRepository pecaInsumoRe
         if (!paginationValidationResult.IsSuccess)
             return Result<ListarPecasInsumosResponse>.Failure(paginationValidationResult.Error);
 
-        var filtersCount = 0;
-
-        if (command.Id.HasValue)
-            filtersCount++;
-
-        if (!string.IsNullOrWhiteSpace(command.Codigo))
-            filtersCount++;
-
-        if (filtersCount > 1)
-            return Result<ListarPecasInsumosResponse>.Failure(new Error("Informe apenas um filtro por vez: id ou codigo."));
-
-        if (command.Id.HasValue)
-            return await GetByIdAsync(command.Id.Value, cancellationToken);
-
         if (!string.IsNullOrWhiteSpace(command.Codigo))
             return await GetByCodigoAsync(command.Codigo, cancellationToken);
 
@@ -44,19 +30,6 @@ public sealed class ListarPecasInsumosUseCase(IPecaInsumoRepository pecaInsumoRe
             TotalItems = pagedResult.Value.TotalItems,
             PecasInsumos = pagedResult.Value.PecasInsumos.Select(ToItemResponse).ToArray()
         });
-    }
-
-    private async Task<Result<ListarPecasInsumosResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
-    {
-        if (id == Guid.Empty)
-            return Result<ListarPecasInsumosResponse>.Failure(new Error("O identificador da peca ou insumo deve ser valido."));
-
-        var pecaInsumoResult = await _pecaInsumoRepository.GetByIdAsync(id, cancellationToken);
-
-        if (!pecaInsumoResult.IsSuccess || pecaInsumoResult.Value is null)
-            return Result<ListarPecasInsumosResponse>.Failure(pecaInsumoResult.Error);
-
-        return Result<ListarPecasInsumosResponse>.Success(CreateSingleItemResponse(pecaInsumoResult.Value));
     }
 
     private async Task<Result<ListarPecasInsumosResponse>> GetByCodigoAsync(string codigo, CancellationToken cancellationToken)

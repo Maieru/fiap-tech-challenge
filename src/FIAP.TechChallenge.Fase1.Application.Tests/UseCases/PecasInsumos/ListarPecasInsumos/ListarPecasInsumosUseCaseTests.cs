@@ -28,22 +28,6 @@ internal sealed class ListarPecasInsumosUseCaseTests
     }
 
     [Test]
-    public async Task ExecuteAsync_ShouldFail_WhenMoreThanOneFilterIsInformed()
-    {
-        var repositoryMock = new Mock<IPecaInsumoRepository>();
-        var useCase = new ListarPecasInsumosUseCase(repositoryMock.Object);
-
-        var result = await useCase.ExecuteAsync(new ListarPecasInsumosCommand { Id = Guid.NewGuid(), Codigo = "FLT-001" });
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("Informe apenas um filtro por vez: id ou codigo."));
-        });
-    }
-
-    [Test]
     public async Task ExecuteAsync_ShouldSucceed_WhenListingPagedPecasInsumos()
     {
         var repositoryMock = new Mock<IPecaInsumoRepository>();
@@ -72,31 +56,6 @@ internal sealed class ListarPecasInsumosUseCaseTests
     }
 
     [Test]
-    public async Task ExecuteAsync_ShouldSucceed_WhenGettingById()
-    {
-        var repositoryMock = new Mock<IPecaInsumoRepository>();
-        var pecaInsumo = CreatePecaInsumo();
-
-        _ = repositoryMock
-            .Setup(x => x.GetByIdAsync(pecaInsumo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<PecaInsumo>.Success(pecaInsumo));
-
-        var useCase = new ListarPecasInsumosUseCase(repositoryMock.Object);
-
-        var result = await useCase.ExecuteAsync(new ListarPecasInsumosCommand { Id = pecaInsumo.Id });
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.Value, Is.Not.Null);
-            Assert.That(result.Value!.PecasInsumos, Has.Count.EqualTo(1));
-            Assert.That(result.Value.PecasInsumos.First().Id, Is.EqualTo(pecaInsumo.Id));
-        });
-
-        repositoryMock.Verify(x => x.GetByIdAsync(pecaInsumo.Id, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
     public async Task ExecuteAsync_ShouldSucceed_WhenGettingByCodigo()
     {
         var repositoryMock = new Mock<IPecaInsumoRepository>();
@@ -122,21 +81,21 @@ internal sealed class ListarPecasInsumosUseCaseTests
     }
 
     [Test]
-    public async Task ExecuteAsync_ShouldFail_WhenIdIsEmpty()
+    public async Task ExecuteAsync_ShouldFail_WhenCodigoIsInvalid()
     {
         var repositoryMock = new Mock<IPecaInsumoRepository>();
         var useCase = new ListarPecasInsumosUseCase(repositoryMock.Object);
 
-        var result = await useCase.ExecuteAsync(new ListarPecasInsumosCommand { Id = Guid.Empty });
+        var result = await useCase.ExecuteAsync(new ListarPecasInsumosCommand { Codigo = "x" });
 
         Assert.Multiple(() =>
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O identificador da peca ou insumo deve ser valido."));
+            Assert.That(result.Error.Description, Is.EqualTo("O codigo da peca ou insumo deve ter pelo menos 2 caracteres."));
         });
 
-        repositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        repositoryMock.Verify(x => x.GetByCodigoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static PecaInsumo CreatePecaInsumo(

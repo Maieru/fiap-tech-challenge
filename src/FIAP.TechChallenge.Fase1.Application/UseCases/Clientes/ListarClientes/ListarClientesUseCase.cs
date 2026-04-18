@@ -18,9 +18,6 @@ public sealed class ListarClientesUseCase(IClienteRepository clienteRepository) 
 
         var filtersCount = 0;
 
-        if (command.Id.HasValue)
-            filtersCount++;
-
         if (!string.IsNullOrWhiteSpace(command.Cpf))
             filtersCount++;
 
@@ -28,10 +25,7 @@ public sealed class ListarClientesUseCase(IClienteRepository clienteRepository) 
             filtersCount++;
 
         if (filtersCount > 1)
-            return Result<ListarClientesResponse>.Failure(new Error("Informe apenas um filtro por vez: id, cpf ou cnpj."));
-
-        if (command.Id.HasValue)
-            return await GetByIdAsync(command.Id.Value, cancellationToken);
+            return Result<ListarClientesResponse>.Failure(new Error("Informe apenas um filtro por vez: cpf ou cnpj."));
 
         if (!string.IsNullOrWhiteSpace(command.Cpf))
             return await GetByCpfAsync(command.Cpf, cancellationToken);
@@ -53,16 +47,6 @@ public sealed class ListarClientesUseCase(IClienteRepository clienteRepository) 
         };
 
         return Result<ListarClientesResponse>.Success(response);
-    }
-
-    private async Task<Result<ListarClientesResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
-    {
-        var clienteResult = await _clienteRepository.GetByIdAsync(id, cancellationToken);
-
-        if (!clienteResult.IsSuccess || clienteResult.Value is null)
-            return Result<ListarClientesResponse>.Failure(clienteResult.Error);
-
-        return Result<ListarClientesResponse>.Success(CreateSingleItemResponse(clienteResult.Value));
     }
 
     private async Task<Result<ListarClientesResponse>> GetByCpfAsync(string cpf, CancellationToken cancellationToken)

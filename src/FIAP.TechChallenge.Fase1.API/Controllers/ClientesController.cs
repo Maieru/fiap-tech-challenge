@@ -1,6 +1,7 @@
-Ôªøusing FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.AtualizarCliente;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.AtualizarCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.CriarCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ListarClientes;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.RecuperarCliente;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
@@ -15,7 +16,6 @@ public sealed class ClientesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get(
         [FromServices] IListarClientesUseCase useCase,
-        [FromQuery] Guid? id,
         [FromQuery] string? cpf,
         [FromQuery] string? cnpj,
         [FromQuery] int pageNumber = 1,
@@ -24,7 +24,6 @@ public sealed class ClientesController : ControllerBase
     {
         var command = new ListarClientesCommand
         {
-            Id = id,
             Cpf = cpf,
             Cnpj = cnpj,
             PageNumber = pageNumber,
@@ -35,14 +34,38 @@ public sealed class ClientesController : ControllerBase
 
         if (!result.IsSuccess)
         {
-            if (result.Error.Description == "Cliente n√£o encontrado.")
+            if (result.Error.Description == "Cliente n„o encontrado.")
                 return NotFound(new { error = result.Error.Description });
 
             return BadRequest(new { error = result.Error.Description });
         }
 
-        if (id.HasValue || !string.IsNullOrWhiteSpace(cpf) || !string.IsNullOrWhiteSpace(cnpj))
+        if (!string.IsNullOrWhiteSpace(cpf) || !string.IsNullOrWhiteSpace(cnpj))
             return Ok(result.Value!.Clientes.First());
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(RecuperarClienteResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById([FromRoute] Guid id, [FromServices] IRecuperarClienteUseCase useCase, CancellationToken cancellationToken = default)
+    {
+        var command = new RecuperarClienteCommand
+        {
+            ClienteId = id
+        };
+
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Description == "Cliente n„o encontrado.")
+                return NotFound(new { error = result.Error.Description });
+
+            return BadRequest(new { error = result.Error.Description });
+        }
 
         return Ok(result.Value);
     }
@@ -78,7 +101,7 @@ public sealed class ClientesController : ControllerBase
 
         if (!result.IsSuccess)
         {
-            if (result.Error.Description == "Cliente n√£o encontrado.")
+            if (result.Error.Description == "Cliente n„o encontrado.")
                 return NotFound(new { error = result.Error.Description });
 
             return BadRequest(new { error = result.Error.Description });

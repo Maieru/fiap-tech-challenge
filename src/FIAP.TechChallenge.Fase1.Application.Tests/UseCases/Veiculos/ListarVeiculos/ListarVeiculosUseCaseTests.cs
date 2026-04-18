@@ -34,13 +34,13 @@ internal sealed class ListarVeiculosUseCaseTests
         var repositoryMock = new Mock<IVeiculoRepository>();
         var useCase = new ListarVeiculosUseCase(repositoryMock.Object);
 
-        var result = await useCase.ExecuteAsync(new ListarVeiculosCommand { Id = Guid.NewGuid(), Placa = "ABC1234" });
+        var result = await useCase.ExecuteAsync(new ListarVeiculosCommand { Placa = "ABC1234", ClienteId = Guid.NewGuid() });
 
         Assert.Multiple(() =>
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("Informe apenas um filtro por vez: id, placa ou clienteId."));
+            Assert.That(result.Error.Description, Is.EqualTo("Informe apenas um filtro por vez: placa ou clienteId."));
         });
     }
 
@@ -95,31 +95,6 @@ internal sealed class ListarVeiculosUseCaseTests
         });
 
         repositoryMock.Verify(x => x.GetByPlacaAsync("ABC1234", It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task ExecuteAsync_ShouldSucceed_WhenGettingById()
-    {
-        var repositoryMock = new Mock<IVeiculoRepository>();
-        var veiculo = CreateVeiculo();
-
-        _ = repositoryMock
-            .Setup(x => x.GetByIdAsync(veiculo.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Veiculo>.Success(veiculo));
-
-        var useCase = new ListarVeiculosUseCase(repositoryMock.Object);
-
-        var result = await useCase.ExecuteAsync(new ListarVeiculosCommand { Id = veiculo.Id });
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.Value, Is.Not.Null);
-            Assert.That(result.Value!.Veiculos, Has.Count.EqualTo(1));
-            Assert.That(result.Value.Veiculos.First().Id, Is.EqualTo(veiculo.Id));
-        });
-
-        repositoryMock.Verify(x => x.GetByIdAsync(veiculo.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]

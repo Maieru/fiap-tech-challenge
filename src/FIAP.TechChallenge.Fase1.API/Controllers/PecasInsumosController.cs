@@ -2,6 +2,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaIn
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.EntradaEstoquePecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.IncluirPecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.ListarPecasInsumos;
+using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.RecuperarPecaInsumo;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
@@ -16,7 +17,6 @@ public sealed class PecasInsumosController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get(
         [FromServices] IListarPecasInsumosUseCase useCase,
-        [FromQuery] Guid? id,
         [FromQuery] string? codigo,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
@@ -24,7 +24,6 @@ public sealed class PecasInsumosController : ControllerBase
     {
         var command = new ListarPecasInsumosCommand
         {
-            Id = id,
             Codigo = codigo,
             PageNumber = pageNumber,
             PageSize = pageSize
@@ -41,8 +40,33 @@ public sealed class PecasInsumosController : ControllerBase
             return BadRequest(new { error = result.Error.Description });
         }
 
-        if (id.HasValue || !string.IsNullOrWhiteSpace(codigo))
+        if (!string.IsNullOrWhiteSpace(codigo))
             return Ok(result.Value!.PecasInsumos.First());
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(RecuperarPecaInsumoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById([FromRoute] Guid id, [FromServices] IRecuperarPecaInsumoUseCase useCase, CancellationToken cancellationToken = default)
+    {
+        var command = new RecuperarPecaInsumoCommand
+        {
+            PecaInsumoId = id
+        };
+
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Description.Contains("Peca ou insumo", StringComparison.OrdinalIgnoreCase)
+                && result.Error.Description.Contains("encontrado", StringComparison.OrdinalIgnoreCase))
+                return NotFound(new { error = result.Error.Description });
+
+            return BadRequest(new { error = result.Error.Description });
+        }
 
         return Ok(result.Value);
     }

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -139,7 +139,7 @@ public sealed class PecasInsumosControllerTests
         var getAllResponse = await _client.GetAsync("/api/pecasinsumos?pageNumber=1&pageSize=10");
         var allResult = await getAllResponse.Content.ReadFromJsonAsync<ListarPecasInsumosResponse>();
 
-        var getByIdResponse = await _client.GetAsync($"/api/pecasinsumos?id={firstCreated!.Id}");
+        var getByIdResponse = await _client.GetAsync($"/api/pecasinsumos/{firstCreated!.Id}");
         var byId = await getByIdResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
 
         var getByCodigoResponse = await _client.GetAsync("/api/pecasinsumos?codigo=pst-501");
@@ -183,29 +183,16 @@ public sealed class PecasInsumosControllerTests
     }
 
     [Test]
-    public async Task Get_ShouldReturnBadRequest_WhenMoreThanOneFilterIsProvided()
+    public async Task Get_ShouldReturnBadRequest_WhenPageNumberIsZero()
     {
-        var createRequest = new
-        {
-            Nome = "Filtro de ar",
-            Codigo = "flt-777",
-            Descricao = "Filtro para teste",
-            PrecoUnitario = 35m,
-            QuantidadeEstoque = 9
-        };
-
-        var createResponse = await _client.PostAsJsonAsync("/api/pecasinsumos", createRequest);
-        var created = await createResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
-
-        var response = await _client.GetAsync($"/api/pecasinsumos?id={created!.Id}&codigo={created.Codigo}");
+        var response = await _client.GetAsync("/api/pecasinsumos?pageNumber=0&pageSize=10");
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
 
         Assert.Multiple(() =>
         {
-            _ = createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
-            _ = error!.Error.Should().Be("Informe apenas um filtro por vez: id ou codigo.");
+            _ = error!.Error.Should().Be("O numero da pagina deve ser maior que zero.");
         });
     }
 

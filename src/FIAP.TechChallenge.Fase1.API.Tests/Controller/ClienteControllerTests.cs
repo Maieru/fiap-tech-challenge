@@ -47,7 +47,7 @@ public sealed class ClienteControllerTests
             _ = created.Nome.Should().Be("Maria Silva");
         });
 
-        var getResponse = await _client.GetAsync($"/api/clientes?id={created!.Id}");
+        var getResponse = await _client.GetAsync($"/api/clientes/{created!.Id}");
         _ = getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var cliente = await getResponse.Content.ReadFromJsonAsync<ClienteResponse>();
@@ -69,7 +69,7 @@ public sealed class ClienteControllerTests
         var putResponse = await _client.PutAsJsonAsync($"/api/clientes/{created.Id}", updateRequest);
         _ = putResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var getUpdatedResponse = await _client.GetAsync($"/api/clientes?id={created.Id}");
+        var getUpdatedResponse = await _client.GetAsync($"/api/clientes/{created.Id}");
         _ = getUpdatedResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var updated = await getUpdatedResponse.Content.ReadFromJsonAsync<ClienteResponse>();
@@ -125,7 +125,7 @@ public sealed class ClienteControllerTests
         var putResponse = await _client.PutAsJsonAsync($"/api/clientes/{created.Id}", updateRequest);
         _ = putResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var getByIdResponse = await _client.GetAsync($"/api/clientes?id={created.Id}");
+        var getByIdResponse = await _client.GetAsync($"/api/clientes/{created.Id}");
         var updated = await getByIdResponse.Content.ReadFromJsonAsync<ClienteResponse>();
 
         Assert.Multiple(() =>
@@ -185,7 +185,7 @@ public sealed class ClienteControllerTests
         var cpf = firstClient.GetProperty("cpf").GetString();
         var nome = firstClient.GetProperty("nome").GetString();
 
-        var getByIdResponse = await _client.GetAsync($"/api/clientes?id={id}");
+        var getByIdResponse = await _client.GetAsync($"/api/clientes/{id}");
         var cliente = await getByIdResponse.Content.ReadFromJsonAsync<ClienteResponse>();
 
         Assert.Multiple(() =>
@@ -197,29 +197,6 @@ public sealed class ClienteControllerTests
             _ = cliente!.Id.Should().Be(id);
             _ = cliente.Cpf.Should().Be(cpf);
             _ = cliente.Nome.Should().Be(nome);
-        });
-    }
-
-    [Test]
-    public async Task CreateThenGetWithMultipleFilters_ShouldReturnBadRequest_AndNotAffectSubsequentValidGet()
-    {
-        var created = await CreateClientAsync(5001);
-
-        var invalidGetResponse = await _client.GetAsync($"/api/clientes?id={created.Id}&cpf={created.Cpf}");
-        var error = await invalidGetResponse.Content.ReadFromJsonAsync<ErrorResponse>();
-
-        var validGetResponse = await _client.GetAsync($"/api/clientes?id={created.Id}");
-        var cliente = await validGetResponse.Content.ReadFromJsonAsync<ClienteResponse>();
-
-        Assert.Multiple(() =>
-        {
-            _ = invalidGetResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            _ = error.Should().NotBeNull();
-            _ = error!.Error.Should().Be("Informe apenas um filtro por vez: id, cpf ou cnpj.");
-            _ = validGetResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            _ = cliente.Should().NotBeNull();
-            _ = cliente!.Id.Should().Be(created.Id);
-            _ = cliente.Cpf.Should().Be(created.Cpf);
         });
     }
 
@@ -238,7 +215,7 @@ public sealed class ClienteControllerTests
         var invalidPutResponse = await _client.PutAsJsonAsync($"/api/clientes/{Guid.NewGuid()}", updateRequest);
         var error = await invalidPutResponse.Content.ReadFromJsonAsync<ErrorResponse>();
 
-        var getOriginalResponse = await _client.GetAsync($"/api/clientes?id={created.Id}");
+        var getOriginalResponse = await _client.GetAsync($"/api/clientes/{created.Id}");
         var original = await getOriginalResponse.Content.ReadFromJsonAsync<ClienteResponse>();
 
         Assert.Multiple(() =>
@@ -260,7 +237,7 @@ public sealed class ClienteControllerTests
     {
         var nonExistingId = Guid.NewGuid();
 
-        var response = await _client.GetAsync($"/api/clientes?id={nonExistingId}");
+        var response = await _client.GetAsync($"/api/clientes/{nonExistingId}");
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
 
         Assert.Multiple(() =>
@@ -386,22 +363,6 @@ public sealed class ClienteControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Be("Cliente não encontrado.");
-        });
-    }
-
-    [Test]
-    public async Task Get_ShouldReturnBadRequest_WhenMoreThanOneFilterIsProvided()
-    {
-        var created = await CreateClientAsync(200);
-
-        var response = await _client.GetAsync($"/api/clientes?id={created.Id}&cpf={created.Cpf}");
-        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-
-        Assert.Multiple(() =>
-        {
-            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            _ = error.Should().NotBeNull();
-            _ = error!.Error.Should().Be("Informe apenas um filtro por vez: id, cpf ou cnpj.");
         });
     }
 
