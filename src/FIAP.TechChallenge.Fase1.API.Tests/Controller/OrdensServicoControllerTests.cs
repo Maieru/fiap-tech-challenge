@@ -257,6 +257,118 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task AddPecaInsumo_ShouldSucceed_WhenRequestIsValid()
+    {
+        var cliente = await CreateClientAsync(9011);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(39), "Nissan", "Versa", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Troca de pastilhas dianteiras");
+        var pecaInsumo = await CreatePecaInsumoAsync("Pastilha de freio", "pst-os-001", "Pastilha dianteira", 210m, 15);
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var request = new
+        {
+            PecaInsumoId = pecaInsumo.Id,
+            Quantidade = 3
+        };
+
+        var response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addpecainsumo", request);
+        var created = await response.Content.ReadFromJsonAsync<PecaInsumoDaOrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Id.Should().NotBeEmpty();
+            _ = created.OrdemServicoId.Should().Be(ordemServico.Id);
+            _ = created.PecaInsumoId.Should().Be(pecaInsumo.Id);
+            _ = created.Nome.Should().Be("Pastilha de freio");
+            _ = created.Codigo.Should().Be("PST-OS-001");
+            _ = created.Descricao.Should().Be("Pastilha dianteira");
+            _ = created.PrecoUnitario.Should().Be(210m);
+            _ = created.Quantidade.Should().Be(3);
+            _ = created.ValorTotal.Should().Be(630m);
+        });
+    }
+
+    [Test]
+    public async Task AddPecaInsumo_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
+    {
+        var pecaInsumo = await CreatePecaInsumoAsync("Disco de freio", "dsc-os-100", "Disco ventilado", 350m, 10);
+
+        var request = new
+        {
+            PecaInsumoId = pecaInsumo.Id,
+            Quantidade = 1
+        };
+
+        var response = await _client.PostAsJsonAsync($"/api/ordensservico/{Guid.NewGuid()}/addpecainsumo", request);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("Ordem");
+            _ = error.Error.Should().Contain("encontrada");
+        });
+    }
+
+    [Test]
+    public async Task AddPecaInsumo_ShouldReturnBadRequest_WhenQuantidadeIsInvalid()
+    {
+        var cliente = await CreateClientAsync(9012);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(40), "Jeep", "Compass", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Revisao de freios");
+        var pecaInsumo = await CreatePecaInsumoAsync("Fluido de freio", "fld-os-200", "Fluido DOT4", 59m, 40);
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var request = new
+        {
+            PecaInsumoId = pecaInsumo.Id,
+            Quantidade = 0
+        };
+
+        var response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addpecainsumo", request);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("quantidade");
+        });
+    }
+
+    [Test]
+    public async Task AddPecaInsumo_ShouldReturnBadRequest_WhenOrdemServicoIsNotEmDiagnostico()
+    {
+        var cliente = await CreateClientAsync(9013);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(41), "Peugeot", "208", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Troca de filtro");
+        var pecaInsumo = await CreatePecaInsumoAsync("Filtro de ar", "flt-os-300", "Filtro do motor", 45m, 25);
+
+        var request = new
+        {
+            PecaInsumoId = pecaInsumo.Id,
+            Quantidade = 1
+        };
+
+        var response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addpecainsumo", request);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("diagnostico");
+        });
+    }
+
+    [Test]
     public async Task IniciarDiagnostico_ShouldSucceed_WhenOrdemServicoIsRecebida()
     {
         var cliente = await CreateClientAsync(9009);
@@ -403,6 +515,30 @@ public sealed class OrdensServicoControllerTests
         return created!;
     }
 
+    private async Task<PecaInsumoResponse> CreatePecaInsumoAsync(string nome, string codigo, string descricao, decimal precoUnitario, int quantidadeEstoque)
+    {
+        var request = new
+        {
+            Nome = nome,
+            Codigo = codigo,
+            Descricao = descricao,
+            PrecoUnitario = precoUnitario,
+            QuantidadeEstoque = quantidadeEstoque
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/pecasinsumos", request);
+        var created = await response.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Id.Should().NotBeEmpty();
+        });
+
+        return created!;
+    }
+
     private static string GenerateValidPlaca(int seed)
     {
         const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -466,6 +602,11 @@ public sealed class OrdensServicoControllerTests
         public Guid Id { get; set; }
     }
 
+    private sealed class PecaInsumoResponse
+    {
+        public Guid Id { get; set; }
+    }
+
     private sealed class ServicoDaOrdemServicoResponse
     {
         public Guid Id { get; set; }
@@ -473,6 +614,19 @@ public sealed class OrdensServicoControllerTests
         public Guid ServicoId { get; set; }
         public string Descricao { get; set; } = string.Empty;
         public decimal ValorUnitario { get; set; }
+        public int Quantidade { get; set; }
+        public decimal ValorTotal { get; set; }
+    }
+
+    private sealed class PecaInsumoDaOrdemServicoResponse
+    {
+        public Guid Id { get; set; }
+        public Guid OrdemServicoId { get; set; }
+        public Guid PecaInsumoId { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string Codigo { get; set; } = string.Empty;
+        public string? Descricao { get; set; }
+        public decimal PrecoUnitario { get; set; }
         public int Quantidade { get; set; }
         public decimal ValorTotal { get; set; }
     }

@@ -464,6 +464,37 @@ internal class OrdemServicoTests
     }
 
     [Test]
+    public void ValidarAdicaoPecaInsumo_ShouldFail_WhenStatusIsNotEmDiagnostico()
+    {
+        var ordemServico = CreateOrdemServicoValida();
+
+        var result = ordemServico.ValidarAdicaoPecaInsumo();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.False);
+            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de servico em diagnostico podem receber pecas e insumos."));
+        });
+    }
+
+    [Test]
+    public void ValidarAdicaoPecaInsumo_ShouldSucceed_WhenStatusIsEmDiagnostico()
+    {
+        var ordemServico = CreateOrdemServicoValida();
+        _ = ordemServico.IniciarDiagnostico();
+
+        var result = ordemServico.ValidarAdicaoPecaInsumo();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.True);
+            Assert.That(result.Error, Is.EqualTo(Error.None));
+        });
+    }
+
+    [Test]
     public void Entregar_ShouldFail_WhenStatusIsNotFinalizada()
     {
         var ordemServico = CreateOrdemServicoValida();

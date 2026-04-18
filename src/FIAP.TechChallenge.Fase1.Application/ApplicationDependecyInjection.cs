@@ -5,6 +5,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.EntradaEstoqueP
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.IncluirPecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.ListarPecasInsumos;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaInsumoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnosticoOrdemServico;
@@ -28,6 +29,7 @@ public static class ApplicationDependecyInjection
         _ = services.AddScoped<IAtualizarVeiculoUseCase, AtualizarVeiculoUseCase>();
         _ = services.AddScoped<IListarVeiculosUseCase, ListarVeiculosUseCase>();
         _ = services.AddScoped<ICriarOrdemServicoUseCase, CriarOrdemServicoUseCase>();
+        _ = services.AddScoped<IAdicionarPecaInsumoOrdemServicoUseCase, AdicionarPecaInsumoOrdemServicoUseCase>();
         _ = services.AddScoped<IAdicionarServicoOrdemServicoUseCase, AdicionarServicoOrdemServicoUseCase>();
         _ = services.AddScoped<IIniciarDiagnosticoOrdemServicoUseCase, IniciarDiagnosticoOrdemServicoUseCase>();
         _ = services.AddScoped<IIncluirPecaInsumoUseCase, IncluirPecaInsumoUseCase>();
