@@ -11,6 +11,81 @@ namespace FIAP.TechChallenge.Fase1.Infaestructure.Tests.Persistence.Repositories
 internal sealed class ServicoDaOrdemDeServicoRepositoryTests
 {
     [Test]
+    public async Task GetByOrdemServicoIdAsync_ShouldReturnOnlyServicosFromRequestedOrdemServico()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+
+        var ordemServicoId = Guid.NewGuid();
+        var outraOrdemServicoId = Guid.NewGuid();
+
+        context.OrdensServico.AddRange(
+            new OrdemServicoEntity
+            {
+                Id = ordemServicoId,
+                ClienteId = Guid.NewGuid(),
+                VeiculoId = Guid.NewGuid(),
+                DescricaoProblema = "Ruido na dianteira",
+                Status = StatusOrdemServico.Recebida,
+                DataCriacao = DateTime.UtcNow
+            },
+            new OrdemServicoEntity
+            {
+                Id = outraOrdemServicoId,
+                ClienteId = Guid.NewGuid(),
+                VeiculoId = Guid.NewGuid(),
+                DescricaoProblema = "Falha de ignicao",
+                Status = StatusOrdemServico.Recebida,
+                DataCriacao = DateTime.UtcNow
+            });
+
+        context.ServicoDaOrdemDeServico.AddRange(
+            new ServicoDaOrdemDeServicoEntity
+            {
+                Id = Guid.NewGuid(),
+                OrdemServicoId = ordemServicoId,
+                ServicoId = Guid.NewGuid(),
+                Descricao = "Alinhamento",
+                ValorUnitario = 120m,
+                Quantidade = 1
+            },
+            new ServicoDaOrdemDeServicoEntity
+            {
+                Id = Guid.NewGuid(),
+                OrdemServicoId = ordemServicoId,
+                ServicoId = Guid.NewGuid(),
+                Descricao = "Balanceamento",
+                ValorUnitario = 90m,
+                Quantidade = 2
+            },
+            new ServicoDaOrdemDeServicoEntity
+            {
+                Id = Guid.NewGuid(),
+                OrdemServicoId = outraOrdemServicoId,
+                ServicoId = Guid.NewGuid(),
+                Descricao = "Troca de velas",
+                ValorUnitario = 220m,
+                Quantidade = 1
+            });
+
+        _ = await context.SaveChangesAsync();
+
+        var repository = new ServicoDaOrdemDeServicoRepository(context);
+
+        var result = await repository.GetByOrdemServicoIdAsync(ordemServicoId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value, Has.Count.EqualTo(2));
+            Assert.That(result.Value!.All(x => x.OrdemServicoId == ordemServicoId), Is.True);
+            Assert.That(result.Value.Sum(x => x.ValorTotal), Is.EqualTo(300m));
+        });
+    }
+
+    [Test]
     public async Task AddAsync_ShouldPersistServicoDaOrdemDeServico()
     {
         var databaseName = Guid.NewGuid().ToString();

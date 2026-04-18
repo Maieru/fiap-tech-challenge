@@ -11,6 +11,87 @@ namespace FIAP.TechChallenge.Fase1.Infaestructure.Tests.Persistence.Repositories
 internal sealed class PecaOuInsumoDaOrdemDeServicoRepositoryTests
 {
     [Test]
+    public async Task GetByOrdemServicoIdAsync_ShouldReturnOnlyPecasEInsumosFromRequestedOrdemServico()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+
+        var ordemServicoId = Guid.NewGuid();
+        var outraOrdemServicoId = Guid.NewGuid();
+
+        context.OrdensServico.AddRange(
+            new OrdemServicoEntity
+            {
+                Id = ordemServicoId,
+                ClienteId = Guid.NewGuid(),
+                VeiculoId = Guid.NewGuid(),
+                DescricaoProblema = "Troca de sistema de freio",
+                Status = StatusOrdemServico.Recebida,
+                DataCriacao = DateTime.UtcNow
+            },
+            new OrdemServicoEntity
+            {
+                Id = outraOrdemServicoId,
+                ClienteId = Guid.NewGuid(),
+                VeiculoId = Guid.NewGuid(),
+                DescricaoProblema = "Problema no ar-condicionado",
+                Status = StatusOrdemServico.Recebida,
+                DataCriacao = DateTime.UtcNow
+            });
+
+        context.PecaOuInsumoDaOrdemDeServico.AddRange(
+            new PecaOuInsumoDaOrdemDeServicoEntity
+            {
+                Id = Guid.NewGuid(),
+                OrdemServicoId = ordemServicoId,
+                PecaInsumoId = Guid.NewGuid(),
+                Nome = "Pastilha de freio",
+                Codigo = "PST-100",
+                Descricao = "Dianteira",
+                PrecoUnitario = 190m,
+                Quantidade = 2
+            },
+            new PecaOuInsumoDaOrdemDeServicoEntity
+            {
+                Id = Guid.NewGuid(),
+                OrdemServicoId = ordemServicoId,
+                PecaInsumoId = Guid.NewGuid(),
+                Nome = "Fluido DOT4",
+                Codigo = "FLD-101",
+                Descricao = "Freio",
+                PrecoUnitario = 50m,
+                Quantidade = 1
+            },
+            new PecaOuInsumoDaOrdemDeServicoEntity
+            {
+                Id = Guid.NewGuid(),
+                OrdemServicoId = outraOrdemServicoId,
+                PecaInsumoId = Guid.NewGuid(),
+                Nome = "Filtro de cabine",
+                Codigo = "FLT-201",
+                Descricao = "Cabine",
+                PrecoUnitario = 60m,
+                Quantidade = 1
+            });
+
+        _ = await context.SaveChangesAsync();
+
+        var repository = new PecaOuInsumoDaOrdemDeServicoRepository(context);
+
+        var result = await repository.GetByOrdemServicoIdAsync(ordemServicoId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value, Has.Count.EqualTo(2));
+            Assert.That(result.Value!.All(x => x.OrdemServicoId == ordemServicoId), Is.True);
+            Assert.That(result.Value.Sum(x => x.ValorTotal), Is.EqualTo(430m));
+        });
+    }
+
+    [Test]
     public async Task AddAsync_ShouldPersistPecaOuInsumoDaOrdemDeServico()
     {
         var databaseName = Guid.NewGuid().ToString();

@@ -314,6 +314,70 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task GetById_ShouldReturnOrdemServicoComServicosEPecasInsumos()
+    {
+        var cliente = await CreateClientAsync(9016);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(45), "Chevrolet", "Tracker", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Ruido na suspensao dianteira");
+
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var servico = await CreateServicoAsync("Troca de amortecedor", 480m);
+        var addServicoResponse = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addservico", new
+        {
+            ServicoId = servico.Id,
+            Quantidade = 1
+        });
+        _ = addServicoResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var pecaInsumo = await CreatePecaInsumoAsync("Amortecedor dianteiro", "amt-os-450", "Conjunto completo", 390m, 20);
+        var addPecaInsumoResponse = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addpecainsumo", new
+        {
+            PecaInsumoId = pecaInsumo.Id,
+            Quantidade = 2
+        });
+        _ = addPecaInsumoResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var response = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
+        var result = await response.Content.ReadFromJsonAsync<RecuperarOrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = result.Should().NotBeNull();
+            _ = result!.Id.Should().Be(ordemServico.Id);
+            _ = result.ClienteId.Should().Be(cliente.Id);
+            _ = result.VeiculoId.Should().Be(veiculo.Id);
+            _ = result.Status.Should().Be(2);
+            _ = result.Servicos.Count.Should().Be(1);
+            _ = result.PecasInsumos.Count.Should().Be(1);
+            _ = result.Servicos.First().Descricao.Should().Be("Troca de amortecedor");
+            _ = result.Servicos.First().ValorTotal.Should().Be(480m);
+            _ = result.PecasInsumos.First().Codigo.Should().Be("AMT-OS-450");
+            _ = result.PecasInsumos.First().ValorTotal.Should().Be(780m);
+            _ = result.ValorTotalServicos.Should().Be(480m);
+            _ = result.ValorTotalPecasInsumos.Should().Be(780m);
+            _ = result.ValorTotalOrdemServico.Should().Be(1260m);
+        });
+    }
+
+    [Test]
+    public async Task GetById_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
+    {
+        var response = await _client.GetAsync($"/api/ordensservico/{Guid.NewGuid()}");
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("Ordem");
+            _ = error.Error.Should().Contain("encontrada");
+        });
+    }
+
+    [Test]
     public async Task Get_ShouldReturnBadRequest_WhenPaginationIsInvalid()
     {
         var response = await _client.GetAsync("/api/ordensservico?pageNumber=0&pageSize=10");
@@ -682,6 +746,31 @@ public sealed class OrdensServicoControllerTests
         public Guid ClienteId { get; set; }
         public Guid VeiculoId { get; set; }
         public int Status { get; set; }
+    }
+
+    private sealed class RecuperarOrdemServicoResponse
+    {
+        public Guid Id { get; set; }
+        public Guid ClienteId { get; set; }
+        public Guid VeiculoId { get; set; }
+        public int Status { get; set; }
+        public IReadOnlyCollection<RecuperarServicoDaOrdemServicoItemResponse> Servicos { get; set; } = [];
+        public IReadOnlyCollection<RecuperarPecaInsumoDaOrdemServicoItemResponse> PecasInsumos { get; set; } = [];
+        public decimal ValorTotalServicos { get; set; }
+        public decimal ValorTotalPecasInsumos { get; set; }
+        public decimal ValorTotalOrdemServico { get; set; }
+    }
+
+    private sealed class RecuperarServicoDaOrdemServicoItemResponse
+    {
+        public string Descricao { get; set; } = string.Empty;
+        public decimal ValorTotal { get; set; }
+    }
+
+    private sealed class RecuperarPecaInsumoDaOrdemServicoItemResponse
+    {
+        public string Codigo { get; set; } = string.Empty;
+        public decimal ValorTotal { get; set; }
     }
 
     private sealed class ServicoResponse

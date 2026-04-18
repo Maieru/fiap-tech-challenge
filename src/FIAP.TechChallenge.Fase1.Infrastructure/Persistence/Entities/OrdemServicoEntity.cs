@@ -39,7 +39,4 @@ public sealed class OrdemServicoEntity
 
     [ForeignKey(nameof(VeiculoId))]
     public VeiculoEntity Veiculo { get; set; } = null!;
-
-    public ICollection<ServicoDaOrdemDeServicoEntity> Servicos { get; set; } = new List<ServicoDaOrdemDeServicoEntity>();
-    public ICollection<PecaOuInsumoDaOrdemDeServicoEntity> PecasOuInsumos { get; set; } = new List<PecaOuInsumoDaOrdemDeServicoEntity>();
 }

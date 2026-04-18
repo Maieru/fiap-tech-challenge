@@ -3,6 +3,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaI
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnosticoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.RecuperarOrdemServico;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,6 +38,37 @@ public sealed class OrdensServicoController : ControllerBase
 
         if (!result.IsSuccess)
             return BadRequest(new { error = result.Error.Description });
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(RecuperarOrdemServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetById(
+        [FromRoute] Guid id,
+        [FromServices] IRecuperarOrdemServicoUseCase useCase,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RecuperarOrdemServicoCommand
+        {
+            OrdemServicoId = id
+        };
+
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            var errorDescription = result.Error.Description;
+            var isNotFound = errorDescription.Contains("encontrad", StringComparison.OrdinalIgnoreCase)
+                && errorDescription.Contains("Ordem", StringComparison.OrdinalIgnoreCase);
+
+            if (isNotFound)
+                return NotFound(new { error = errorDescription });
+
+            return BadRequest(new { error = errorDescription });
+        }
 
         return Ok(result.Value);
     }
