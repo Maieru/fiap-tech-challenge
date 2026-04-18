@@ -257,6 +257,77 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task Get_ShouldListOrdensServicoAndFilterByClienteVeiculoAndStatus()
+    {
+        var cliente1 = await CreateClientAsync(9014);
+        var cliente2 = await CreateClientAsync(9015);
+
+        var veiculo1 = await CreateVehicleAsync(cliente1.Id, GenerateValidPlaca(42), "Toyota", "Corolla", 2023);
+        var veiculo2 = await CreateVehicleAsync(cliente1.Id, GenerateValidPlaca(43), "Honda", "City", 2024);
+        var veiculo3 = await CreateVehicleAsync(cliente2.Id, GenerateValidPlaca(44), "Ford", "Focus", 2022);
+
+        var ordemRecebida = await CreateOrdemServicoAsync(cliente1.Id, veiculo1.Id, "Troca de amortecedor");
+        var ordemEmDiagnostico = await CreateOrdemServicoAsync(cliente1.Id, veiculo2.Id, "Ruido na suspensao traseira");
+        var ordemOutroCliente = await CreateOrdemServicoAsync(cliente2.Id, veiculo3.Id, "Vazamento de oleo");
+
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemEmDiagnostico.Id}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var getAllResponse = await _client.GetAsync("/api/ordensservico?pageNumber=1&pageSize=10");
+        var allResult = await getAllResponse.Content.ReadFromJsonAsync<ListarOrdensServicoResponse>();
+
+        var getByClienteResponse = await _client.GetAsync($"/api/ordensservico?clienteId={cliente1.Id}&pageNumber=1&pageSize=10");
+        var byCliente = await getByClienteResponse.Content.ReadFromJsonAsync<ListarOrdensServicoResponse>();
+
+        var getByVeiculoResponse = await _client.GetAsync($"/api/ordensservico?veiculoId={veiculo1.Id}&pageNumber=1&pageSize=10");
+        var byVeiculo = await getByVeiculoResponse.Content.ReadFromJsonAsync<ListarOrdensServicoResponse>();
+
+        var getByStatusResponse = await _client.GetAsync("/api/ordensservico?status=2&pageNumber=1&pageSize=10");
+        var byStatus = await getByStatusResponse.Content.ReadFromJsonAsync<ListarOrdensServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = getAllResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = allResult.Should().NotBeNull();
+            _ = allResult!.OrdensServico.Count.Should().Be(3);
+            _ = allResult.OrdensServico.Any(x => x.Id == ordemRecebida.Id).Should().BeTrue();
+            _ = allResult.OrdensServico.Any(x => x.Id == ordemEmDiagnostico.Id).Should().BeTrue();
+            _ = allResult.OrdensServico.Any(x => x.Id == ordemOutroCliente.Id).Should().BeTrue();
+
+            _ = getByClienteResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = byCliente.Should().NotBeNull();
+            _ = byCliente!.OrdensServico.Count.Should().Be(2);
+            _ = byCliente.OrdensServico.All(x => x.ClienteId == cliente1.Id).Should().BeTrue();
+
+            _ = getByVeiculoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = byVeiculo.Should().NotBeNull();
+            _ = byVeiculo!.OrdensServico.Count.Should().Be(1);
+            _ = byVeiculo.OrdensServico.First().Id.Should().Be(ordemRecebida.Id);
+            _ = byVeiculo.OrdensServico.First().VeiculoId.Should().Be(veiculo1.Id);
+
+            _ = getByStatusResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = byStatus.Should().NotBeNull();
+            _ = byStatus!.OrdensServico.Count.Should().Be(1);
+            _ = byStatus.OrdensServico.First().Id.Should().Be(ordemEmDiagnostico.Id);
+            _ = byStatus.OrdensServico.First().Status.Should().Be(2);
+        });
+    }
+
+    [Test]
+    public async Task Get_ShouldReturnBadRequest_WhenPaginationIsInvalid()
+    {
+        var response = await _client.GetAsync("/api/ordensservico?pageNumber=0&pageSize=10");
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Be("O numero da pagina deve ser maior que zero.");
+        });
+    }
+
+    [Test]
     public async Task AddPecaInsumo_ShouldSucceed_WhenRequestIsValid()
     {
         var cliente = await CreateClientAsync(9011);
@@ -595,6 +666,22 @@ public sealed class OrdensServicoControllerTests
         public string DescricaoProblema { get; set; } = string.Empty;
         public int Status { get; set; }
         public DateTime DataCriacao { get; set; }
+    }
+
+    private sealed class ListarOrdensServicoResponse
+    {
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalItems { get; set; }
+        public IReadOnlyCollection<ListarOrdemServicoItemResponse> OrdensServico { get; set; } = [];
+    }
+
+    private sealed class ListarOrdemServicoItemResponse
+    {
+        public Guid Id { get; set; }
+        public Guid ClienteId { get; set; }
+        public Guid VeiculoId { get; set; }
+        public int Status { get; set; }
     }
 
     private sealed class ServicoResponse

@@ -2,6 +2,8 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServi
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaInsumoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnosticoOrdemServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensServico;
+using FIAP.TechChallenge.Fase1.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
@@ -10,6 +12,35 @@ namespace FIAP.TechChallenge.Fase1.API.Controllers;
 [Route("api/[controller]")]
 public sealed class OrdensServicoController : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType(typeof(ListarOrdensServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Get(
+        [FromServices] IListarOrdensServicoUseCase useCase,
+        [FromQuery] Guid? clienteId,
+        [FromQuery] Guid? veiculoId,
+        [FromQuery] StatusOrdemServico? status,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new ListarOrdensServicoCommand
+        {
+            ClienteId = clienteId,
+            VeiculoId = veiculoId,
+            Status = status,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error.Description });
+
+        return Ok(result.Value);
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(CriarOrdemServicoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

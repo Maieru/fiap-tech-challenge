@@ -57,6 +57,77 @@ internal sealed class OrdemServicoRepositoryTests
     }
 
     [Test]
+    public async Task GetPagedAsync_ShouldReturnFilteredOrders_WhenClienteVeiculoAndStatusAreInformed()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var clienteId = Guid.NewGuid();
+        var veiculoId = Guid.NewGuid();
+        var ordemEsperada = CreateEntity(
+            id: Guid.NewGuid(),
+            clienteId: clienteId,
+            veiculoId: veiculoId,
+            status: StatusOrdemServico.EmDiagnostico,
+            dataCriacao: new DateTime(2026, 04, 12, 12, 0, 0, DateTimeKind.Utc));
+
+        await using var context = CreateContext(databaseName);
+        context.OrdensServico.AddRange(
+            ordemEsperada,
+            CreateEntity(clienteId: clienteId, veiculoId: veiculoId, status: StatusOrdemServico.Recebida),
+            CreateEntity(clienteId: clienteId, veiculoId: Guid.NewGuid(), status: StatusOrdemServico.EmDiagnostico),
+            CreateEntity(clienteId: Guid.NewGuid(), veiculoId: veiculoId, status: StatusOrdemServico.EmDiagnostico));
+        _ = await context.SaveChangesAsync();
+
+        var repository = new OrdemServicoRepository(context);
+
+        var result = await repository.GetPagedAsync(
+            clienteId,
+            veiculoId,
+            StatusOrdemServico.EmDiagnostico,
+            pageNumber: 1,
+            pageSize: 10);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value.OrdensServico, Has.Count.EqualTo(1));
+            Assert.That(result.Value.TotalItems, Is.EqualTo(1));
+            Assert.That(result.Value.OrdensServico.First().Id, Is.EqualTo(ordemEsperada.Id));
+        });
+    }
+
+    [Test]
+    public async Task GetPagedAsync_ShouldApplyPaginationAndOrdering_WhenNoFilterIsInformed()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        var ordemMaisAntiga = CreateEntity(dataCriacao: new DateTime(2026, 04, 10, 8, 0, 0, DateTimeKind.Utc));
+        var ordemIntermediaria = CreateEntity(dataCriacao: new DateTime(2026, 04, 11, 8, 0, 0, DateTimeKind.Utc));
+        var ordemMaisRecente = CreateEntity(dataCriacao: new DateTime(2026, 04, 12, 8, 0, 0, DateTimeKind.Utc));
+
+        await using var context = CreateContext(databaseName);
+        context.OrdensServico.AddRange(ordemMaisAntiga, ordemIntermediaria, ordemMaisRecente);
+        _ = await context.SaveChangesAsync();
+
+        var repository = new OrdemServicoRepository(context);
+
+        var result = await repository.GetPagedAsync(
+            clienteId: null,
+            veiculoId: null,
+            status: null,
+            pageNumber: 1,
+            pageSize: 2);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value.TotalItems, Is.EqualTo(3));
+            Assert.That(result.Value.OrdensServico, Has.Count.EqualTo(2));
+            Assert.That(result.Value.OrdensServico.First().Id, Is.EqualTo(ordemMaisRecente.Id));
+            Assert.That(result.Value.OrdensServico.Skip(1).First().Id, Is.EqualTo(ordemIntermediaria.Id));
+        });
+    }
+
+    [Test]
     public async Task AddAsync_ShouldPersistOrdemServico()
     {
         var databaseName = Guid.NewGuid().ToString();
@@ -122,17 +193,40 @@ internal sealed class OrdemServicoRepositoryTests
         return new AppDbContext(options);
     }
 
-    private static OrdemServicoEntity CreateEntity()
+    private static OrdemServicoEntity CreateEntity(
+        Guid? id = null,
+        Guid? clienteId = null,
+        Guid? veiculoId = null,
+        StatusOrdemServico status = StatusOrdemServico.Recebida,
+        DateTime? dataCriacao = null)
     {
-        return new OrdemServicoEntity
+        var baseData = dataCriacao ?? new DateTime(2026, 04, 11, 12, 0, 0, DateTimeKind.Utc);
+        var entity = new OrdemServicoEntity
         {
-            Id = Guid.NewGuid(),
-            ClienteId = Guid.NewGuid(),
-            VeiculoId = Guid.NewGuid(),
+            Id = id ?? Guid.NewGuid(),
+            ClienteId = clienteId ?? Guid.NewGuid(),
+            VeiculoId = veiculoId ?? Guid.NewGuid(),
             DescricaoProblema = "Problema no sistema de freio",
-            Status = StatusOrdemServico.Recebida,
-            DataCriacao = new DateTime(2026, 04, 11, 12, 0, 0, DateTimeKind.Utc)
+            Status = status,
+            DataCriacao = baseData
         };
+
+        if (status >= StatusOrdemServico.EmDiagnostico)
+            entity.DataInicioDiagnostico = baseData.AddHours(1);
+
+        if (status >= StatusOrdemServico.AguardandoAprovacao)
+            entity.DataEnvioAprovacao = baseData.AddHours(2);
+
+        if (status >= StatusOrdemServico.EmExecucao)
+            entity.DataInicioExecucao = baseData.AddHours(3);
+
+        if (status >= StatusOrdemServico.Finalizada)
+            entity.DataFinalizacao = baseData.AddHours(4);
+
+        if (status == StatusOrdemServico.Entregue)
+            entity.DataEntrega = baseData.AddHours(5);
+
+        return entity;
     }
 
     private static OrdemServico CreateOrdemServico()
