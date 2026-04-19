@@ -1,6 +1,7 @@
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
+using System.Transactions;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaInsumoOrdemServico;
 
@@ -44,8 +45,12 @@ public sealed class AdicionarPecaInsumoOrdemServicoUseCase(
 
         var pecaOuInsumoDaOrdemDeServico = pecaOuInsumoDaOrdemDeServicoResult.Value;
 
+        using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+
         await _pecaOuInsumoDaOrdemDeServicoRepository.AddAsync(pecaOuInsumoDaOrdemDeServico, cancellationToken);
         await _pecaInsumoRepository.UpdateAsync(pecaInsumo, cancellationToken);
+
+        transactionScope.Complete();
 
         return Result<AdicionarPecaInsumoOrdemServicoResponse>.Success(new AdicionarPecaInsumoOrdemServicoResponse
         {

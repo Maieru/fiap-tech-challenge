@@ -233,6 +233,83 @@ internal sealed class AdicionarPecaInsumoOrdemServicoUseCaseTests
         });
     }
 
+    [Test]
+    public void ExecuteAsync_ShouldThrow_WhenAddPecaOuInsumoFails()
+    {
+        var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var pecaInsumoRepositoryMock = new Mock<IPecaInsumoRepository>();
+        var pecaOuInsumoDaOrdemRepositoryMock = new Mock<IPecaOuInsumoDaOrdemDeServicoRepository>();
+        var ordemServico = CreateOrdemServico();
+        var pecaInsumo = CreatePecaInsumo();
+
+        _ = ordemServicoRepositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+        _ = pecaInsumoRepositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<PecaInsumo>.Success(pecaInsumo));
+        _ = pecaOuInsumoDaOrdemRepositoryMock
+            .Setup(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Falha ao salvar peça/insumo da ordem de serviço."));
+
+        var useCase = new AdicionarPecaInsumoOrdemServicoUseCase(
+            ordemServicoRepositoryMock.Object,
+            pecaInsumoRepositoryMock.Object,
+            pecaOuInsumoDaOrdemRepositoryMock.Object);
+
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await useCase.ExecuteAsync(CreateCommand(ordemServico.Id, pecaInsumo.Id, quantidade: 3)));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(exception, Is.Not.Null);
+            Assert.That(exception!.Message, Is.EqualTo("Falha ao salvar peça/insumo da ordem de serviço."));
+        });
+
+        pecaOuInsumoDaOrdemRepositoryMock.Verify(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()), Times.Once);
+        pecaInsumoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PecaInsumo>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public void ExecuteAsync_ShouldThrow_WhenUpdatePecaInsumoFails()
+    {
+        var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var pecaInsumoRepositoryMock = new Mock<IPecaInsumoRepository>();
+        var pecaOuInsumoDaOrdemRepositoryMock = new Mock<IPecaOuInsumoDaOrdemDeServicoRepository>();
+        var ordemServico = CreateOrdemServico();
+        var pecaInsumo = CreatePecaInsumo();
+
+        _ = ordemServicoRepositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+        _ = pecaInsumoRepositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<PecaInsumo>.Success(pecaInsumo));
+        _ = pecaOuInsumoDaOrdemRepositoryMock
+            .Setup(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _ = pecaInsumoRepositoryMock
+            .Setup(x => x.UpdateAsync(It.IsAny<PecaInsumo>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Falha ao atualizar estoque da peça/insumo."));
+
+        var useCase = new AdicionarPecaInsumoOrdemServicoUseCase(
+            ordemServicoRepositoryMock.Object,
+            pecaInsumoRepositoryMock.Object,
+            pecaOuInsumoDaOrdemRepositoryMock.Object);
+
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await useCase.ExecuteAsync(CreateCommand(ordemServico.Id, pecaInsumo.Id, quantidade: 3)));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(exception, Is.Not.Null);
+            Assert.That(exception!.Message, Is.EqualTo("Falha ao atualizar estoque da peça/insumo."));
+        });
+
+        pecaOuInsumoDaOrdemRepositoryMock.Verify(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()), Times.Once);
+        pecaInsumoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PecaInsumo>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static AdicionarPecaInsumoOrdemServicoCommand CreateCommand(
         Guid? ordemServicoId = null,
         Guid? pecaInsumoId = null,
