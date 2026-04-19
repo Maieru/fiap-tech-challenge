@@ -685,6 +685,69 @@ public sealed class OrdensServicoControllerTests
         });
     }
 
+    [Test]
+    public async Task Finalizar_ShouldSucceed_WhenOrdemServicoIsEmExecucao()
+    {
+        var cliente = await CreateClientAsync(9021);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(50), "Volkswagen", "T-Cross", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Barulho no eixo traseiro");
+
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
+        _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { });
+        _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/finalizar", new { });
+        var updated = await response.Content.ReadFromJsonAsync<FinalizarOrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = updated.Should().NotBeNull();
+            _ = updated!.Id.Should().Be(ordemServico.Id);
+            _ = updated.Status.Should().Be(5);
+            _ = updated.DataFinalizacao.Should().BeAfter(DateTime.UtcNow.AddMinutes(-5));
+        });
+    }
+
+    [Test]
+    public async Task Finalizar_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
+    {
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{Guid.NewGuid()}/finalizar", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("Ordem");
+            _ = error.Error.Should().Contain("encontrada");
+            _ = error.ErrorCode.Should().Be("NotFound");
+        });
+    }
+
+    [Test]
+    public async Task Finalizar_ShouldReturnBadRequest_WhenOrdemServicoIsNotEmExecucao()
+    {
+        var cliente = await CreateClientAsync(9022);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(51), "Nissan", "Kicks", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Ruido na coluna de direcao");
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/finalizar", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("finalizadas");
+        });
+    }
+
     private async Task<ClienteResponse> CreateClientAsync(int seed)
     {
         var request = new
@@ -951,6 +1014,13 @@ public sealed class OrdensServicoControllerTests
         public Guid Id { get; set; }
         public int Status { get; set; }
         public DateTime DataInicioExecucao { get; set; }
+    }
+
+    private sealed class FinalizarOrdemServicoResponse
+    {
+        public Guid Id { get; set; }
+        public int Status { get; set; }
+        public DateTime DataFinalizacao { get; set; }
     }
 
     private sealed class ErrorResponse

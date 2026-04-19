@@ -3,6 +3,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaI
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AprovarExecucaoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.FinalizarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnosticoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.RecuperarOrdemServico;
@@ -139,6 +140,20 @@ public sealed class OrdensServicoController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new AprovarExecucaoOrdemServicoCommand { OrdemServicoId = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPut("{id:guid}/finalizar")]
+    [ProducesResponseType(typeof(FinalizarOrdemServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PutFinalizar(
+        [FromRoute] Guid id,
+        [FromServices] IFinalizarOrdemServicoUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new FinalizarOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this);
     }
