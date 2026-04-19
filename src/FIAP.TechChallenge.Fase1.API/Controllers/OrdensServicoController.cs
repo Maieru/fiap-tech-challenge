@@ -1,6 +1,7 @@
 ﻿using FIAP.TechChallenge.Fase1.API.Extensions;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaInsumoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AprovarExecucaoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnosticoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensServico;
@@ -124,6 +125,20 @@ public sealed class OrdensServicoController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new SolicitarAprovacaoOrdemServicoCommand { OrdemServicoId = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPut("{id:guid}/aprovar-execucao")]
+    [ProducesResponseType(typeof(AprovarExecucaoOrdemServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PutAprovarExecucao(
+        [FromRoute] Guid id,
+        [FromServices] IAprovarExecucaoOrdemServicoUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new AprovarExecucaoOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this);
     }

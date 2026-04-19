@@ -625,6 +625,66 @@ public sealed class OrdensServicoControllerTests
         });
     }
 
+    [Test]
+    public async Task AprovarExecucao_ShouldSucceed_WhenOrdemServicoIsAguardandoAprovacao()
+    {
+        var cliente = await CreateClientAsync(9019);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(48), "Jeep", "Renegade", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Luz de injecao acesa");
+
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
+        _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { });
+        var updated = await response.Content.ReadFromJsonAsync<AprovarExecucaoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = updated.Should().NotBeNull();
+            _ = updated!.Id.Should().Be(ordemServico.Id);
+            _ = updated.Status.Should().Be(4);
+            _ = updated.DataInicioExecucao.Should().BeAfter(DateTime.UtcNow.AddMinutes(-5));
+        });
+    }
+
+    [Test]
+    public async Task AprovarExecucao_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
+    {
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{Guid.NewGuid()}/aprovar-execucao", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("Ordem");
+            _ = error.Error.Should().Contain("encontrada");
+            _ = error.ErrorCode.Should().Be("NotFound");
+        });
+    }
+
+    [Test]
+    public async Task AprovarExecucao_ShouldReturnBadRequest_WhenOrdemServicoIsNotAguardandoAprovacao()
+    {
+        var cliente = await CreateClientAsync(9020);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(49), "Ford", "Territory", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Vibracao no volante");
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("aguardando aprovação");
+        });
+    }
+
     private async Task<ClienteResponse> CreateClientAsync(int seed)
     {
         var request = new
@@ -884,6 +944,13 @@ public sealed class OrdensServicoControllerTests
         public Guid Id { get; set; }
         public int Status { get; set; }
         public DateTime DataEnvioAprovacao { get; set; }
+    }
+
+    private sealed class AprovarExecucaoResponse
+    {
+        public Guid Id { get; set; }
+        public int Status { get; set; }
+        public DateTime DataInicioExecucao { get; set; }
     }
 
     private sealed class ErrorResponse
