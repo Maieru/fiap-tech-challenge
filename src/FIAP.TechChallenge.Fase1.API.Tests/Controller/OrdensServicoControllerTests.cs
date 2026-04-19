@@ -367,6 +367,141 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task FluxoCompleto_ShouldSucceed_FromRecebidaToEntregue()
+    {
+        var cliente = await CreateClientAsync(9030);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(60), "Toyota", "Corolla", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Revisao geral com troca de componentes");
+
+        var servico1 = await CreateServicoAsync("Troca de oleo", 350m);
+        var servico2 = await CreateServicoAsync("Balanceamento", 120m);
+
+        var pecaInsumo1 = await CreatePecaInsumoAsync("Filtro de oleo", "flt-os-901", "Filtro premium", 260m, 30);
+        var pecaInsumo2 = await CreatePecaInsumoAsync("Aditivo de combustivel", "adt-os-902", "Aditivo para limpeza", 35m, 60);
+
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+        var iniciarDiagnosticoBody = await iniciarDiagnosticoResponse.Content.ReadFromJsonAsync<IniciarDiagnosticoResponse>();
+
+        var getEmDiagnosticoResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
+        var getEmDiagnosticoBody = await getEmDiagnosticoResponse.Content.ReadFromJsonAsync<RecuperarOrdemServicoResponse>();
+
+        var addServico1Response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addservico", new
+        {
+            ServicoId = servico1.Id,
+            Quantidade = 1
+        });
+
+        var addServico2Response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addservico", new
+        {
+            ServicoId = servico2.Id,
+            Quantidade = 2
+        });
+
+        var addPecaInsumo1Response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addpecainsumo", new
+        {
+            PecaInsumoId = pecaInsumo1.Id,
+            Quantidade = 2
+        });
+
+        var addPecaInsumo2Response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addpecainsumo", new
+        {
+            PecaInsumoId = pecaInsumo2.Id,
+            Quantidade = 3
+        });
+
+        var getComItensResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
+        var getComItensBody = await getComItensResponse.Content.ReadFromJsonAsync<RecuperarOrdemServicoResponse>();
+
+        var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
+        var solicitarAprovacaoBody = await solicitarAprovacaoResponse.Content.ReadFromJsonAsync<SolicitarAprovacaoResponse>();
+
+        var getAguardandoAprovacaoResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
+        var getAguardandoAprovacaoBody = await getAguardandoAprovacaoResponse.Content.ReadFromJsonAsync<RecuperarOrdemServicoResponse>();
+
+        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { });
+        var aprovarExecucaoBody = await aprovarExecucaoResponse.Content.ReadFromJsonAsync<AprovarExecucaoResponse>();
+
+        var getEmExecucaoResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
+        var getEmExecucaoBody = await getEmExecucaoResponse.Content.ReadFromJsonAsync<RecuperarOrdemServicoResponse>();
+
+        var finalizarResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/finalizar", new { });
+        var finalizarBody = await finalizarResponse.Content.ReadFromJsonAsync<FinalizarOrdemServicoResponse>();
+
+        var getConcluidaResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
+        var getConcluidaBody = await getConcluidaResponse.Content.ReadFromJsonAsync<RecuperarOrdemServicoResponse>();
+
+        var entregarResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/entregar", new { });
+        var entregarBody = await entregarResponse.Content.ReadFromJsonAsync<EntregarOrdemServicoResponse>();
+
+        var getEntregueResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
+        var getEntregueBody = await getEntregueResponse.Content.ReadFromJsonAsync<RecuperarOrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = iniciarDiagnosticoBody.Should().NotBeNull();
+            _ = iniciarDiagnosticoBody!.Status.Should().Be(2);
+
+            _ = getEmDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = getEmDiagnosticoBody.Should().NotBeNull();
+            _ = getEmDiagnosticoBody!.Status.Should().Be(2);
+            _ = getEmDiagnosticoBody.Servicos.Count.Should().Be(0);
+            _ = getEmDiagnosticoBody.PecasInsumos.Count.Should().Be(0);
+
+            _ = addServico1Response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = addServico2Response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = addPecaInsumo1Response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = addPecaInsumo2Response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            _ = getComItensResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = getComItensBody.Should().NotBeNull();
+            _ = getComItensBody!.Status.Should().Be(2);
+            _ = getComItensBody.Servicos.Count.Should().Be(2);
+            _ = getComItensBody.PecasInsumos.Count.Should().Be(2);
+            _ = getComItensBody.ValorTotalServicos.Should().Be(590m);
+            _ = getComItensBody.ValorTotalPecasInsumos.Should().Be(625m);
+            _ = getComItensBody.ValorTotalOrdemServico.Should().Be(1215m);
+
+            _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = solicitarAprovacaoBody.Should().NotBeNull();
+            _ = solicitarAprovacaoBody!.Status.Should().Be(3);
+
+            _ = getAguardandoAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = getAguardandoAprovacaoBody.Should().NotBeNull();
+            _ = getAguardandoAprovacaoBody!.Status.Should().Be(3);
+
+            _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = aprovarExecucaoBody.Should().NotBeNull();
+            _ = aprovarExecucaoBody!.Status.Should().Be(4);
+
+            _ = getEmExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = getEmExecucaoBody.Should().NotBeNull();
+            _ = getEmExecucaoBody!.Status.Should().Be(4);
+
+            _ = finalizarResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = finalizarBody.Should().NotBeNull();
+            _ = finalizarBody!.Status.Should().Be(5);
+
+            _ = getConcluidaResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = getConcluidaBody.Should().NotBeNull();
+            _ = getConcluidaBody!.Status.Should().Be(5);
+
+            _ = entregarResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = entregarBody.Should().NotBeNull();
+            _ = entregarBody!.Status.Should().Be(6);
+
+            _ = getEntregueResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = getEntregueBody.Should().NotBeNull();
+            _ = getEntregueBody!.Status.Should().Be(6);
+            _ = getEntregueBody.Servicos.Count.Should().Be(2);
+            _ = getEntregueBody.PecasInsumos.Count.Should().Be(2);
+            _ = getEntregueBody.ValorTotalServicos.Should().Be(590m);
+            _ = getEntregueBody.ValorTotalPecasInsumos.Should().Be(625m);
+            _ = getEntregueBody.ValorTotalOrdemServico.Should().Be(1215m);
+        });
+    }
+
+    [Test]
     public async Task GetById_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
     {
         var response = await _client.GetAsync($"/api/ordensservico/{Guid.NewGuid()}");
