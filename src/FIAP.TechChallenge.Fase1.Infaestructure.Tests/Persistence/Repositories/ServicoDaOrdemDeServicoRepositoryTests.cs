@@ -88,7 +88,7 @@ internal sealed class ServicoDaOrdemDeServicoRepositoryTests
             Assert.That(result.Value, Has.Count.EqualTo(2));
             Assert.That(result.Value!.All(x => x.OrdemServicoId == ordemServicoId), Is.True);
             Assert.That(result.Value!.Sum(x => x.ValorTotal), Is.EqualTo(300m));
-            Assert.That(result.Value.Any(x => x.Concluido), Is.True);
+            Assert.That(result.Value!.Any(x => x.Concluido), Is.True);
         });
     }
 

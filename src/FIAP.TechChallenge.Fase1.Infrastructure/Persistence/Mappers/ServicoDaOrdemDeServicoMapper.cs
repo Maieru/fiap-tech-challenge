@@ -23,7 +23,7 @@ public static class ServicoDaOrdemDeServicoMapper
 
     public static Result<ServicoDaOrdemDeServico> ToDomain(ServicoDaOrdemDeServicoEntity entity)
     {
-        return ServicoDaOrdemDeServico.Rehydrate(
+        var snapshot = new ServicoDaOrdemDeServicoSnapshot(
             entity.Id,
             entity.OrdemServicoId,
             entity.ServicoId,
@@ -32,5 +32,7 @@ public static class ServicoDaOrdemDeServicoMapper
             entity.Quantidade,
             entity.TempoGastoMinutos,
             entity.Concluido);
+
+        return ServicoDaOrdemDeServico.Rehydrate(snapshot);
     }
 }

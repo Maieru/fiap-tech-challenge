@@ -387,14 +387,15 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
 
         var servicoDaOrdemResult = concluido
             ? ServicoDaOrdemDeServico.Rehydrate(
-                Guid.NewGuid(),
-                ordemServicoId,
-                servicoResult.Value!.Id,
-                servicoResult.Value.Descricao,
-                servicoResult.Value.ValorUnitario,
-                1,
-                30,
-                true)
+                new ServicoDaOrdemDeServicoSnapshot(
+                    Guid.NewGuid(),
+                    ordemServicoId,
+                    servicoResult.Value!.Id,
+                    servicoResult.Value.Descricao,
+                    servicoResult.Value.ValorUnitario,
+                    1,
+                    30,
+                    true))
             : ServicoDaOrdemDeServico.Create(ordemServicoId, servicoResult.Value!, 1);
 
         Assert.Multiple(() =>

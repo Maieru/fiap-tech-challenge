@@ -12,14 +12,15 @@ internal sealed class ServicoDaOrdemDeServicoMapperTests
     public void ToEntity_ShouldMapAllFields_WhenDomainIsValid()
     {
         var domain = ServicoDaOrdemDeServico.Rehydrate(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "Balanceamento",
-            89.9m,
-            2,
-            45,
-            true).Value!;
+            new ServicoDaOrdemDeServicoSnapshot(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                "Balanceamento",
+                89.9m,
+                2,
+                45,
+                true)).Value!;
 
         var entity = ServicoDaOrdemDeServicoMapper.ToEntity(domain);
 

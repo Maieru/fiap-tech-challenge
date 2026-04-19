@@ -2,6 +2,16 @@
 
 namespace FIAP.TechChallenge.Fase1.Domain.Entities;
 
+public sealed record ServicoDaOrdemDeServicoSnapshot(
+    Guid Id,
+    Guid OrdemServicoId,
+    Guid ServicoId,
+    string Descricao,
+    decimal ValorUnitario,
+    int Quantidade,
+    int? TempoGastoMinutos,
+    bool Concluido);
+
 /// <summary>
 /// Representa um serviço efetivamente adicionado a uma ordem de serviço,
 /// preservando os dados usados no momento de adição.
@@ -20,24 +30,16 @@ public sealed class ServicoDaOrdemDeServico
 
     public decimal ValorTotal => ValorUnitario * Quantidade;
 
-    private ServicoDaOrdemDeServico(
-        Guid id,
-        Guid ordemServicoId,
-        Guid servicoId,
-        string descricao,
-        decimal valorUnitario,
-        int quantidade,
-        int? tempoGastoMinutos,
-        bool concluido)
+    private ServicoDaOrdemDeServico(ServicoDaOrdemDeServicoSnapshot snapshot)
     {
-        Id = id;
-        OrdemServicoId = ordemServicoId;
-        ServicoId = servicoId;
-        Descricao = descricao;
-        ValorUnitario = valorUnitario;
-        Quantidade = quantidade;
-        TempoGastoMinutos = tempoGastoMinutos;
-        Concluido = concluido;
+        Id = snapshot.Id;
+        OrdemServicoId = snapshot.OrdemServicoId;
+        ServicoId = snapshot.ServicoId;
+        Descricao = snapshot.Descricao;
+        ValorUnitario = snapshot.ValorUnitario;
+        Quantidade = snapshot.Quantidade;
+        TempoGastoMinutos = snapshot.TempoGastoMinutos;
+        Concluido = snapshot.Concluido;
     }
 
     public static Result<ServicoDaOrdemDeServico> Create(Guid ordemServicoId, Servico servico, int quantidade)
@@ -45,62 +47,58 @@ public sealed class ServicoDaOrdemDeServico
         if (servico is null)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("O serviço da ordem de serviço é obrigatório."));
 
-        return Create(Guid.NewGuid(), ordemServicoId, servico.Id, servico.Descricao, servico.ValorUnitario, quantidade, null, false);
+        var snapshot = new ServicoDaOrdemDeServicoSnapshot(
+            Guid.NewGuid(),
+            ordemServicoId,
+            servico.Id,
+            servico.Descricao,
+            servico.ValorUnitario,
+            quantidade,
+            null,
+            false);
+
+        return Create(snapshot);
     }
 
-    public static Result<ServicoDaOrdemDeServico> Rehydrate(
-        Guid id,
-        Guid ordemServicoId,
-        Guid servicoId,
-        string descricao,
-        decimal valorUnitario,
-        int quantidade,
-        int? tempoGastoMinutos,
-        bool concluido)
+    public static Result<ServicoDaOrdemDeServico> Rehydrate(ServicoDaOrdemDeServicoSnapshot snapshot)
     {
-        if (id == Guid.Empty)
+        if (snapshot.Id == Guid.Empty)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("O id do serviço da ordem de serviço é inválido."));
 
-        return Create(id, ordemServicoId, servicoId, descricao, valorUnitario, quantidade, tempoGastoMinutos, concluido);
+        return Create(snapshot);
     }
 
-    private static Result<ServicoDaOrdemDeServico> Create(
-        Guid id,
-        Guid ordemServicoId,
-        Guid servicoId,
-        string descricao,
-        decimal valorUnitario,
-        int quantidade,
-        int? tempoGastoMinutos,
-        bool concluido)
+    private static Result<ServicoDaOrdemDeServico> Create(ServicoDaOrdemDeServicoSnapshot snapshot)
     {
-        if (ordemServicoId == Guid.Empty)
+        if (snapshot.OrdemServicoId == Guid.Empty)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("O serviço deve estar associado a uma ordem de serviço válida."));
 
-        if (servicoId == Guid.Empty)
+        if (snapshot.ServicoId == Guid.Empty)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("O serviço informado é inválido."));
 
-        if (string.IsNullOrWhiteSpace(descricao))
+        if (string.IsNullOrWhiteSpace(snapshot.Descricao))
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("A descrição do serviço da ordem de serviço é obrigatória."));
 
-        descricao = descricao.Trim();
+        var descricao = snapshot.Descricao.Trim();
 
         if (descricao.Length > 1000)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("A descrição do serviço da ordem de serviço deve conter no máximo 1000 caracteres."));
 
-        if (valorUnitario < 0)
+        if (snapshot.ValorUnitario < 0)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("O valor unitário do serviço da ordem de serviço não pode ser negativo."));
 
-        if (quantidade <= 0)
+        if (snapshot.Quantidade <= 0)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("A quantidade do serviço da ordem de serviço deve ser maior que zero."));
 
-        if (concluido && (!tempoGastoMinutos.HasValue || tempoGastoMinutos.Value <= 0))
+        if (snapshot.Concluido && (!snapshot.TempoGastoMinutos.HasValue || snapshot.TempoGastoMinutos.Value <= 0))
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("O tempo gasto do serviço concluído da ordem de serviço deve ser maior que zero."));
 
-        if (!concluido && tempoGastoMinutos.HasValue)
+        if (!snapshot.Concluido && snapshot.TempoGastoMinutos.HasValue)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("Não é permitido informar tempo gasto para serviço não concluído da ordem de serviço."));
 
-        var entity = new ServicoDaOrdemDeServico(id, ordemServicoId, servicoId, descricao, valorUnitario, quantidade, tempoGastoMinutos, concluido);
+        var normalizedSnapshot = snapshot with { Descricao = descricao };
+
+        var entity = new ServicoDaOrdemDeServico(normalizedSnapshot);
 
         return Result<ServicoDaOrdemDeServico>.Success(entity);
     }
