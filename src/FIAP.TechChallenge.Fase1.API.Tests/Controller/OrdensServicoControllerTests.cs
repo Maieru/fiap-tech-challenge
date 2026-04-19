@@ -582,6 +582,8 @@ public sealed class OrdensServicoControllerTests
 
         var response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addpecainsumo", request);
         var created = await response.Content.ReadFromJsonAsync<PecaInsumoDaOrdemServicoResponse>();
+        var pecaInsumoAtualizadaResponse = await _client.GetAsync($"/api/pecasinsumos/{pecaInsumo.Id}");
+        var pecaInsumoAtualizada = await pecaInsumoAtualizadaResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
 
         Assert.Multiple(() =>
         {
@@ -596,6 +598,9 @@ public sealed class OrdensServicoControllerTests
             _ = created.PrecoUnitario.Should().Be(210m);
             _ = created.Quantidade.Should().Be(3);
             _ = created.ValorTotal.Should().Be(630m);
+            _ = pecaInsumoAtualizadaResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = pecaInsumoAtualizada.Should().NotBeNull();
+            _ = pecaInsumoAtualizada!.QuantidadeEstoque.Should().Be(12);
         });
     }
 
@@ -648,6 +653,35 @@ public sealed class OrdensServicoControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("quantidade");
+        });
+    }
+
+    [Test]
+    public async Task AddPecaInsumo_ShouldReturnBadRequest_WhenQuantidadeExceedsEstoqueDisponivel()
+    {
+        var cliente = await CreateClientAsync(90121);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(401), "Renault", "Kwid", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Substituicao de componente");
+        var pecaInsumo = await CreatePecaInsumoAsync("Sensor ABS", "sns-os-210", "Sensor dianteiro", 125m, 1);
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var request = new
+        {
+            PecaInsumoId = pecaInsumo.Id,
+            Quantidade = 2
+        };
+
+        var response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addpecainsumo", request);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("estoque");
+            _ = error.ErrorCode.Should().Be("BadRequest");
         });
     }
 
@@ -1255,6 +1289,7 @@ public sealed class OrdensServicoControllerTests
     private sealed class PecaInsumoResponse
     {
         public Guid Id { get; set; }
+        public int QuantidadeEstoque { get; set; }
     }
 
     private sealed class ServicoDaOrdemServicoResponse

@@ -36,6 +36,7 @@ internal sealed class AdicionarPecaInsumoOrdemServicoUseCaseTests
 
         pecaInsumoRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         pecaOuInsumoDaOrdemRepositoryMock.Verify(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()), Times.Never);
+        pecaInsumoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PecaInsumo>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
@@ -68,6 +69,7 @@ internal sealed class AdicionarPecaInsumoOrdemServicoUseCaseTests
         });
 
         pecaOuInsumoDaOrdemRepositoryMock.Verify(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()), Times.Never);
+        pecaInsumoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PecaInsumo>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
@@ -98,6 +100,7 @@ internal sealed class AdicionarPecaInsumoOrdemServicoUseCaseTests
 
         pecaInsumoRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         pecaOuInsumoDaOrdemRepositoryMock.Verify(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()), Times.Never);
+        pecaInsumoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PecaInsumo>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
@@ -131,6 +134,41 @@ internal sealed class AdicionarPecaInsumoOrdemServicoUseCaseTests
         });
 
         pecaOuInsumoDaOrdemRepositoryMock.Verify(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()), Times.Never);
+        pecaInsumoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PecaInsumo>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task ExecuteAsync_ShouldFail_WhenQuantidadeExceedsEstoque()
+    {
+        var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var pecaInsumoRepositoryMock = new Mock<IPecaInsumoRepository>();
+        var pecaOuInsumoDaOrdemRepositoryMock = new Mock<IPecaOuInsumoDaOrdemDeServicoRepository>();
+        var ordemServico = CreateOrdemServico();
+        var pecaInsumo = CreatePecaInsumo(quantidadeEstoque: 2);
+
+        _ = ordemServicoRepositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+        _ = pecaInsumoRepositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<PecaInsumo>.Success(pecaInsumo));
+
+        var useCase = new AdicionarPecaInsumoOrdemServicoUseCase(
+            ordemServicoRepositoryMock.Object,
+            pecaInsumoRepositoryMock.Object,
+            pecaOuInsumoDaOrdemRepositoryMock.Object);
+
+        var result = await useCase.ExecuteAsync(CreateCommand(ordemServico.Id, pecaInsumo.Id, quantidade: 3));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("A quantidade informada é maior que o estoque disponível."));
+        });
+
+        pecaOuInsumoDaOrdemRepositoryMock.Verify(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()), Times.Never);
+        pecaInsumoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PecaInsumo>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
@@ -142,6 +180,7 @@ internal sealed class AdicionarPecaInsumoOrdemServicoUseCaseTests
         var ordemServico = CreateOrdemServico();
         var pecaInsumo = CreatePecaInsumo();
         PecaOuInsumoDaOrdemDeServico? pecaOuInsumoAdicionado = null;
+        PecaInsumo? pecaInsumoAtualizado = null;
 
         _ = ordemServicoRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -152,6 +191,10 @@ internal sealed class AdicionarPecaInsumoOrdemServicoUseCaseTests
         _ = pecaOuInsumoDaOrdemRepositoryMock
             .Setup(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()))
             .Callback<PecaOuInsumoDaOrdemDeServico, CancellationToken>((item, _) => pecaOuInsumoAdicionado = item)
+            .Returns(Task.CompletedTask);
+        _ = pecaInsumoRepositoryMock
+            .Setup(x => x.UpdateAsync(It.IsAny<PecaInsumo>(), It.IsAny<CancellationToken>()))
+            .Callback<PecaInsumo, CancellationToken>((item, _) => pecaInsumoAtualizado = item)
             .Returns(Task.CompletedTask);
 
         var useCase = new AdicionarPecaInsumoOrdemServicoUseCase(
@@ -167,9 +210,11 @@ internal sealed class AdicionarPecaInsumoOrdemServicoUseCaseTests
             Assert.That(result.Value, Is.Not.Null);
             Assert.That(result.Error, Is.EqualTo(Error.None));
             Assert.That(pecaOuInsumoAdicionado, Is.Not.Null);
+            Assert.That(pecaInsumoAtualizado, Is.Not.Null);
         });
 
         pecaOuInsumoDaOrdemRepositoryMock.Verify(x => x.AddAsync(It.IsAny<PecaOuInsumoDaOrdemDeServico>(), It.IsAny<CancellationToken>()), Times.Once);
+        pecaInsumoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<PecaInsumo>(), It.IsAny<CancellationToken>()), Times.Once);
 
         var response = result.Value!;
 
@@ -184,6 +229,7 @@ internal sealed class AdicionarPecaInsumoOrdemServicoUseCaseTests
             Assert.That(response.PrecoUnitario, Is.EqualTo(pecaInsumo.PrecoUnitario));
             Assert.That(response.Quantidade, Is.EqualTo(3));
             Assert.That(response.ValorTotal, Is.EqualTo(pecaInsumo.PrecoUnitario * 3));
+            Assert.That(pecaInsumoAtualizado!.QuantidadeEstoque, Is.EqualTo(27));
         });
     }
 
@@ -224,9 +270,9 @@ internal sealed class AdicionarPecaInsumoOrdemServicoUseCaseTests
         return ordemServico;
     }
 
-    private static PecaInsumo CreatePecaInsumo()
+    private static PecaInsumo CreatePecaInsumo(int quantidadeEstoque = 30)
     {
-        var pecaInsumoResult = PecaInsumo.Create("Pastilha de freio", "PST-001", "Pastilha dianteira", 180m, 30);
+        var pecaInsumoResult = PecaInsumo.Create("Pastilha de freio", "PST-001", "Pastilha dianteira", 180m, quantidadeEstoque);
 
         Assert.Multiple(() =>
         {

@@ -30,6 +30,13 @@ public sealed class AdicionarPecaInsumoOrdemServicoUseCase(
         if (!pecaInsumoResult.IsSuccess || pecaInsumoResult.Value is null)
             return Result<AdicionarPecaInsumoOrdemServicoResponse>.Failure(pecaInsumoResult.Error);
 
+        var pecaInsumo = pecaInsumoResult.Value;
+
+        var removeEstoqueResult = pecaInsumo.RemoveEstoque(command.Quantidade);
+
+        if (!removeEstoqueResult.IsSuccess)
+            return Result<AdicionarPecaInsumoOrdemServicoResponse>.Failure(removeEstoqueResult.Error);
+
         var pecaOuInsumoDaOrdemDeServicoResult = PecaOuInsumoDaOrdemDeServico.Create(command.OrdemServicoId, pecaInsumoResult.Value, command.Quantidade);
 
         if (!pecaOuInsumoDaOrdemDeServicoResult.IsSuccess || pecaOuInsumoDaOrdemDeServicoResult.Value is null)
@@ -38,6 +45,7 @@ public sealed class AdicionarPecaInsumoOrdemServicoUseCase(
         var pecaOuInsumoDaOrdemDeServico = pecaOuInsumoDaOrdemDeServicoResult.Value;
 
         await _pecaOuInsumoDaOrdemDeServicoRepository.AddAsync(pecaOuInsumoDaOrdemDeServico, cancellationToken);
+        await _pecaInsumoRepository.UpdateAsync(pecaInsumo, cancellationToken);
 
         return Result<AdicionarPecaInsumoOrdemServicoResponse>.Success(new AdicionarPecaInsumoOrdemServicoResponse
         {
