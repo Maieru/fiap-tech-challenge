@@ -1,6 +1,8 @@
-﻿using FIAP.TechChallenge.Fase1.API.Extensions;
+using FIAP.TechChallenge.Fase1.API.Extensions;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ListarServicos;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.RecuperarServico;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
@@ -9,6 +11,37 @@ namespace FIAP.TechChallenge.Fase1.API.Controllers;
 [Route("api/[controller]")]
 public sealed class ServicosController : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType(typeof(ListarServicosResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Get(
+        [FromServices] IListarServicosUseCase useCase,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new ListarServicosCommand
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(RecuperarServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById([FromRoute] Guid id, [FromServices] IRecuperarServicoUseCase useCase, CancellationToken cancellationToken = default)
+    {
+        var command = new RecuperarServicoCommand { ServicoId = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(CadastrarServicoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

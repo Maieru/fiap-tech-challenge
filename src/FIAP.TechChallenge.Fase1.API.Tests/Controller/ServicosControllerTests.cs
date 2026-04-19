@@ -65,6 +65,81 @@ public sealed class ServicosControllerTests
     }
 
     [Test]
+    public async Task Get_ShouldListAllAndGetById_WhenRequestIsValid()
+    {
+        var firstCreateRequest = new
+        {
+            Descricao = "Alinhamento",
+            ValorUnitario = 99.90m
+        };
+
+        var secondCreateRequest = new
+        {
+            Descricao = "Balanceamento",
+            ValorUnitario = 79.90m
+        };
+
+        var firstCreateResponse = await _client.PostAsJsonAsync("/api/servicos", firstCreateRequest);
+        var secondCreateResponse = await _client.PostAsJsonAsync("/api/servicos", secondCreateRequest);
+        var firstCreated = await firstCreateResponse.Content.ReadFromJsonAsync<ServicoResponse>();
+        var secondCreated = await secondCreateResponse.Content.ReadFromJsonAsync<ServicoResponse>();
+
+        var getAllResponse = await _client.GetAsync("/api/servicos?pageNumber=1&pageSize=10");
+        var allResult = await getAllResponse.Content.ReadFromJsonAsync<ListarServicosResponse>();
+
+        var getByIdResponse = await _client.GetAsync($"/api/servicos/{firstCreated!.Id}");
+        var byId = await getByIdResponse.Content.ReadFromJsonAsync<ServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = firstCreateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = secondCreateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            _ = getAllResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = allResult.Should().NotBeNull();
+            _ = allResult!.Servicos.Count.Should().BeGreaterThanOrEqualTo(2);
+            _ = allResult.Servicos.Any(x => x.Id == firstCreated.Id).Should().BeTrue();
+            _ = allResult.Servicos.Any(x => x.Id == secondCreated!.Id).Should().BeTrue();
+
+            _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = byId.Should().NotBeNull();
+            _ = byId!.Id.Should().Be(firstCreated.Id);
+            _ = byId.Descricao.Should().Be("Alinhamento");
+            _ = byId.ValorUnitario.Should().Be(99.90m);
+        });
+    }
+
+    [Test]
+    public async Task GetById_ShouldReturnNotFound_WhenServicoDoesNotExist()
+    {
+        var response = await _client.GetAsync($"/api/servicos/{Guid.NewGuid()}");
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Be("Servico nao encontrado.");
+            _ = error.ErrorCode.Should().Be("NotFound");
+        });
+    }
+
+    [Test]
+    public async Task Get_ShouldReturnBadRequest_WhenPageNumberIsZero()
+    {
+        var response = await _client.GetAsync("/api/servicos?pageNumber=0&pageSize=10");
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Be("O numero da pagina deve ser maior que zero.");
+            _ = error.ErrorCode.Should().Be("BadRequest");
+        });
+    }
+
+    [Test]
     public async Task Create_ShouldReturnBadRequest_WhenDescricaoIsInvalid()
     {
         var request = new
@@ -169,6 +244,14 @@ public sealed class ServicosControllerTests
     {
         public string Error { get; set; } = string.Empty;
         public string ErrorCode { get; set; } = string.Empty;
+    }
+
+    private sealed class ListarServicosResponse
+    {
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalItems { get; set; }
+        public IReadOnlyCollection<ServicoResponse> Servicos { get; set; } = [];
     }
 }
 
