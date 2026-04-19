@@ -568,6 +568,63 @@ public sealed class OrdensServicoControllerTests
         });
     }
 
+    [Test]
+    public async Task SolicitarAprovacao_ShouldSucceed_WhenOrdemServicoIsEmDiagnostico()
+    {
+        var cliente = await CreateClientAsync(9017);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(46), "Toyota", "Corolla", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Falha no sistema eletrico");
+
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
+        var updated = await response.Content.ReadFromJsonAsync<SolicitarAprovacaoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = updated.Should().NotBeNull();
+            _ = updated!.Id.Should().Be(ordemServico.Id);
+            _ = updated.Status.Should().Be(3);
+            _ = updated.DataEnvioAprovacao.Should().BeAfter(DateTime.UtcNow.AddMinutes(-5));
+        });
+    }
+
+    [Test]
+    public async Task SolicitarAprovacao_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
+    {
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{Guid.NewGuid()}/solicitar-aprovacao", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("Ordem");
+            _ = error.Error.Should().Contain("encontrada");
+            _ = error.ErrorCode.Should().Be("NotFound");
+        });
+    }
+
+    [Test]
+    public async Task SolicitarAprovacao_ShouldReturnBadRequest_WhenOrdemServicoIsNotEmDiagnostico()
+    {
+        var cliente = await CreateClientAsync(9018);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(47), "Honda", "Civic", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Falha no alternador");
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("diagnóstico");
+        });
+    }
+
     private async Task<ClienteResponse> CreateClientAsync(int seed)
     {
         var request = new
@@ -820,6 +877,13 @@ public sealed class OrdensServicoControllerTests
         public Guid Id { get; set; }
         public int Status { get; set; }
         public DateTime DataInicioDiagnostico { get; set; }
+    }
+
+    private sealed class SolicitarAprovacaoResponse
+    {
+        public Guid Id { get; set; }
+        public int Status { get; set; }
+        public DateTime DataEnvioAprovacao { get; set; }
     }
 
     private sealed class ErrorResponse

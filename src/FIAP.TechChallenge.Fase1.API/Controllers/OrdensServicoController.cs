@@ -5,6 +5,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServ
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnosticoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.RecuperarOrdemServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.SolicitarAprovacaoOrdemServico;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
@@ -109,6 +110,20 @@ public sealed class OrdensServicoController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new IniciarDiagnosticoOrdemServicoCommand { OrdemServicoId = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPut("{id:guid}/solicitar-aprovacao")]
+    [ProducesResponseType(typeof(SolicitarAprovacaoOrdemServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PutSolicitarAprovacao(
+        [FromRoute] Guid id,
+        [FromServices] ISolicitarAprovacaoOrdemServicoUseCase useCase,
+        CancellationToken cancellationToken)
+    {
+        var command = new SolicitarAprovacaoOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this);
     }
