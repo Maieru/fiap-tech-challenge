@@ -748,6 +748,72 @@ public sealed class OrdensServicoControllerTests
         });
     }
 
+    [Test]
+    public async Task Entregar_ShouldSucceed_WhenOrdemServicoIsFinalizada()
+    {
+        var cliente = await CreateClientAsync(9023);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(52), "Hyundai", "HB20", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Falha no sistema de arrefecimento");
+
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
+        _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { });
+        _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var finalizarResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/finalizar", new { });
+        _ = finalizarResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/entregar", new { });
+        var updated = await response.Content.ReadFromJsonAsync<EntregarOrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = updated.Should().NotBeNull();
+            _ = updated!.Id.Should().Be(ordemServico.Id);
+            _ = updated.Status.Should().Be(6);
+            _ = updated.DataEntrega.Should().BeAfter(DateTime.UtcNow.AddMinutes(-5));
+        });
+    }
+
+    [Test]
+    public async Task Entregar_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
+    {
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{Guid.NewGuid()}/entregar", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("Ordem");
+            _ = error.Error.Should().Contain("encontrada");
+            _ = error.ErrorCode.Should().Be("NotFound");
+        });
+    }
+
+    [Test]
+    public async Task Entregar_ShouldReturnBadRequest_WhenOrdemServicoIsNotFinalizada()
+    {
+        var cliente = await CreateClientAsync(9024);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(53), "Kia", "Cerato", 2023);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Barulho na correia");
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/entregar", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("finalizadas");
+        });
+    }
+
     private async Task<ClienteResponse> CreateClientAsync(int seed)
     {
         var request = new
@@ -1021,6 +1087,13 @@ public sealed class OrdensServicoControllerTests
         public Guid Id { get; set; }
         public int Status { get; set; }
         public DateTime DataFinalizacao { get; set; }
+    }
+
+    private sealed class EntregarOrdemServicoResponse
+    {
+        public Guid Id { get; set; }
+        public int Status { get; set; }
+        public DateTime DataEntrega { get; set; }
     }
 
     private sealed class ErrorResponse

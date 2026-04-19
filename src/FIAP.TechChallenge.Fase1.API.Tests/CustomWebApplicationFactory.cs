@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace FIAP.TechChallenge.Fase1.API.Tests;
 
@@ -23,6 +24,12 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
             {
                 _ = options.UseInMemoryDatabase(_databaseName);
             });
+        });
+
+        _ = builder.ConfigureLogging(logging =>
+        {
+            _ = logging.ClearProviders();
+            _ = logging.AddConsole();
         });
     }
 }

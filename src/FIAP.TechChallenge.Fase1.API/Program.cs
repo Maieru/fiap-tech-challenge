@@ -23,12 +23,11 @@ if (app.Environment.IsDevelopment())
 }
 
 if (!app.Environment.IsEnvironment("Testing"))
+{
     await app.ApplyMigrationsAsync();
-
-app.UseHttpsRedirection();
+    _ = app.UseHttpsRedirection();
+}
 
 app.UseAuthorization();
-
 app.MapControllers();
-
 await app.RunAsync();
