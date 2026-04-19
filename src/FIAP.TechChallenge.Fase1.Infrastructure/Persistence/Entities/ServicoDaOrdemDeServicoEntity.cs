@@ -28,6 +28,11 @@ public sealed class ServicoDaOrdemDeServicoEntity
     [Required]
     public int Quantidade { get; set; }
 
+    public int? TempoGastoMinutos { get; set; }
+
+    [Required]
+    public bool Concluido { get; set; }
+
     [ForeignKey(nameof(OrdemServicoId))]
     public OrdemServicoEntity OrdemServico { get; set; } = null!;
 }

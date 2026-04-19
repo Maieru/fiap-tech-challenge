@@ -15,7 +15,7 @@ internal sealed class ServicoDaOrdemDeServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O serviÃ§o da ordem de serviÃ§o Ã© obrigatÃ³rio."));
+            Assert.That(result.Error.Description, Is.EqualTo("O serviço da ordem de serviço é obrigatório."));
         });
     }
 
@@ -30,7 +30,7 @@ internal sealed class ServicoDaOrdemDeServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O serviÃ§o deve estar associado a uma ordem de serviÃ§o vÃ¡lida."));
+            Assert.That(result.Error.Description, Is.EqualTo("O serviço deve estar associado a uma ordem de serviço válida."));
         });
     }
 
@@ -45,7 +45,7 @@ internal sealed class ServicoDaOrdemDeServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A quantidade do serviÃ§o da ordem de serviÃ§o deve ser maior que zero."));
+            Assert.That(result.Error.Description, Is.EqualTo("A quantidade do serviço da ordem de serviço deve ser maior que zero."));
         });
     }
 
@@ -85,15 +85,17 @@ internal sealed class ServicoDaOrdemDeServicoTests
             Guid.Empty,
             Guid.NewGuid(),
             Guid.NewGuid(),
-            "ServiÃ§o",
+            "serviço",
             10m,
-            1);
+            1,
+            null,
+            false);
 
         Assert.Multiple(() =>
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O id do serviÃ§o da ordem de serviÃ§o Ã© invÃ¡lido."));
+            Assert.That(result.Error.Description, Is.EqualTo("O id do serviço da ordem de serviço é inválido."));
         });
     }
 
@@ -104,15 +106,17 @@ internal sealed class ServicoDaOrdemDeServicoTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.Empty,
-            "ServiÃ§o",
+            "serviço",
             10m,
-            1);
+            1,
+            null,
+            false);
 
         Assert.Multiple(() =>
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O serviÃ§o informado Ã© invÃ¡lido."));
+            Assert.That(result.Error.Description, Is.EqualTo("O serviço informado é inválido."));
         });
     }
 
@@ -125,13 +129,15 @@ internal sealed class ServicoDaOrdemDeServicoTests
             Guid.NewGuid(),
             "   ",
             10m,
-            1);
+            1,
+            null,
+            false);
 
         Assert.Multiple(() =>
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A descriÃ§Ã£o do serviÃ§o da ordem de serviÃ§o Ã© obrigatÃ³ria."));
+            Assert.That(result.Error.Description, Is.EqualTo("A descrição do serviço da ordem de serviço é obrigatória."));
         });
     }
 
@@ -144,13 +150,15 @@ internal sealed class ServicoDaOrdemDeServicoTests
             Guid.NewGuid(),
             new string('a', 1001),
             10m,
-            1);
+            1,
+            null,
+            false);
 
         Assert.Multiple(() =>
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A descriÃ§Ã£o do serviÃ§o da ordem de serviÃ§o deve conter no mÃ¡ximo 1000 caracteres."));
+            Assert.That(result.Error.Description, Is.EqualTo("A descrição do serviço da ordem de serviço deve conter no máximo 1000 caracteres."));
         });
     }
 
@@ -161,15 +169,17 @@ internal sealed class ServicoDaOrdemDeServicoTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
-            "ServiÃ§o",
+            "serviço",
             -0.01m,
-            1);
+            1,
+            null,
+            false);
 
         Assert.Multiple(() =>
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O valor unitÃ¡rio do serviÃ§o da ordem de serviÃ§o nÃ£o pode ser negativo."));
+            Assert.That(result.Error.Description, Is.EqualTo("O valor unitário do serviço da ordem de serviço não pode ser negativo."));
         });
     }
 
@@ -180,7 +190,7 @@ internal sealed class ServicoDaOrdemDeServicoTests
         var ordemServicoId = Guid.NewGuid();
         var servicoId = Guid.NewGuid();
 
-        var result = ServicoDaOrdemDeServico.Rehydrate(id, ordemServicoId, servicoId, "  Balanceamento  ", 75.5m, 2);
+        var result = ServicoDaOrdemDeServico.Rehydrate(id, ordemServicoId, servicoId, "  Balanceamento  ", 75.5m, 2, null, false);
 
         Assert.Multiple(() =>
         {
@@ -214,7 +224,7 @@ internal sealed class ServicoDaOrdemDeServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("A quantidade do serviÃ§o da ordem de serviÃ§o deve ser maior que zero."));
+            Assert.That(result.Error.Description, Is.EqualTo("A quantidade do serviço da ordem de serviço deve ser maior que zero."));
             Assert.That(entity.Quantidade, Is.EqualTo(2));
         });
     }
@@ -247,7 +257,7 @@ internal sealed class ServicoDaOrdemDeServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("O valor unitÃ¡rio do serviÃ§o da ordem de serviÃ§o nÃ£o pode ser negativo."));
+            Assert.That(result.Error.Description, Is.EqualTo("O valor unitário do serviço da ordem de serviço não pode ser negativo."));
             Assert.That(entity.ValorUnitario, Is.EqualTo(100m));
         });
     }
@@ -280,8 +290,8 @@ internal sealed class ServicoDaOrdemDeServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("A descriÃ§Ã£o do serviÃ§o da ordem de serviÃ§o Ã© obrigatÃ³ria."));
-            Assert.That(entity.Descricao, Is.EqualTo("ServiÃ§o Inicial"));
+            Assert.That(result.Error.Description, Is.EqualTo("A descrição do serviço da ordem de serviço é obrigatória."));
+            Assert.That(entity.Descricao, Is.EqualTo("serviço Inicial"));
         });
     }
 
@@ -296,8 +306,8 @@ internal sealed class ServicoDaOrdemDeServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("A descriÃ§Ã£o do serviÃ§o da ordem de serviÃ§o deve conter no mÃ¡ximo 1000 caracteres."));
-            Assert.That(entity.Descricao, Is.EqualTo("ServiÃ§o Inicial"));
+            Assert.That(result.Error.Description, Is.EqualTo("A descrição do serviço da ordem de serviço deve conter no máximo 1000 caracteres."));
+            Assert.That(entity.Descricao, Is.EqualTo("serviço Inicial"));
         });
     }
 
@@ -306,14 +316,96 @@ internal sealed class ServicoDaOrdemDeServicoTests
     {
         var entity = CreateServicoDaOrdemDeServicoValido();
 
-        var result = entity.UpdateDescricao("  ServiÃ§o Atualizado  ");
+        var result = entity.UpdateDescricao("  serviço Atualizado  ");
 
         Assert.Multiple(() =>
         {
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Value, Is.True);
             Assert.That(result.Error, Is.EqualTo(Error.None));
-            Assert.That(entity.Descricao, Is.EqualTo("ServiÃ§o Atualizado"));
+            Assert.That(entity.Descricao, Is.EqualTo("serviço Atualizado"));
+        });
+    }
+
+    [Test]
+    public void Rehydrate_ShouldFail_WhenServicoConcluidoWithoutTempoGasto()
+    {
+        var result = ServicoDaOrdemDeServico.Rehydrate(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Servico",
+            100m,
+            1,
+            null,
+            true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O tempo gasto do serviço concluído da ordem de serviço deve ser maior que zero."));
+        });
+    }
+
+    [Test]
+    public void Concluir_ShouldFail_WhenTempoGastoMinutosIsInvalid()
+    {
+        var entity = CreateServicoDaOrdemDeServicoValido();
+
+        var result = entity.Concluir(0);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.False);
+            Assert.That(result.Error.Description, Is.EqualTo("O tempo gasto do serviço da ordem de serviço deve ser maior que zero."));
+            Assert.That(entity.Concluido, Is.False);
+            Assert.That(entity.TempoGastoMinutos, Is.Null);
+        });
+    }
+
+    [Test]
+    public void Concluir_ShouldSucceed_WhenTempoGastoMinutosIsValid()
+    {
+        var entity = CreateServicoDaOrdemDeServicoValido();
+
+        var result = entity.Concluir(35);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.True);
+            Assert.That(result.Error, Is.EqualTo(Error.None));
+            Assert.That(entity.Concluido, Is.True);
+            Assert.That(entity.TempoGastoMinutos, Is.EqualTo(35));
+        });
+    }
+
+    [Test]
+    public void Concluir_ShouldFail_WhenServicoJaConcluido()
+    {
+        var result = ServicoDaOrdemDeServico.Rehydrate(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Servico inicial",
+            100m,
+            2,
+            40,
+            true);
+
+        Assert.That(result.IsSuccess, Is.True);
+
+        var entity = result.Value!;
+        var concluirResult = entity.Concluir(10);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(concluirResult.IsSuccess, Is.False);
+            Assert.That(concluirResult.Value, Is.False);
+            Assert.That(concluirResult.Error.Description, Is.EqualTo("O serviço da ordem de serviço já foi concluído."));
+            Assert.That(entity.TempoGastoMinutos, Is.EqualTo(40));
         });
     }
 
@@ -336,9 +428,11 @@ internal sealed class ServicoDaOrdemDeServicoTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
-            "ServiÃ§o Inicial",
+            "serviço Inicial",
             100m,
-            2);
+            2,
+            null,
+            false);
 
         Assert.Multiple(() =>
         {

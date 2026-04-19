@@ -17,7 +17,9 @@ internal sealed class ServicoDaOrdemDeServicoMapperTests
             Guid.NewGuid(),
             "Balanceamento",
             89.9m,
-            2).Value!;
+            2,
+            45,
+            true).Value!;
 
         var entity = ServicoDaOrdemDeServicoMapper.ToEntity(domain);
 
@@ -29,6 +31,8 @@ internal sealed class ServicoDaOrdemDeServicoMapperTests
             Assert.That(entity.Descricao, Is.EqualTo(domain.Descricao));
             Assert.That(entity.ValorUnitario, Is.EqualTo(domain.ValorUnitario));
             Assert.That(entity.Quantidade, Is.EqualTo(domain.Quantidade));
+            Assert.That(entity.TempoGastoMinutos, Is.EqualTo(domain.TempoGastoMinutos));
+            Assert.That(entity.Concluido, Is.EqualTo(domain.Concluido));
         });
     }
 
@@ -40,9 +44,11 @@ internal sealed class ServicoDaOrdemDeServicoMapperTests
             Id = Guid.NewGuid(),
             OrdemServicoId = Guid.NewGuid(),
             ServicoId = Guid.NewGuid(),
-            Descricao = "Troca de óleo",
+            Descricao = "Troca de oleo",
             ValorUnitario = 150m,
-            Quantidade = 1
+            Quantidade = 1,
+            TempoGastoMinutos = 30,
+            Concluido = true
         };
 
         var result = ServicoDaOrdemDeServicoMapper.ToDomain(entity);
@@ -58,6 +64,8 @@ internal sealed class ServicoDaOrdemDeServicoMapperTests
             Assert.That(result.Value.Descricao, Is.EqualTo(entity.Descricao));
             Assert.That(result.Value.ValorUnitario, Is.EqualTo(entity.ValorUnitario));
             Assert.That(result.Value.Quantidade, Is.EqualTo(entity.Quantidade));
+            Assert.That(result.Value.TempoGastoMinutos, Is.EqualTo(entity.TempoGastoMinutos));
+            Assert.That(result.Value.Concluido, Is.EqualTo(entity.Concluido));
         });
     }
 
@@ -69,9 +77,11 @@ internal sealed class ServicoDaOrdemDeServicoMapperTests
             Id = Guid.Empty,
             OrdemServicoId = Guid.NewGuid(),
             ServicoId = Guid.NewGuid(),
-            Descricao = "Serviço inválido",
+            Descricao = "Servico invalido",
             ValorUnitario = 50m,
-            Quantidade = 1
+            Quantidade = 1,
+            TempoGastoMinutos = null,
+            Concluido = false
         };
 
         var result = ServicoDaOrdemDeServicoMapper.ToDomain(entity);

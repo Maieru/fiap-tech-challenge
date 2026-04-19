@@ -133,10 +133,16 @@ public sealed class OrdemServico
         return Result<bool>.Success(true);
     }
 
-    public Result<bool> Finalizar()
+    public Result<bool> Finalizar(IReadOnlyCollection<ServicoDaOrdemDeServico> servicosDaOrdemServico)
     {
         if (Status != StatusOrdemServico.EmExecucao)
             return Result<bool>.Failure(new Error("Somente ordens de serviço em execução podem ser finalizadas."));
+
+        if (servicosDaOrdemServico is null)
+            return Result<bool>.Failure(new Error("A lista de serviços da ordem de serviço é obrigatória para finalização."));
+
+        if (servicosDaOrdemServico.Any(x => !x.Concluido))
+            return Result<bool>.Failure(new Error("Somente ordens de serviço com todos os serviços concluídos podem ser finalizadas."));
 
         Status = StatusOrdemServico.Finalizada;
         DataFinalizacao = DateTime.UtcNow;
@@ -167,6 +173,14 @@ public sealed class OrdemServico
     {
         if (Status != StatusOrdemServico.EmDiagnostico)
             return Result<bool>.Failure(new Error("Somente ordens de servico em diagnostico podem receber pecas e insumos."));
+
+        return Result<bool>.Success(true);
+    }
+
+    public Result<bool> ValidarConclusaoServico()
+    {
+        if (Status != StatusOrdemServico.EmExecucao)
+            return Result<bool>.Failure(new Error("Somente ordens de serviço em execução podem concluir serviços."));
 
         return Result<bool>.Success(true);
     }

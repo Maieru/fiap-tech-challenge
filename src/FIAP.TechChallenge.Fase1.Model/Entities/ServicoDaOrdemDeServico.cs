@@ -15,10 +15,20 @@ public sealed class ServicoDaOrdemDeServico
     public string Descricao { get; private set; }
     public decimal ValorUnitario { get; private set; }
     public int Quantidade { get; private set; }
+    public int? TempoGastoMinutos { get; private set; }
+    public bool Concluido { get; private set; }
 
     public decimal ValorTotal => ValorUnitario * Quantidade;
 
-    private ServicoDaOrdemDeServico(Guid id, Guid ordemServicoId, Guid servicoId, string descricao, decimal valorUnitario, int quantidade)
+    private ServicoDaOrdemDeServico(
+        Guid id,
+        Guid ordemServicoId,
+        Guid servicoId,
+        string descricao,
+        decimal valorUnitario,
+        int quantidade,
+        int? tempoGastoMinutos,
+        bool concluido)
     {
         Id = id;
         OrdemServicoId = ordemServicoId;
@@ -26,6 +36,8 @@ public sealed class ServicoDaOrdemDeServico
         Descricao = descricao;
         ValorUnitario = valorUnitario;
         Quantidade = quantidade;
+        TempoGastoMinutos = tempoGastoMinutos;
+        Concluido = concluido;
     }
 
     public static Result<ServicoDaOrdemDeServico> Create(Guid ordemServicoId, Servico servico, int quantidade)
@@ -33,18 +45,34 @@ public sealed class ServicoDaOrdemDeServico
         if (servico is null)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("O serviço da ordem de serviço é obrigatório."));
 
-        return Create(Guid.NewGuid(), ordemServicoId, servico.Id, servico.Descricao, servico.ValorUnitario, quantidade);
+        return Create(Guid.NewGuid(), ordemServicoId, servico.Id, servico.Descricao, servico.ValorUnitario, quantidade, null, false);
     }
 
-    public static Result<ServicoDaOrdemDeServico> Rehydrate(Guid id, Guid ordemServicoId, Guid servicoId, string descricao, decimal valorUnitario, int quantidade)
+    public static Result<ServicoDaOrdemDeServico> Rehydrate(
+        Guid id,
+        Guid ordemServicoId,
+        Guid servicoId,
+        string descricao,
+        decimal valorUnitario,
+        int quantidade,
+        int? tempoGastoMinutos,
+        bool concluido)
     {
         if (id == Guid.Empty)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("O id do serviço da ordem de serviço é inválido."));
 
-        return Create(id, ordemServicoId, servicoId, descricao, valorUnitario, quantidade);
+        return Create(id, ordemServicoId, servicoId, descricao, valorUnitario, quantidade, tempoGastoMinutos, concluido);
     }
 
-    private static Result<ServicoDaOrdemDeServico> Create(Guid id, Guid ordemServicoId, Guid servicoId, string descricao, decimal valorUnitario, int quantidade)
+    private static Result<ServicoDaOrdemDeServico> Create(
+        Guid id,
+        Guid ordemServicoId,
+        Guid servicoId,
+        string descricao,
+        decimal valorUnitario,
+        int quantidade,
+        int? tempoGastoMinutos,
+        bool concluido)
     {
         if (ordemServicoId == Guid.Empty)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("O serviço deve estar associado a uma ordem de serviço válida."));
@@ -66,9 +94,29 @@ public sealed class ServicoDaOrdemDeServico
         if (quantidade <= 0)
             return Result<ServicoDaOrdemDeServico>.Failure(new Error("A quantidade do serviço da ordem de serviço deve ser maior que zero."));
 
-        var entity = new ServicoDaOrdemDeServico(id, ordemServicoId, servicoId, descricao, valorUnitario, quantidade);
+        if (concluido && (!tempoGastoMinutos.HasValue || tempoGastoMinutos.Value <= 0))
+            return Result<ServicoDaOrdemDeServico>.Failure(new Error("O tempo gasto do serviço concluído da ordem de serviço deve ser maior que zero."));
+
+        if (!concluido && tempoGastoMinutos.HasValue)
+            return Result<ServicoDaOrdemDeServico>.Failure(new Error("Não é permitido informar tempo gasto para serviço não concluído da ordem de serviço."));
+
+        var entity = new ServicoDaOrdemDeServico(id, ordemServicoId, servicoId, descricao, valorUnitario, quantidade, tempoGastoMinutos, concluido);
 
         return Result<ServicoDaOrdemDeServico>.Success(entity);
+    }
+
+    public Result<bool> Concluir(int tempoGastoMinutos)
+    {
+        if (Concluido)
+            return Result<bool>.Failure(new Error("O serviço da ordem de serviço já foi concluído."));
+
+        if (tempoGastoMinutos <= 0)
+            return Result<bool>.Failure(new Error("O tempo gasto do serviço da ordem de serviço deve ser maior que zero."));
+
+        TempoGastoMinutos = tempoGastoMinutos;
+        Concluido = true;
+
+        return Result<bool>.Success(true);
     }
 
     public Result<bool> UpdateQuantidade(int quantidade)

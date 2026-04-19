@@ -15,12 +15,22 @@ public static class ServicoDaOrdemDeServicoMapper
             ServicoId = domain.ServicoId,
             Descricao = domain.Descricao,
             ValorUnitario = domain.ValorUnitario,
-            Quantidade = domain.Quantidade
+            Quantidade = domain.Quantidade,
+            TempoGastoMinutos = domain.TempoGastoMinutos,
+            Concluido = domain.Concluido
         };
     }
 
     public static Result<ServicoDaOrdemDeServico> ToDomain(ServicoDaOrdemDeServicoEntity entity)
     {
-        return ServicoDaOrdemDeServico.Rehydrate(entity.Id, entity.OrdemServicoId, entity.ServicoId, entity.Descricao, entity.ValorUnitario, entity.Quantidade);
+        return ServicoDaOrdemDeServico.Rehydrate(
+            entity.Id,
+            entity.OrdemServicoId,
+            entity.ServicoId,
+            entity.Descricao,
+            entity.ValorUnitario,
+            entity.Quantidade,
+            entity.TempoGastoMinutos,
+            entity.Concluido);
     }
 }

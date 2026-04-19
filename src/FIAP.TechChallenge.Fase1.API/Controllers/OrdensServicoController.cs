@@ -2,6 +2,7 @@
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaInsumoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AprovarExecucaoOrdemServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ConcluirServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.EntregarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.FinalizarOrdemServico;
@@ -142,6 +143,26 @@ public sealed class OrdensServicoController : ControllerBase
     {
         var command = new AprovarExecucaoOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPut("servicos/{servicoDaOrdemServicoId:guid}/concluir")]
+    [ProducesResponseType(typeof(ConcluirServicoOrdemServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PutConcluirServico(
+        [FromRoute] Guid servicoDaOrdemServicoId,
+        [FromServices] IConcluirServicoOrdemServicoUseCase useCase,
+        [FromBody] ConcluirServicoOrdemServicoCommand command,
+        CancellationToken cancellationToken)
+    {
+        var concluirCommand = new ConcluirServicoOrdemServicoCommand
+        {
+            ServicoDaOrdemDeServicoId = servicoDaOrdemServicoId,
+            TempoGastoMinutos = command.TempoGastoMinutos
+        };
+
+        var result = await useCase.ExecuteAsync(concluirCommand, cancellationToken);
         return result.ToActionResult(this);
     }
 

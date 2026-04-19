@@ -180,6 +180,8 @@ public sealed class OrdensServicoControllerTests
             _ = created.ValorUnitario.Should().Be(320m);
             _ = created.Quantidade.Should().Be(2);
             _ = created.ValorTotal.Should().Be(640m);
+            _ = created.TempoGastoMinutos.Should().BeNull();
+            _ = created.Concluido.Should().BeFalse();
         });
     }
 
@@ -358,6 +360,8 @@ public sealed class OrdensServicoControllerTests
             _ = result.PecasInsumos.Count.Should().Be(1);
             _ = result.Servicos.First().Descricao.Should().Be("Troca de amortecedor");
             _ = result.Servicos.First().ValorTotal.Should().Be(480m);
+            _ = result.Servicos.First().Concluido.Should().BeFalse();
+            _ = result.Servicos.First().TempoGastoMinutos.Should().BeNull();
             _ = result.PecasInsumos.First().Codigo.Should().Be("AMT-OS-450");
             _ = result.PecasInsumos.First().ValorTotal.Should().Be(780m);
             _ = result.ValorTotalServicos.Should().Be(480m);
@@ -396,6 +400,8 @@ public sealed class OrdensServicoControllerTests
             ServicoId = servico2.Id,
             Quantidade = 2
         });
+        var addServico1Body = await addServico1Response.Content.ReadFromJsonAsync<ServicoDaOrdemServicoResponse>();
+        var addServico2Body = await addServico2Response.Content.ReadFromJsonAsync<ServicoDaOrdemServicoResponse>();
 
         var addPecaInsumo1Response = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addpecainsumo", new
         {
@@ -424,6 +430,18 @@ public sealed class OrdensServicoControllerTests
         var getEmExecucaoResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
         var getEmExecucaoBody = await getEmExecucaoResponse.Content.ReadFromJsonAsync<RecuperarOrdemServicoResponse>();
 
+        var concluirServico1Response = await _client.PutAsJsonAsync($"/api/ordensservico/servicos/{addServico1Body!.Id}/concluir", new
+        {
+            TempoGastoMinutos = 80
+        });
+        var concluirServico1Body = await concluirServico1Response.Content.ReadFromJsonAsync<ConcluirServicoOrdemServicoResponse>();
+
+        var concluirServico2Response = await _client.PutAsJsonAsync($"/api/ordensservico/servicos/{addServico2Body!.Id}/concluir", new
+        {
+            TempoGastoMinutos = 45
+        });
+        var concluirServico2Body = await concluirServico2Response.Content.ReadFromJsonAsync<ConcluirServicoOrdemServicoResponse>();
+
         var finalizarResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/finalizar", new { });
         var finalizarBody = await finalizarResponse.Content.ReadFromJsonAsync<FinalizarOrdemServicoResponse>();
 
@@ -450,6 +468,8 @@ public sealed class OrdensServicoControllerTests
 
             _ = addServico1Response.StatusCode.Should().Be(HttpStatusCode.Created);
             _ = addServico2Response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = addServico1Body.Should().NotBeNull();
+            _ = addServico2Body.Should().NotBeNull();
             _ = addPecaInsumo1Response.StatusCode.Should().Be(HttpStatusCode.Created);
             _ = addPecaInsumo2Response.StatusCode.Should().Be(HttpStatusCode.Created);
 
@@ -478,6 +498,16 @@ public sealed class OrdensServicoControllerTests
             _ = getEmExecucaoBody.Should().NotBeNull();
             _ = getEmExecucaoBody!.Status.Should().Be(4);
 
+            _ = concluirServico1Response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = concluirServico1Body.Should().NotBeNull();
+            _ = concluirServico1Body!.Concluido.Should().BeTrue();
+            _ = concluirServico1Body.TempoGastoMinutos.Should().Be(80);
+
+            _ = concluirServico2Response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = concluirServico2Body.Should().NotBeNull();
+            _ = concluirServico2Body!.Concluido.Should().BeTrue();
+            _ = concluirServico2Body.TempoGastoMinutos.Should().Be(45);
+
             _ = finalizarResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             _ = finalizarBody.Should().NotBeNull();
             _ = finalizarBody!.Status.Should().Be(5);
@@ -494,6 +524,7 @@ public sealed class OrdensServicoControllerTests
             _ = getEntregueBody.Should().NotBeNull();
             _ = getEntregueBody!.Status.Should().Be(6);
             _ = getEntregueBody.Servicos.Count.Should().Be(2);
+            _ = getEntregueBody.Servicos.All(x => x.Concluido).Should().BeTrue();
             _ = getEntregueBody.PecasInsumos.Count.Should().Be(2);
             _ = getEntregueBody.ValorTotalServicos.Should().Be(590m);
             _ = getEntregueBody.ValorTotalPecasInsumos.Should().Be(625m);
@@ -821,6 +852,58 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task ConcluirServico_ShouldSucceed_WhenRequestIsValid()
+    {
+        var cliente = await CreateClientAsync(9026);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(54), "Jeep", "Compass", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Falha intermitente no motor");
+        var servico = await CreateServicoAsync("Diagnostico eletrico", 280m);
+
+        _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
+        var addServicoResponse = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addservico", new { ServicoId = servico.Id, Quantidade = 1 });
+        var addServicoBody = await addServicoResponse.Content.ReadFromJsonAsync<ServicoDaOrdemServicoResponse>();
+        _ = addServicoResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
+        _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/servicos/{addServicoBody!.Id}/concluir", new { TempoGastoMinutos = 65 });
+        var updated = await response.Content.ReadFromJsonAsync<ConcluirServicoOrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = updated.Should().NotBeNull();
+            _ = updated!.Id.Should().Be(addServicoBody.Id);
+            _ = updated.Concluido.Should().BeTrue();
+            _ = updated.TempoGastoMinutos.Should().Be(65);
+        });
+    }
+
+    [Test]
+    public async Task Finalizar_ShouldReturnBadRequest_WhenExisteServicoNaoConcluido()
+    {
+        var cliente = await CreateClientAsync(9027);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(55), "Fiat", "Pulse", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Falha no sistema de freio");
+        var servico = await CreateServicoAsync("Troca de pastilhas", 220m);
+
+        _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
+        _ = (await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addservico", new { ServicoId = servico.Id, Quantidade = 1 })).StatusCode.Should().Be(HttpStatusCode.Created);
+        _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
+        _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/finalizar", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("todos os serviços concluídos");
+        });
+    }
+
+    [Test]
     public async Task Finalizar_ShouldSucceed_WhenOrdemServicoIsEmExecucao()
     {
         var cliente = await CreateClientAsync(9021);
@@ -879,7 +962,7 @@ public sealed class OrdensServicoControllerTests
         {
             _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             _ = error.Should().NotBeNull();
-            _ = error!.Error.Should().Contain("finalizadas");
+            _ = error!.Error.Should().Contain("execução");
         });
     }
 
@@ -1154,6 +1237,8 @@ public sealed class OrdensServicoControllerTests
     {
         public string Descricao { get; set; } = string.Empty;
         public decimal ValorTotal { get; set; }
+        public int? TempoGastoMinutos { get; set; }
+        public bool Concluido { get; set; }
     }
 
     private sealed class RecuperarPecaInsumoDaOrdemServicoItemResponse
@@ -1181,6 +1266,17 @@ public sealed class OrdensServicoControllerTests
         public decimal ValorUnitario { get; set; }
         public int Quantidade { get; set; }
         public decimal ValorTotal { get; set; }
+        public int? TempoGastoMinutos { get; set; }
+        public bool Concluido { get; set; }
+    }
+
+    private sealed class ConcluirServicoOrdemServicoResponse
+    {
+        public Guid Id { get; set; }
+        public Guid OrdemServicoId { get; set; }
+        public Guid ServicoId { get; set; }
+        public int TempoGastoMinutos { get; set; }
+        public bool Concluido { get; set; }
     }
 
     private sealed class PecaInsumoDaOrdemServicoResponse

@@ -48,7 +48,9 @@ internal sealed class ServicoDaOrdemDeServicoRepositoryTests
                 ServicoId = Guid.NewGuid(),
                 Descricao = "Alinhamento",
                 ValorUnitario = 120m,
-                Quantidade = 1
+                Quantidade = 1,
+                TempoGastoMinutos = null,
+                Concluido = false
             },
             new ServicoDaOrdemDeServicoEntity
             {
@@ -57,7 +59,9 @@ internal sealed class ServicoDaOrdemDeServicoRepositoryTests
                 ServicoId = Guid.NewGuid(),
                 Descricao = "Balanceamento",
                 ValorUnitario = 90m,
-                Quantidade = 2
+                Quantidade = 2,
+                TempoGastoMinutos = 20,
+                Concluido = true
             },
             new ServicoDaOrdemDeServicoEntity
             {
@@ -66,7 +70,9 @@ internal sealed class ServicoDaOrdemDeServicoRepositoryTests
                 ServicoId = Guid.NewGuid(),
                 Descricao = "Troca de velas",
                 ValorUnitario = 220m,
-                Quantidade = 1
+                Quantidade = 1,
+                TempoGastoMinutos = null,
+                Concluido = false
             });
 
         _ = await context.SaveChangesAsync();
@@ -82,6 +88,55 @@ internal sealed class ServicoDaOrdemDeServicoRepositoryTests
             Assert.That(result.Value, Has.Count.EqualTo(2));
             Assert.That(result.Value!.All(x => x.OrdemServicoId == ordemServicoId), Is.True);
             Assert.That(result.Value!.Sum(x => x.ValorTotal), Is.EqualTo(300m));
+            Assert.That(result.Value.Any(x => x.Concluido), Is.True);
+        });
+    }
+
+    [Test]
+    public async Task GetByIdAsync_ShouldReturnServicoDaOrdem_WhenServicoExists()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+
+        var ordemServicoId = Guid.NewGuid();
+        var servicoDaOrdemId = Guid.NewGuid();
+
+        _ = context.OrdensServico.Add(new OrdemServicoEntity
+        {
+            Id = ordemServicoId,
+            ClienteId = Guid.NewGuid(),
+            VeiculoId = Guid.NewGuid(),
+            DescricaoProblema = "Problema no motor",
+            Status = StatusOrdemServico.Recebida,
+            DataCriacao = DateTime.UtcNow
+        });
+
+        _ = context.ServicoDaOrdemDeServico.Add(new ServicoDaOrdemDeServicoEntity
+        {
+            Id = servicoDaOrdemId,
+            OrdemServicoId = ordemServicoId,
+            ServicoId = Guid.NewGuid(),
+            Descricao = "Troca de oleo",
+            ValorUnitario = 100m,
+            Quantidade = 1,
+            TempoGastoMinutos = null,
+            Concluido = false
+        });
+
+        _ = await context.SaveChangesAsync();
+
+        var repository = new ServicoDaOrdemDeServicoRepository(context);
+
+        var result = await repository.GetByIdAsync(servicoDaOrdemId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value, Is.Not.Null);
+            Assert.That(result.Value!.Id, Is.EqualTo(servicoDaOrdemId));
+            Assert.That(result.Value.Concluido, Is.False);
+            Assert.That(result.Value.TempoGastoMinutos, Is.Null);
         });
     }
 
@@ -97,7 +152,7 @@ internal sealed class ServicoDaOrdemDeServicoRepositoryTests
             Id = Guid.NewGuid(),
             ClienteId = Guid.NewGuid(),
             VeiculoId = Guid.NewGuid(),
-            DescricaoProblema = "Diagnosticar ruído no motor",
+            DescricaoProblema = "Diagnosticar ruido no motor",
             Status = StatusOrdemServico.Recebida,
             DataCriacao = DateTime.UtcNow
         };
@@ -125,6 +180,63 @@ internal sealed class ServicoDaOrdemDeServicoRepositoryTests
             Assert.That(saved.Descricao, Is.EqualTo("Troca de correia dentada"));
             Assert.That(saved.ValorUnitario, Is.EqualTo(550m));
             Assert.That(saved.Quantidade, Is.EqualTo(2));
+            Assert.That(saved.TempoGastoMinutos, Is.Null);
+            Assert.That(saved.Concluido, Is.False);
+        });
+    }
+
+    [Test]
+    public async Task UpdateAsync_ShouldPersistConclusaoDoServicoDaOrdemDeServico()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var context = CreateContext(databaseName);
+
+        var ordemServicoId = Guid.NewGuid();
+        var servicoDaOrdemId = Guid.NewGuid();
+
+        _ = context.OrdensServico.Add(new OrdemServicoEntity
+        {
+            Id = ordemServicoId,
+            ClienteId = Guid.NewGuid(),
+            VeiculoId = Guid.NewGuid(),
+            DescricaoProblema = "Revisao",
+            Status = StatusOrdemServico.Recebida,
+            DataCriacao = DateTime.UtcNow
+        });
+
+        _ = context.ServicoDaOrdemDeServico.Add(new ServicoDaOrdemDeServicoEntity
+        {
+            Id = servicoDaOrdemId,
+            OrdemServicoId = ordemServicoId,
+            ServicoId = Guid.NewGuid(),
+            Descricao = "Troca de oleo",
+            ValorUnitario = 100m,
+            Quantidade = 1,
+            TempoGastoMinutos = null,
+            Concluido = false
+        });
+
+        _ = await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+
+        var repository = new ServicoDaOrdemDeServicoRepository(context);
+        var servicoDaOrdemResult = await repository.GetByIdAsync(servicoDaOrdemId);
+
+        Assert.That(servicoDaOrdemResult.IsSuccess, Is.True);
+
+        var concluirResult = servicoDaOrdemResult.Value!.Concluir(50);
+        Assert.That(concluirResult.IsSuccess, Is.True);
+
+        await repository.UpdateAsync(servicoDaOrdemResult.Value!);
+
+        var saved = await context.ServicoDaOrdemDeServico.AsNoTracking().FirstOrDefaultAsync(x => x.Id == servicoDaOrdemId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(saved, Is.Not.Null);
+            Assert.That(saved!.Concluido, Is.True);
+            Assert.That(saved.TempoGastoMinutos, Is.EqualTo(50));
         });
     }
 

@@ -5,10 +5,12 @@ namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.FinalizarO
 
 public sealed class FinalizarOrdemServicoUseCase(
     IOrdemServicoRepository ordemServicoRepository,
+    IServicoDaOrdemDeServicoRepository servicoDaOrdemDeServicoRepository,
     IClienteRepository clienteRepository,
     IMailService mailService) : IFinalizarOrdemServicoUseCase
 {
     private readonly IOrdemServicoRepository _ordemServicoRepository = ordemServicoRepository;
+    private readonly IServicoDaOrdemDeServicoRepository _servicoDaOrdemDeServicoRepository = servicoDaOrdemDeServicoRepository;
     private readonly IClienteRepository _clienteRepository = clienteRepository;
     private readonly IMailService _mailService = mailService;
 
@@ -20,7 +22,12 @@ public sealed class FinalizarOrdemServicoUseCase(
             return Result<FinalizarOrdemServicoResponse>.Failure(ordemServicoResult.Error);
 
         var ordemServico = ordemServicoResult.Value;
-        var finalizarResult = ordemServico.Finalizar();
+        var servicosDaOrdemResult = await _servicoDaOrdemDeServicoRepository.GetByOrdemServicoIdAsync(ordemServico.Id, cancellationToken);
+
+        if (!servicosDaOrdemResult.IsSuccess || servicosDaOrdemResult.Value is null)
+            return Result<FinalizarOrdemServicoResponse>.Failure(servicosDaOrdemResult.Error);
+
+        var finalizarResult = ordemServico.Finalizar(servicosDaOrdemResult.Value);
 
         if (!finalizarResult.IsSuccess)
             return Result<FinalizarOrdemServicoResponse>.Failure(finalizarResult.Error);

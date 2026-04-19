@@ -116,7 +116,7 @@ internal sealed class EntregarOrdemServicoUseCaseTests
             var iniciarDiagnosticoResult = ordemServico.IniciarDiagnostico();
             var aguardarAprovacaoResult = ordemServico.AguardarAprovacao();
             var aprovarOrcamentoResult = ordemServico.AprovarOrcamento();
-            var finalizarResult = ordemServico.Finalizar();
+            var finalizarResult = ordemServico.Finalizar([]);
 
             Assert.Multiple(() =>
             {
@@ -130,3 +130,4 @@ internal sealed class EntregarOrdemServicoUseCaseTests
         return ordemServico;
     }
 }
+

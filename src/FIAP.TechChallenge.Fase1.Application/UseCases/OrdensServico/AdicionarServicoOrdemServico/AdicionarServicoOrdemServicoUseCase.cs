@@ -47,7 +47,9 @@ public sealed class AdicionarServicoOrdemServicoUseCase(
             Descricao = servicoDaOrdemDeServico.Descricao,
             ValorUnitario = servicoDaOrdemDeServico.ValorUnitario,
             Quantidade = servicoDaOrdemDeServico.Quantidade,
-            ValorTotal = servicoDaOrdemDeServico.ValorTotal
+            ValorTotal = servicoDaOrdemDeServico.ValorTotal,
+            TempoGastoMinutos = servicoDaOrdemDeServico.TempoGastoMinutos,
+            Concluido = servicoDaOrdemDeServico.Concluido
         });
     }
 }

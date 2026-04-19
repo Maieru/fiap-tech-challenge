@@ -31,6 +31,8 @@ public sealed class RecuperarServicoDaOrdemServicoItemResponse
     public decimal ValorUnitario { get; init; }
     public int Quantidade { get; init; }
     public decimal ValorTotal { get; init; }
+    public int? TempoGastoMinutos { get; init; }
+    public bool Concluido { get; init; }
 }
 
 public sealed class RecuperarPecaInsumoDaOrdemServicoItemResponse

@@ -15,6 +15,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
     public async Task ExecuteAsync_ShouldFail_WhenOrdemServicoDoesNotExist()
     {
         var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
         var clienteRepositoryMock = new Mock<IClienteRepository>();
         var mailServiceMock = new Mock<IMailService>();
 
@@ -24,6 +25,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
 
         var useCase = new FinalizarOrdemServicoUseCase(
             ordemServicoRepositoryMock.Object,
+            servicoDaOrdemRepositoryMock.Object,
             clienteRepositoryMock.Object,
             mailServiceMock.Object);
 
@@ -36,6 +38,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
             Assert.That(result.Error.Description, Is.EqualTo("Ordem de servico nao encontrada."));
         });
 
+        servicoDaOrdemRepositoryMock.Verify(x => x.GetByOrdemServicoIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         clienteRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         mailServiceMock.Verify(x => x.SendMail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         ordemServicoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<OrdemServico>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -45,6 +48,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
     public async Task ExecuteAsync_ShouldFail_WhenOrdemServicoIsNotEmExecucao()
     {
         var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
         var clienteRepositoryMock = new Mock<IClienteRepository>();
         var mailServiceMock = new Mock<IMailService>();
         var ordemServico = CreateOrdemServico(emExecucao: false);
@@ -52,9 +56,13 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
         _ = ordemServicoRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+        _ = servicoDaOrdemRepositoryMock
+            .Setup(x => x.GetByOrdemServicoIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>.Success([]));
 
         var useCase = new FinalizarOrdemServicoUseCase(
             ordemServicoRepositoryMock.Object,
+            servicoDaOrdemRepositoryMock.Object,
             clienteRepositoryMock.Object,
             mailServiceMock.Object);
 
@@ -64,7 +72,45 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Does.Contain("finalizadas"));
+            Assert.That(result.Error.Description, Does.Contain("execução"));
+        });
+
+        servicoDaOrdemRepositoryMock.Verify(x => x.GetByOrdemServicoIdAsync(ordemServico.Id, It.IsAny<CancellationToken>()), Times.Once);
+        clienteRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        mailServiceMock.Verify(x => x.SendMail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        ordemServicoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<OrdemServico>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task ExecuteAsync_ShouldFail_WhenExistsServicoNaoConcluido()
+    {
+        var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
+        var clienteRepositoryMock = new Mock<IClienteRepository>();
+        var mailServiceMock = new Mock<IMailService>();
+        var ordemServico = CreateOrdemServico(emExecucao: true);
+        var servicoDaOrdem = CreateServicoDaOrdem(ordemServico.Id, concluido: false);
+
+        _ = ordemServicoRepositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+        _ = servicoDaOrdemRepositoryMock
+            .Setup(x => x.GetByOrdemServicoIdAsync(ordemServico.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>.Success([servicoDaOrdem]));
+
+        var useCase = new FinalizarOrdemServicoUseCase(
+            ordemServicoRepositoryMock.Object,
+            servicoDaOrdemRepositoryMock.Object,
+            clienteRepositoryMock.Object,
+            mailServiceMock.Object);
+
+        var result = await useCase.ExecuteAsync(CreateCommand(ordemServico.Id));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Does.Contain("todos os serviços concluídos"));
         });
 
         clienteRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -76,6 +122,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
     public async Task ExecuteAsync_ShouldFail_WhenClienteDoesNotExist()
     {
         var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
         var clienteRepositoryMock = new Mock<IClienteRepository>();
         var mailServiceMock = new Mock<IMailService>();
         var ordemServico = CreateOrdemServico(emExecucao: true);
@@ -83,12 +130,16 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
         _ = ordemServicoRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+        _ = servicoDaOrdemRepositoryMock
+            .Setup(x => x.GetByOrdemServicoIdAsync(ordemServico.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>.Success([]));
         _ = clienteRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<Cliente>.Failure(new Error("Cliente nao encontrado.")));
 
         var useCase = new FinalizarOrdemServicoUseCase(
             ordemServicoRepositoryMock.Object,
+            servicoDaOrdemRepositoryMock.Object,
             clienteRepositoryMock.Object,
             mailServiceMock.Object);
 
@@ -109,6 +160,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
     public async Task ExecuteAsync_ShouldFail_WhenSendMailFails()
     {
         var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
         var clienteRepositoryMock = new Mock<IClienteRepository>();
         var mailServiceMock = new Mock<IMailService>();
         var ordemServico = CreateOrdemServico(emExecucao: true);
@@ -117,6 +169,9 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
         _ = ordemServicoRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+        _ = servicoDaOrdemRepositoryMock
+            .Setup(x => x.GetByOrdemServicoIdAsync(ordemServico.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>.Success([]));
         _ = clienteRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<Cliente>.Success(cliente));
@@ -126,6 +181,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
 
         var useCase = new FinalizarOrdemServicoUseCase(
             ordemServicoRepositoryMock.Object,
+            servicoDaOrdemRepositoryMock.Object,
             clienteRepositoryMock.Object,
             mailServiceMock.Object);
 
@@ -146,6 +202,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
     public async Task ExecuteAsync_ShouldSucceed_WhenClienteDoesNotHaveEmail()
     {
         var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
         var clienteRepositoryMock = new Mock<IClienteRepository>();
         var mailServiceMock = new Mock<IMailService>();
         var ordemServico = CreateOrdemServico(emExecucao: true);
@@ -155,6 +212,9 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
         _ = ordemServicoRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+        _ = servicoDaOrdemRepositoryMock
+            .Setup(x => x.GetByOrdemServicoIdAsync(ordemServico.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>.Success([]));
         _ = clienteRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<Cliente>.Success(cliente));
@@ -165,6 +225,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
 
         var useCase = new FinalizarOrdemServicoUseCase(
             ordemServicoRepositoryMock.Object,
+            servicoDaOrdemRepositoryMock.Object,
             clienteRepositoryMock.Object,
             mailServiceMock.Object);
 
@@ -195,6 +256,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
     public async Task ExecuteAsync_ShouldSucceed_AndSendMail_WhenClienteHasEmail()
     {
         var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
         var clienteRepositoryMock = new Mock<IClienteRepository>();
         var mailServiceMock = new Mock<IMailService>();
         var ordemServico = CreateOrdemServico(emExecucao: true);
@@ -204,6 +266,9 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
         _ = ordemServicoRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+        _ = servicoDaOrdemRepositoryMock
+            .Setup(x => x.GetByOrdemServicoIdAsync(ordemServico.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>.Success([]));
         _ = clienteRepositoryMock
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<Cliente>.Success(cliente));
@@ -217,6 +282,7 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
 
         var useCase = new FinalizarOrdemServicoUseCase(
             ordemServicoRepositoryMock.Object,
+            servicoDaOrdemRepositoryMock.Object,
             clienteRepositoryMock.Object,
             mailServiceMock.Object);
 
@@ -307,5 +373,36 @@ internal sealed class FinalizarOrdemServicoUseCaseTests
         });
 
         return clienteResult.Value!;
+    }
+
+    private static ServicoDaOrdemDeServico CreateServicoDaOrdem(Guid ordemServicoId, bool concluido)
+    {
+        var servicoResult = Servico.Create("Troca de oleo", 100m);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(servicoResult.IsSuccess, Is.True);
+            Assert.That(servicoResult.Value, Is.Not.Null);
+        });
+
+        var servicoDaOrdemResult = concluido
+            ? ServicoDaOrdemDeServico.Rehydrate(
+                Guid.NewGuid(),
+                ordemServicoId,
+                servicoResult.Value!.Id,
+                servicoResult.Value.Descricao,
+                servicoResult.Value.ValorUnitario,
+                1,
+                30,
+                true)
+            : ServicoDaOrdemDeServico.Create(ordemServicoId, servicoResult.Value!, 1);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(servicoDaOrdemResult.IsSuccess, Is.True);
+            Assert.That(servicoDaOrdemResult.Value, Is.Not.Null);
+        });
+
+        return servicoDaOrdemResult.Value!;
     }
 }
