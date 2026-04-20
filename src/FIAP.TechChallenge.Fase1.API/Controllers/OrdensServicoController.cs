@@ -22,13 +22,7 @@ public sealed class OrdensServicoController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(ListarOrdensServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get(
-        [FromServices] IListarOrdensServicoUseCase useCase,
-        [FromQuery] Guid? clienteId,
-        [FromQuery] Guid? veiculoId,
-        [FromQuery] StatusOrdemServico? status,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
+    public async Task<IActionResult> Get(IListarOrdensServicoUseCase useCase, Guid? clienteId, Guid? veiculoId, StatusOrdemServico? status, int pageNumber = 1, int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
         var command = new ListarOrdensServicoCommand
@@ -49,7 +43,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(RecuperarOrdemServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetById([FromRoute] Guid id, [FromServices] IRecuperarOrdemServicoUseCase useCase, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetById(Guid id, IRecuperarOrdemServicoUseCase useCase, CancellationToken cancellationToken = default)
     {
         var command = new RecuperarOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
@@ -60,7 +54,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(CriarOrdemServicoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Post([FromServices] ICriarOrdemServicoUseCase useCase, [FromBody] CriarOrdemServicoCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Post(ICriarOrdemServicoUseCase useCase, CriarOrdemServicoCommand command, CancellationToken cancellationToken)
     {
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this, value => CreatedAtAction(nameof(Post), new { id = value.Id }, value));
@@ -70,7 +64,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(AdicionarServicoOrdemServicoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> AddServico([FromRoute] Guid id, [FromServices] IAdicionarServicoOrdemServicoUseCase useCase, [FromBody] AdicionarServicoOrdemServicoCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> AddServico(Guid id, IAdicionarServicoOrdemServicoUseCase useCase, AdicionarServicoOrdemServicoCommand command, CancellationToken cancellationToken)
     {
         var addCommand = new AdicionarServicoOrdemServicoCommand
         {
@@ -87,11 +81,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(AdicionarPecaInsumoOrdemServicoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> AddPecaInsumo(
-        [FromRoute] Guid id,
-        [FromServices] IAdicionarPecaInsumoOrdemServicoUseCase useCase,
-        [FromBody] AdicionarPecaInsumoOrdemServicoCommand command,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> AddPecaInsumo(Guid id, IAdicionarPecaInsumoOrdemServicoUseCase useCase, AdicionarPecaInsumoOrdemServicoCommand command, CancellationToken cancellationToken)
     {
         var addCommand = new AdicionarPecaInsumoOrdemServicoCommand
         {
@@ -108,10 +98,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(IniciarDiagnosticoOrdemServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> PutIniciarDiagnostico(
-        [FromRoute] Guid id,
-        [FromServices] IIniciarDiagnosticoOrdemServicoUseCase useCase,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> PutIniciarDiagnostico(Guid id, IIniciarDiagnosticoOrdemServicoUseCase useCase, CancellationToken cancellationToken)
     {
         var command = new IniciarDiagnosticoOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
@@ -122,10 +109,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(SolicitarAprovacaoOrdemServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> PutSolicitarAprovacao(
-        [FromRoute] Guid id,
-        [FromServices] ISolicitarAprovacaoOrdemServicoUseCase useCase,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> PutSolicitarAprovacao(Guid id, ISolicitarAprovacaoOrdemServicoUseCase useCase, CancellationToken cancellationToken)
     {
         var command = new SolicitarAprovacaoOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
@@ -136,10 +120,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(AprovarExecucaoOrdemServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> PutAprovarExecucao(
-        [FromRoute] Guid id,
-        [FromServices] IAprovarExecucaoOrdemServicoUseCase useCase,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> PutAprovarExecucao(Guid id, IAprovarExecucaoOrdemServicoUseCase useCase, CancellationToken cancellationToken)
     {
         var command = new AprovarExecucaoOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
@@ -150,11 +131,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(ConcluirServicoOrdemServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> PutConcluirServico(
-        [FromRoute] Guid servicoDaOrdemServicoId,
-        [FromServices] IConcluirServicoOrdemServicoUseCase useCase,
-        [FromBody] ConcluirServicoOrdemServicoCommand command,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> PutConcluirServico(Guid servicoDaOrdemServicoId, IConcluirServicoOrdemServicoUseCase useCase, ConcluirServicoOrdemServicoCommand command, CancellationToken cancellationToken)
     {
         var concluirCommand = new ConcluirServicoOrdemServicoCommand
         {
@@ -170,10 +147,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(FinalizarOrdemServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> PutFinalizar(
-        [FromRoute] Guid id,
-        [FromServices] IFinalizarOrdemServicoUseCase useCase,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> PutFinalizar(Guid id, IFinalizarOrdemServicoUseCase useCase, CancellationToken cancellationToken)
     {
         var command = new FinalizarOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
@@ -184,10 +158,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(EntregarOrdemServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> PutEntregar(
-        [FromRoute] Guid id,
-        [FromServices] IEntregarOrdemServicoUseCase useCase,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> PutEntregar(Guid id, IEntregarOrdemServicoUseCase useCase, CancellationToken cancellationToken)
     {
         var command = new EntregarOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);

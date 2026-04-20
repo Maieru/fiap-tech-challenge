@@ -15,13 +15,7 @@ public sealed class ClientesController : ControllerBase
     [ProducesResponseType(typeof(ListarClientesResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get(
-        [FromServices] IListarClientesUseCase useCase,
-        [FromQuery] string? cpf,
-        [FromQuery] string? cnpj,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(IListarClientesUseCase useCase, string? cpf, string? cnpj, int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var command = new ListarClientesCommand
         {
@@ -46,7 +40,7 @@ public sealed class ClientesController : ControllerBase
     [ProducesResponseType(typeof(RecuperarClienteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById([FromRoute] Guid id, [FromServices] IRecuperarClienteUseCase useCase, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetById(Guid id, IRecuperarClienteUseCase useCase, CancellationToken cancellationToken = default)
     {
         var command = new RecuperarClienteCommand { ClienteId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
@@ -56,7 +50,7 @@ public sealed class ClientesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CriarClienteResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Post([FromServices] ICriarClienteUseCase useCase, [FromBody] CriarClienteCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Post(ICriarClienteUseCase useCase, CriarClienteCommand command, CancellationToken cancellationToken)
     {
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this, value => CreatedAtAction(nameof(Post), new { id = value.Id }, value));
@@ -66,7 +60,7 @@ public sealed class ClientesController : ControllerBase
     [ProducesResponseType(typeof(AtualizarClienteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Put([FromRoute] Guid id, [FromServices] IAtualizarClienteUseCase useCase, [FromBody] AtualizarClienteCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Put(Guid id, IAtualizarClienteUseCase useCase, AtualizarClienteCommand command, CancellationToken cancellationToken)
     {
         var updateCommand = new AtualizarClienteCommand
         {

@@ -15,13 +15,7 @@ public sealed class VeiculosController : ControllerBase
     [ProducesResponseType(typeof(ListarVeiculosResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get(
-        [FromServices] IListarVeiculosUseCase useCase,
-        [FromQuery] string? placa,
-        [FromQuery] Guid? clienteId,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(IListarVeiculosUseCase useCase, string? placa, Guid? clienteId, int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var command = new ListarVeiculosCommand
         {
@@ -46,7 +40,7 @@ public sealed class VeiculosController : ControllerBase
     [ProducesResponseType(typeof(RecuperarVeiculoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById([FromRoute] Guid id, [FromServices] IRecuperarVeiculoUseCase useCase, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetById(Guid id, IRecuperarVeiculoUseCase useCase, CancellationToken cancellationToken = default)
     {
         var command = new RecuperarVeiculoCommand { VeiculoId = id };
 
@@ -58,7 +52,7 @@ public sealed class VeiculosController : ControllerBase
     [ProducesResponseType(typeof(CriarVeiculoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Post([FromServices] ICriarVeiculoUseCase useCase, [FromBody] CriarVeiculoCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Post(ICriarVeiculoUseCase useCase, CriarVeiculoCommand command, CancellationToken cancellationToken)
     {
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this, value => CreatedAtAction(nameof(Post), new { id = value.Id }, value));
@@ -68,7 +62,7 @@ public sealed class VeiculosController : ControllerBase
     [ProducesResponseType(typeof(AtualizarVeiculoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Put([FromRoute] Guid id, [FromServices] IAtualizarVeiculoUseCase useCase, [FromBody] AtualizarVeiculoCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Put(Guid id, IAtualizarVeiculoUseCase useCase, AtualizarVeiculoCommand command, CancellationToken cancellationToken)
     {
         var updateCommand = new AtualizarVeiculoCommand
         {

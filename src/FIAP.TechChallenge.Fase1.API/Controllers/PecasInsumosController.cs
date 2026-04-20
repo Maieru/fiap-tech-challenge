@@ -16,12 +16,7 @@ public sealed class PecasInsumosController : ControllerBase
     [ProducesResponseType(typeof(ListarPecasInsumosResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get(
-        [FromServices] IListarPecasInsumosUseCase useCase,
-        [FromQuery] string? codigo,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(IListarPecasInsumosUseCase useCase, string? codigo, int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var command = new ListarPecasInsumosCommand
         {
@@ -45,7 +40,7 @@ public sealed class PecasInsumosController : ControllerBase
     [ProducesResponseType(typeof(RecuperarPecaInsumoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById([FromRoute] Guid id, [FromServices] IRecuperarPecaInsumoUseCase useCase, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetById(Guid id, IRecuperarPecaInsumoUseCase useCase, CancellationToken cancellationToken = default)
     {
         var command = new RecuperarPecaInsumoCommand
         {
@@ -59,7 +54,7 @@ public sealed class PecasInsumosController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(IncluirPecaInsumoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Post([FromServices] IIncluirPecaInsumoUseCase useCase, [FromBody] IncluirPecaInsumoCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Post(IIncluirPecaInsumoUseCase useCase, IncluirPecaInsumoCommand command, CancellationToken cancellationToken)
     {
         var result = await useCase.ExecuteAsync(command, cancellationToken);
 
@@ -70,7 +65,7 @@ public sealed class PecasInsumosController : ControllerBase
     [ProducesResponseType(typeof(EntradaEstoquePecaInsumoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> PutEntradaEstoque([FromRoute] Guid id, [FromServices] IEntradaEstoquePecaInsumoUseCase useCase, [FromBody] EntradaEstoquePecaInsumoCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> PutEntradaEstoque(Guid id, IEntradaEstoquePecaInsumoUseCase useCase, EntradaEstoquePecaInsumoCommand command, CancellationToken cancellationToken)
     {
         var entradaEstoqueCommand = new EntradaEstoquePecaInsumoCommand
         {
@@ -86,7 +81,7 @@ public sealed class PecasInsumosController : ControllerBase
     [ProducesResponseType(typeof(AtualizarPecaInsumoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Put([FromRoute] Guid id, [FromServices] IAtualizarPecaInsumoUseCase useCase, [FromBody] AtualizarPecaInsumoCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Put(Guid id, IAtualizarPecaInsumoUseCase useCase, AtualizarPecaInsumoCommand command, CancellationToken cancellationToken)
     {
         var updateCommand = new AtualizarPecaInsumoCommand
         {

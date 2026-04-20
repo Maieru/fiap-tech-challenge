@@ -15,11 +15,7 @@ public sealed class ServicosController : ControllerBase
     [ProducesResponseType(typeof(ListarServicosResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get(
-        [FromServices] IListarServicosUseCase useCase,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(IListarServicosUseCase useCase, int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var command = new ListarServicosCommand
         {
@@ -35,7 +31,7 @@ public sealed class ServicosController : ControllerBase
     [ProducesResponseType(typeof(RecuperarServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById([FromRoute] Guid id, [FromServices] IRecuperarServicoUseCase useCase, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetById(Guid id, IRecuperarServicoUseCase useCase, CancellationToken cancellationToken = default)
     {
         var command = new RecuperarServicoCommand { ServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
@@ -46,7 +42,7 @@ public sealed class ServicosController : ControllerBase
     [ProducesResponseType(typeof(CadastrarServicoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Post([FromServices] ICadastrarServicoUseCase useCase, [FromBody] CadastrarServicoCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Post(ICadastrarServicoUseCase useCase, CadastrarServicoCommand command, CancellationToken cancellationToken)
     {
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this, value => CreatedAtAction(nameof(Post), new { id = value.Id }, value));
@@ -56,7 +52,7 @@ public sealed class ServicosController : ControllerBase
     [ProducesResponseType(typeof(AtualizarServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Put([FromRoute] Guid id, [FromServices] IAtualizarServicoUseCase useCase, [FromBody] AtualizarServicoCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Put(Guid id, IAtualizarServicoUseCase useCase, AtualizarServicoCommand command, CancellationToken cancellationToken)
     {
         var updateCommand = new AtualizarServicoCommand
         {
