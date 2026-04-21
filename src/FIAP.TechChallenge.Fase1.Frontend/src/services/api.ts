@@ -44,6 +44,7 @@ api.interceptors.response.use(
 export function getApiErrorMessage(error: unknown, fallback = "Erro inesperado.") {
   if (axios.isAxiosError<ApiErrorResponse>(error)) {
     const data = error.response?.data;
+    if (data?.error) return data.error;
     if (data?.detail) return data.detail;
     if (data?.message) return data.message;
     if (data?.title) return data.title;

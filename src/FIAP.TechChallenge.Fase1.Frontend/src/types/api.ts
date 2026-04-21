@@ -9,6 +9,8 @@ export interface ApiValidationError {
 }
 
 export interface ApiErrorResponse {
+  error?: string;
+  errorCode?: string;
   title?: string;
   detail?: string;
   message?: string;
