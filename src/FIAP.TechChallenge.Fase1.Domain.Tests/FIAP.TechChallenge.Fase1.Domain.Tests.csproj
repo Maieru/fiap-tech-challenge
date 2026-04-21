@@ -21,11 +21,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="NUnit.Framework" />
+    <ProjectReference Include="..\FIAP.TechChallenge.Fase1.Domain\FIAP.TechChallenge.Fase1.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FIAP.TechChallenge.Fase1.Model\FIAP.TechChallenge.Fase1.Domain.csproj" />
+    <Using Include="NUnit.Framework" />
   </ItemGroup>
 
 </Project>
