@@ -22,8 +22,7 @@ public sealed class OrdensServicoController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(ListarOrdensServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get(IListarOrdensServicoUseCase useCase, Guid? clienteId, Guid? veiculoId, StatusOrdemServico? status, int pageNumber = 1, int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(IListarOrdensServicoUseCase useCase, Guid? clienteId, Guid? veiculoId, StatusOrdemServico? status, int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var command = new ListarOrdensServicoCommand
         {

@@ -2,6 +2,7 @@
 using FIAP.TechChallenge.Fase1.Infrastructure.Notification.Mail;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Repositories;
+using FIAP.TechChallenge.Fase1.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,8 @@ public static class InfraestructureDependecyInjection
         _ = services.AddScoped<IPecaOuInsumoDaOrdemDeServicoRepository, PecaOuInsumoDaOrdemDeServicoRepository>();
         _ = services.AddScoped<IServicoRepository, ServicoRepository>();
         _ = services.AddScoped<IServicoDaOrdemDeServicoRepository, ServicoDaOrdemDeServicoRepository>();
+        _ = services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        _ = services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 
         _ = services.AddScoped<IMailService, MailService>();
 
