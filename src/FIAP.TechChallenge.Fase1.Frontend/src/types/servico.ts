@@ -6,6 +6,12 @@ export interface Servico {
   valorUnitario: number;
 }
 
+export interface TempoMedioServico {
+  servicoId: string;
+  tempoMedioMinutos: number;
+  quantidadeExecucoes: number;
+}
+
 export interface ServicoPayload {
   descricao: string;
   valorUnitario: number;

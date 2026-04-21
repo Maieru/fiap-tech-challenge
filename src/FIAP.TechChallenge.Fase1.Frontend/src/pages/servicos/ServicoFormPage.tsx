@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getApiErrorMessage } from "@/services/api";
 import { servicosService } from "@/services/servicos.service";
+import type { TempoMedioServico } from "@/types/servico";
 
 const initialForm = {
   descricao: "",
@@ -20,6 +21,7 @@ export function ServicoFormPage() {
   const isEdit = Boolean(id);
 
   const [formData, setFormData] = useState(initialForm);
+  const [tempoMedio, setTempoMedio] = useState<TempoMedioServico | null>(null);
   const [loading, setLoading] = useState(isEdit);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -30,11 +32,16 @@ export function ServicoFormPage() {
     async function loadServico() {
       setLoading(true);
       try {
-        const servico = await servicosService.getById(servicoId);
+        const [servico, tempoMedioServico] = await Promise.all([
+          servicosService.getById(servicoId),
+          servicosService.getTempoMedio(servicoId),
+        ]);
+
         setFormData({
           descricao: servico.descricao,
           valorUnitario: String(servico.valorUnitario),
         });
+        setTempoMedio(tempoMedioServico);
       } catch {
         toast.error("Não foi possível carregar os dados do serviço.");
       } finally {
@@ -80,6 +87,19 @@ export function ServicoFormPage() {
             <p className="text-sm text-muted-foreground">Carregando...</p>
           ) : (
             <form className="space-y-4" onSubmit={handleSubmit}>
+              {isEdit && tempoMedio ? (
+                <div className="grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Quantidade de execuções</p>
+                    <p className="text-sm font-medium">{tempoMedio.quantidadeExecucoes}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Tempo médio de execução</p>
+                    <p className="text-sm font-medium">{tempoMedio.tempoMedioMinutos.toFixed(2)} min</p>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="space-y-2">
                 <Label htmlFor="descricao">Descrição</Label>
                 <Input

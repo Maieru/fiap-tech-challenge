@@ -1,5 +1,5 @@
 import { api } from "@/services/api";
-import type { ListServicosResponse, Servico, ServicoPayload } from "@/types/servico";
+import type { ListServicosResponse, Servico, ServicoPayload, TempoMedioServico } from "@/types/servico";
 
 interface ListServicosParams {
   pageNumber?: number;
@@ -20,6 +20,11 @@ export const servicosService = {
 
   async getById(id: string) {
     const { data } = await api.get<Servico>(`/servicos/${id}`);
+    return data;
+  },
+
+  async getTempoMedio(id: string) {
+    const { data } = await api.get<TempoMedioServico>(`/servicos/${id}/tempo-medio`);
     return data;
   },
 
