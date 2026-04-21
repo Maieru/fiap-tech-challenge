@@ -101,8 +101,9 @@ export function OrdemServicoFormPage() {
       }
 
       let finalVeiculoId = veiculoId;
+      const deveCadastrarNovoVeiculo = usarNovoCliente || cadastrarNovoVeiculo;
 
-      if (cadastrarNovoVeiculo) {
+      if (deveCadastrarNovoVeiculo) {
         if (!novoVeiculo.placa || !novoVeiculo.marca || !novoVeiculo.modelo || !novoVeiculo.ano) {
           toast.error("Preencha os dados do novo veículo.");
           return;
@@ -156,29 +157,36 @@ export function OrdemServicoFormPage() {
               <CardTitle>Cliente e veículo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant={usarNovoCliente ? "default" : "outline"}
-                  onClick={() => {
-                    setUsarNovoCliente((prev) => !prev);
-                    setClienteId("");
-                    setCadastrarNovoVeiculo(true);
-                    setVeiculoId("");
-                  }}
-                >
-                  {usarNovoCliente ? "Usando novo cliente" : "Cadastrar novo cliente na OS"}
-                </Button>
-                <Button
-                  type="button"
-                  variant={cadastrarNovoVeiculo ? "default" : "outline"}
-                  onClick={() => {
-                    setCadastrarNovoVeiculo((prev) => !prev);
-                    setVeiculoId("");
-                  }}
-                >
-                  {cadastrarNovoVeiculo ? "Criar novo veículo" : "Selecionar veículo existente"}
-                </Button>
+              <div className="space-y-2">
+                <Label>Cliente</Label>
+                <div className="space-y-2 rounded-md border p-3">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="tipo-cliente"
+                      checked={usarNovoCliente}
+                      onChange={() => {
+                        setUsarNovoCliente(true);
+                        setClienteId("");
+                        setCadastrarNovoVeiculo(true);
+                        setVeiculoId("");
+                      }}
+                    />
+                    Criar novo cliente
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="tipo-cliente"
+                      checked={!usarNovoCliente}
+                      onChange={() => {
+                        setUsarNovoCliente(false);
+                        setClienteId("");
+                      }}
+                    />
+                    Usar cliente existente
+                  </label>
+                </div>
               </div>
 
               {usarNovoCliente ? (
@@ -235,7 +243,43 @@ export function OrdemServicoFormPage() {
                 </div>
               )}
 
-              {cadastrarNovoVeiculo ? (
+              {usarNovoCliente ? (
+                <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+                  Para novo cliente, o veículo também será cadastrado como novo nesta OS.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>Veículo</Label>
+                  <div className="space-y-2 rounded-md border p-3">
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="radio"
+                        name="tipo-veiculo"
+                        checked={cadastrarNovoVeiculo}
+                        onChange={() => {
+                          setCadastrarNovoVeiculo(true);
+                          setVeiculoId("");
+                        }}
+                      />
+                      Criar novo veículo
+                    </label>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="radio"
+                        name="tipo-veiculo"
+                        checked={!cadastrarNovoVeiculo}
+                        onChange={() => {
+                          setCadastrarNovoVeiculo(false);
+                          setVeiculoId("");
+                        }}
+                      />
+                      Usar veículo existente
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {usarNovoCliente || cadastrarNovoVeiculo ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="placa">Placa</Label>
