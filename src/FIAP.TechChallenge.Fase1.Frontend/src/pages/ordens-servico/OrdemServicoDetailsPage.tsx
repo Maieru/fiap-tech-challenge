@@ -37,6 +37,8 @@ export function OrdemServicoDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [addingItem, setAddingItem] = useState(false);
+  const [tempoGastoPorServico, setTempoGastoPorServico] = useState<Record<string, string>>({});
+  const [concludingServicoId, setConcludingServicoId] = useState<string | null>(null);
 
   async function loadData() {
     if (!id) return;
@@ -45,6 +47,7 @@ export function OrdemServicoDetailsPage() {
     try {
       const ordemResponse = await ordensServicoService.getById(id);
       setOrdem(ordemResponse);
+      setTempoGastoPorServico({});
 
       const [clienteResponse, veiculoResponse, servicosResponse, pecasResponse] = await Promise.all([
         clientesService.getById(ordemResponse.clienteId),
@@ -84,6 +87,7 @@ export function OrdemServicoDetailsPage() {
   }, [ordem]);
 
   const isEmDiagnostico = ordem?.status === 2;
+  const isEmExecucao = ordem?.status === 4;
 
   async function handleStatusAdvance() {
     if (!nextAction) return;
@@ -97,6 +101,26 @@ export function OrdemServicoDetailsPage() {
       toast.error(getApiErrorMessage(error, "Falha ao atualizar status."));
     } finally {
       setUpdatingStatus(false);
+    }
+  }
+
+  async function handleConcluirServico(servicoDaOrdemServicoId: string) {
+    const tempoGastoMinutos = Number(tempoGastoPorServico[servicoDaOrdemServicoId]);
+
+    if (!Number.isInteger(tempoGastoMinutos) || tempoGastoMinutos <= 0) {
+      toast.error("Informe um tempo gasto válido (em minutos).");
+      return;
+    }
+
+    setConcludingServicoId(servicoDaOrdemServicoId);
+    try {
+      await ordensServicoService.concluirServico(servicoDaOrdemServicoId, { tempoGastoMinutos });
+      toast.success("Serviço marcado como concluído.");
+      await loadData();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Falha ao concluir serviço."));
+    } finally {
+      setConcludingServicoId(null);
     }
   }
 
@@ -272,13 +296,15 @@ export function OrdemServicoDetailsPage() {
                     <TableHead>Qtd</TableHead>
                     <TableHead>Valor Unitário</TableHead>
                     <TableHead>Total</TableHead>
+                    <TableHead>Tempo (min)</TableHead>
                     <TableHead>Concluído</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {ordem.servicos.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center text-muted-foreground">
                         Nenhum serviço adicionado.
                       </TableCell>
                     </TableRow>
@@ -289,7 +315,36 @@ export function OrdemServicoDetailsPage() {
                         <TableCell>{servico.quantidade}</TableCell>
                         <TableCell>{formatCurrency(servico.valorUnitario)}</TableCell>
                         <TableCell>{formatCurrency(servico.valorTotal)}</TableCell>
+                        <TableCell>{servico.tempoGastoMinutos ?? "-"}</TableCell>
                         <TableCell>{servico.concluido ? "Sim" : "Não"}</TableCell>
+                        <TableCell>
+                          {isEmExecucao && !servico.concluido ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                min="1"
+                                className="w-24"
+                                value={tempoGastoPorServico[servico.id] ?? ""}
+                                onChange={(event) =>
+                                  setTempoGastoPorServico((current) => ({
+                                    ...current,
+                                    [servico.id]: event.target.value,
+                                  }))
+                                }
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => handleConcluirServico(servico.id)}
+                                disabled={concludingServicoId === servico.id}
+                              >
+                                {concludingServicoId === servico.id ? "Concluindo..." : "Concluir"}
+                              </Button>
+                            </div>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))
                   )}

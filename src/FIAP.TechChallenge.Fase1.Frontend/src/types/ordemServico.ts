@@ -64,6 +64,10 @@ export interface AddPecaOrdemPayload {
   quantidade: number;
 }
 
+export interface ConcluirServicoOrdemPayload {
+  tempoGastoMinutos: number;
+}
+
 export interface ListOrdensServicoResponse extends PagedResponse {
   ordensServico: OrdemServico[];
 }

@@ -2,6 +2,7 @@ import { api } from "@/services/api";
 import type {
   AddPecaOrdemPayload,
   AddServicoOrdemPayload,
+  ConcluirServicoOrdemPayload,
   CreateOrdemServicoPayload,
   ListOrdensServicoResponse,
   OrdemServicoDetalhes,
@@ -56,6 +57,11 @@ export const ordensServicoService = {
 
   async aprovarExecucao(id: string) {
     const { data } = await api.put(`/ordensservico/${id}/aprovar-execucao`);
+    return data;
+  },
+
+  async concluirServico(servicoDaOrdemServicoId: string, payload: ConcluirServicoOrdemPayload) {
+    const { data } = await api.put(`/ordensservico/servicos/${servicoDaOrdemServicoId}/concluir`, payload);
     return data;
   },
 
