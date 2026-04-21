@@ -19,9 +19,10 @@ services:
 
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=fiap_tech_challenge;Username=postgres;Password=postgres
 
-      Jwt__Key: 8b301d30-2445-45e4-8d75-727c8d4001c2
+      Jwt__SigningKey: 8b301d30-2445-45e4-8d75-727c8d4001c2
       Jwt__Issuer: fiap-techchallenge
       Jwt__Audience: fiap-techchallenge-client
+      Jwt__ExpirationMinutes: 60
     networks:
       - fiap-techchallenge-network
 
