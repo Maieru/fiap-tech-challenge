@@ -28,6 +28,7 @@ if (!app.Environment.IsEnvironment("Testing"))
     _ = app.UseHttpsRedirection();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 await app.RunAsync();

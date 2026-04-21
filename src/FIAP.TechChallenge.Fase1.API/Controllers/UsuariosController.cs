@@ -1,5 +1,7 @@
 using FIAP.TechChallenge.Fase1.API.Extensions;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.AutenticarUsuario;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.CriarUsuario;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
@@ -8,6 +10,21 @@ namespace FIAP.TechChallenge.Fase1.API.Controllers;
 [Route("api/[controller]")]
 public sealed class UsuariosController : ControllerBase
 {
+    [AllowAnonymous]
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(AutenticarUsuarioResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Login(
+        IAutenticarUsuarioUseCase useCase,
+        AutenticarUsuarioCommand command,
+        CancellationToken cancellationToken)
+    {
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [AllowAnonymous]
     [HttpPost]
     [ProducesResponseType(typeof(CriarUsuarioResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

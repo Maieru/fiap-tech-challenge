@@ -47,6 +47,57 @@ public sealed class UsuariosControllerTests
     }
 
     [Test]
+    public async Task Login_ShouldReturnToken_WhenCredentialsAreValid()
+    {
+        var createRequest = new
+        {
+            Usuario = "Admin",
+            Senha = "SenhaForte@123"
+        };
+
+        _ = await _client.PostAsJsonAsync("/api/usuarios", createRequest);
+
+        var loginRequest = new
+        {
+            Usuario = "Admin",
+            Senha = "SenhaForte@123"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/usuarios/login", loginRequest);
+        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = auth.Should().NotBeNull();
+            _ = auth!.Token.Should().NotBeNullOrWhiteSpace();
+            _ = auth.TipoToken.Should().Be("Bearer");
+            _ = auth.ExpiresInSeconds.Should().BeGreaterThan(0);
+        });
+    }
+
+    [Test]
+    public async Task Login_ShouldReturnUnauthorized_WhenCredentialsAreInvalid()
+    {
+        var request = new
+        {
+            Usuario = "Admin",
+            Senha = "SenhaErrada@123"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/usuarios/login", request);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Be("Usuario ou senha invalidos.");
+            _ = error.ErrorCode.Should().Be("Unauthorized");
+        });
+    }
+
+    [Test]
     public async Task Post_ShouldReturnConflict_WhenUsuarioAlreadyExists()
     {
         var request = new
@@ -95,6 +146,13 @@ public sealed class UsuariosControllerTests
         public Guid Id { get; set; }
         public string Usuario { get; set; } = string.Empty;
         public string SenhaCriptografada { get; set; } = string.Empty;
+    }
+
+    private sealed class AuthResponse
+    {
+        public string Token { get; set; } = string.Empty;
+        public string TipoToken { get; set; } = string.Empty;
+        public int ExpiresInSeconds { get; set; }
     }
 
     private sealed class ErrorResponse
