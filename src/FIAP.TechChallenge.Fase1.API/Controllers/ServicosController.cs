@@ -3,12 +3,14 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ListarServicos;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.RecuperarServico;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class ServicosController : ControllerBase
 {
     [HttpGet]

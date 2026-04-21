@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using FIAP.TechChallenge.Fase1.API.Tests;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -9,18 +10,22 @@ public sealed class PecasInsumosControllerTests
 {
     private CustomWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
+    private HttpClient _unauthorizedClient = null!;
 
     [SetUp]
-    public void SetUp()
+    public async Task SetUp()
     {
         _factory = new CustomWebApplicationFactory();
         _client = _factory.CreateClient();
+        _unauthorizedClient = _factory.CreateClient();
+        await TestAuthenticationHelper.ConfigureAuthenticatedClientAsync(_client);
     }
 
     [TearDown]
     public async Task TearDown()
     {
         _client.Dispose();
+        _unauthorizedClient.Dispose();
         await _factory.DisposeAsync();
     }
 
@@ -399,6 +404,52 @@ public sealed class PecasInsumosControllerTests
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("entrada em estoque");
         });
+    }
+
+    [Test]
+    public async Task AllActions_ShouldReturnUnauthorized_WhenTokenIsMissing()
+    {
+        var getResponse = await SendUnauthorizedAsync(HttpMethod.Get, "/api/pecasinsumos");
+        var getByIdResponse = await SendUnauthorizedAsync(HttpMethod.Get, $"/api/pecasinsumos/{Guid.NewGuid()}");
+        var postResponse = await SendUnauthorizedAsync(HttpMethod.Post, "/api/pecasinsumos", new
+        {
+            Nome = "Filtro de oleo",
+            Codigo = "flt-unauth",
+            Descricao = "Teste sem token",
+            PrecoUnitario = 10m,
+            QuantidadeEstoque = 1
+        });
+        var putEntradaEstoqueResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/pecasinsumos/{Guid.NewGuid()}/entrada-estoque", new
+        {
+            Quantidade = 2
+        });
+        var putResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/pecasinsumos/{Guid.NewGuid()}", new
+        {
+            Nome = "Filtro atualizado",
+            Codigo = "flt-unauth-upd",
+            Descricao = "Atualizacao sem token",
+            PrecoUnitario = 12m,
+            Ativo = true
+        });
+
+        Assert.Multiple(() =>
+        {
+            _ = getResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = postResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = putEntradaEstoqueResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = putResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        });
+    }
+
+    private async Task<HttpResponseMessage> SendUnauthorizedAsync(HttpMethod method, string uri, object? payload = null)
+    {
+        using var request = new HttpRequestMessage(method, uri);
+
+        if (payload is not null)
+            request.Content = JsonContent.Create(payload);
+
+        return await _unauthorizedClient.SendAsync(request);
     }
 
     private sealed class PecaInsumoResponse

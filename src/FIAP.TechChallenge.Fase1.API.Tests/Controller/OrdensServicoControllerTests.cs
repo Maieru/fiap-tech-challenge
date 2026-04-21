@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using FIAP.TechChallenge.Fase1.API.Tests;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -9,18 +10,22 @@ public sealed class OrdensServicoControllerTests
 {
     private CustomWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
+    private HttpClient _unauthorizedClient = null!;
 
     [SetUp]
-    public void SetUp()
+    public async Task SetUp()
     {
         _factory = new CustomWebApplicationFactory();
         _client = _factory.CreateClient();
+        _unauthorizedClient = _factory.CreateClient();
+        await TestAuthenticationHelper.ConfigureAuthenticatedClientAsync(_client);
     }
 
     [TearDown]
     public async Task TearDown()
     {
         _client.Dispose();
+        _unauthorizedClient.Dispose();
         await _factory.DisposeAsync();
     }
 
@@ -1064,6 +1069,66 @@ public sealed class OrdensServicoControllerTests
             _ = error.Should().NotBeNull();
             _ = error!.Error.Should().Contain("finalizadas");
         });
+    }
+
+    [Test]
+    public async Task AllActions_ShouldReturnUnauthorized_WhenTokenIsMissing()
+    {
+        var ordemServicoId = Guid.NewGuid();
+        var servicoDaOrdemServicoId = Guid.NewGuid();
+
+        var getResponse = await SendUnauthorizedAsync(HttpMethod.Get, "/api/ordensservico");
+        var getByIdResponse = await SendUnauthorizedAsync(HttpMethod.Get, $"/api/ordensservico/{ordemServicoId}");
+        var postResponse = await SendUnauthorizedAsync(HttpMethod.Post, "/api/ordensservico", new
+        {
+            ClienteId = Guid.NewGuid(),
+            VeiculoId = Guid.NewGuid(),
+            DescricaoProblema = "Teste sem token"
+        });
+        var addServicoResponse = await SendUnauthorizedAsync(HttpMethod.Post, $"/api/ordensservico/{ordemServicoId}/addservico", new
+        {
+            ServicoId = Guid.NewGuid(),
+            Quantidade = 1
+        });
+        var addPecaInsumoResponse = await SendUnauthorizedAsync(HttpMethod.Post, $"/api/ordensservico/{ordemServicoId}/addpecainsumo", new
+        {
+            PecaInsumoId = Guid.NewGuid(),
+            Quantidade = 1
+        });
+        var iniciarDiagnosticoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/iniciar-diagnostico", new { });
+        var solicitarAprovacaoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/solicitar-aprovacao", new { });
+        var aprovarExecucaoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/aprovar-execucao", new { });
+        var concluirServicoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/servicos/{servicoDaOrdemServicoId}/concluir", new
+        {
+            TempoGastoMinutos = 30
+        });
+        var finalizarResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/finalizar", new { });
+        var entregarResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/entregar", new { });
+
+        Assert.Multiple(() =>
+        {
+            _ = getResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = postResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = addServicoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = addPecaInsumoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = concluirServicoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = finalizarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = entregarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        });
+    }
+
+    private async Task<HttpResponseMessage> SendUnauthorizedAsync(HttpMethod method, string uri, object? payload = null)
+    {
+        using var request = new HttpRequestMessage(method, uri);
+
+        if (payload is not null)
+            request.Content = JsonContent.Create(payload);
+
+        return await _unauthorizedClient.SendAsync(request);
     }
 
     private async Task<ClienteResponse> CreateClientAsync(int seed)

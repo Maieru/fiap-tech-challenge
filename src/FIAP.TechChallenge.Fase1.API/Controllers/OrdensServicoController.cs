@@ -11,12 +11,14 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensSe
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.RecuperarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.SolicitarAprovacaoOrdemServico;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class OrdensServicoController : ControllerBase
 {
     [HttpGet]

@@ -10,18 +10,22 @@ public sealed class ClienteControllerTests
 {
     private CustomWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
+    private HttpClient _unauthorizedClient = null!;
 
     [SetUp]
-    public void SetUp()
+    public async Task SetUp()
     {
         _factory = new CustomWebApplicationFactory();
         _client = _factory.CreateClient();
+        _unauthorizedClient = _factory.CreateClient();
+        await TestAuthenticationHelper.ConfigureAuthenticatedClientAsync(_client);
     }
 
     [TearDown]
     public async Task TearDown()
     {
         _client.Dispose();
+        _unauthorizedClient.Dispose();
         await _factory.DisposeAsync();
     }
 
@@ -383,6 +387,44 @@ public sealed class ClienteControllerTests
             _ = error!.Error.Should().Be("O número da página deve ser maior que zero.");
             _ = error.ErrorCode.Should().Be("BadRequest");
         });
+    }
+
+    [Test]
+    public async Task AllActions_ShouldReturnUnauthorized_WhenTokenIsMissing()
+    {
+        var getResponse = await SendUnauthorizedAsync(HttpMethod.Get, "/api/clientes");
+        var getByIdResponse = await SendUnauthorizedAsync(HttpMethod.Get, $"/api/clientes/{Guid.NewGuid()}");
+        var postResponse = await SendUnauthorizedAsync(HttpMethod.Post, "/api/clientes", new
+        {
+            Nome = "Maria Silva",
+            Cpf = GenerateValidCpf(9911),
+            Telefone = "11999999999",
+            Email = "maria@email.com"
+        });
+        var putResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/clientes/{Guid.NewGuid()}", new
+        {
+            Nome = "Maria Souza",
+            Telefone = "11988888888",
+            Email = "maria.souza@email.com"
+        });
+
+        Assert.Multiple(() =>
+        {
+            _ = getResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = postResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = putResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        });
+    }
+
+    private async Task<HttpResponseMessage> SendUnauthorizedAsync(HttpMethod method, string uri, object? payload = null)
+    {
+        using var request = new HttpRequestMessage(method, uri);
+
+        if (payload is not null)
+            request.Content = JsonContent.Create(payload);
+
+        return await _unauthorizedClient.SendAsync(request);
     }
 
     private async Task<ClienteResponse> CreateClientAsync(int seed)
