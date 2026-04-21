@@ -1,0 +1,94 @@
+# Oficina Frontend (MVP)
+
+Frontend administrativo para oficina mecânica, implementado com:
+
+- React
+- Vite
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- React Router
+- Axios
+
+## Estrutura de pastas
+
+```txt
+src/
+  components/
+    common/
+    ui/
+  contexts/
+  hooks/
+  layouts/
+  lib/
+  pages/
+    auth/
+    dashboard/
+    clientes/
+    veiculos/
+    servicos/
+    pecas-insumos/
+    ordens-servico/
+  routes/
+  services/
+  types/
+```
+
+## Funcionalidades implementadas
+
+- Login administrativo com JWT.
+- Persistência de sessão em `localStorage`.
+- Interceptor Axios com `Authorization: Bearer <token>`.
+- Logout automático em `401`.
+- Rotas protegidas.
+- Layout administrativo com sidebar, header e conteúdo responsivo.
+- CRUD de:
+  - Clientes
+  - Veículos
+  - Serviços
+  - Peças/Insumos (com entrada de estoque)
+- Ordens de serviço:
+  - Listagem
+  - Criação (cliente/veículo existente ou novo + itens)
+  - Detalhes com orçamento e timeline
+  - Avanço de status (Recebida -> Entregue)
+- Feedback visual com toasts (sucesso/erro) e estados de carregamento.
+
+## Configuração
+
+1. Copie o arquivo de exemplo:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+2. Ajuste a URL da API no `.env`:
+
+```env
+VITE_API_BASE_URL=http://localhost:5251/api
+```
+
+## Execução local
+
+```bash
+npm install
+npm run dev
+```
+
+Aplicação disponível em: `http://localhost:5173`
+
+## Build de produção
+
+```bash
+npm run build
+npm run preview
+```
+
+## Pontos de adaptação rápida
+
+- Cliente HTTP: `src/services/api.ts`
+- Serviços por módulo: `src/services/*.service.ts`
+- Tipos de dados: `src/types/*`
+- Rotas da app: `src/routes/AppRouter.tsx`
+
+Se o backend mudar payloads/rotas, os ajustes ficam concentrados em `services` e `types`.
