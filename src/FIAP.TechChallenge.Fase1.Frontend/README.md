@@ -68,7 +68,24 @@ Copy-Item .env.example .env
 VITE_API_BASE_URL=http://localhost:5251/api
 ```
 
-## Execução local
+## Subindo tudo com Docker Compose
+
+Execute a partir da raiz do repositorio (`src`):
+
+```bash
+docker compose up --build
+```
+
+Servicos disponiveis:
+
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:8080`
+- PgAdmin: `http://localhost:5050`
+- Postgres: `localhost:5432`
+
+No modo Docker, o frontend ja e buildado com `VITE_API_BASE_URL=http://localhost:8080/api`.
+
+## Execucao local (sem Docker)
 
 ```bash
 npm install

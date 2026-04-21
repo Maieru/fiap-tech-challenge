@@ -1,6 +1,6 @@
 # FIAP Tech Challenge Fase 1
 
-Sistema de gestão para oficina mecânica, desenvolvido com arquitetura em camadas, back-end em .NET, persistência em PostgreSQL e frontend React opcional em projeto separado dentro da mesma solução.
+Sistema de gestão para oficina mecânica, desenvolvido com arquitetura em camadas, back-end em .NET, persistência em PostgreSQL e frontend React na mesma solução, incluindo execução conjunta com os demais serviços via Docker Compose.
 
 ## Visão Geral
 
@@ -32,9 +32,9 @@ O projeto foi desenvolvido como um **monólito em camadas**, conforme proposto n
 
 ### Dependências de ambiente
 
-- Docker + Docker Compose, para subir a API e o banco localmente;
+- Docker + Docker Compose, para subir API, frontend e banco localmente;
 - SDK .NET 10, para execução fora do Docker;
-- Node.js, apenas para execução do frontend fora do Docker.
+- Node.js, para execução do frontend fora do Docker.
 
 ### Dependências entre projetos da solução
 
@@ -99,6 +99,7 @@ O projeto contempla requisitos de segurança e qualidade previstos no desafio, i
 O `docker-compose.yml` sobe os seguintes serviços:
 
 * `fiap-techchallenge-api` (API .NET) em `http://localhost:8080`
+* `fiap-techchallenge-frontend` (Frontend React) em `http://localhost:5173`
 * `fiap-techchallenge-db` (PostgreSQL) em `localhost:5432`
 * `fiap-techchallenge-pgadmin` (opcional, administração do banco) em `http://localhost:5050`
 
@@ -112,12 +113,13 @@ O `docker-compose.yml` sobe os seguintes serviços:
 Na raiz da solução (`src`), execute:
 
 ```bash
-docker compose -f docker-compose.yml up --build -d
+docker compose up --build -d
 ```
 
-Após a inicialização, a API estará disponível em:
+Após a inicialização, os principais serviços estarão disponíveis em:
 
 ```text
+http://localhost:5173
 http://localhost:8080
 ```
 
@@ -235,9 +237,9 @@ Para executar os testes localmente:
 dotnet test
 ```
 
-## Frontend (Opcional)
+## Frontend
 
-O repositório contém também um frontend React em `FIAP.TechChallenge.Fase1.Frontend`, utilizado como apoio visual e para validação manual dos fluxos. Ele não compõe o escopo obrigatório principal da Fase 1.
+O repositório contém também um frontend React em `FIAP.TechChallenge.Fase1.Frontend`, utilizado como apoio visual e para validação manual dos fluxos.
 
 Para executar o frontend localmente:
 
