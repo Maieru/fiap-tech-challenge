@@ -1,1 +1,0 @@
-# fiap-fase1-tech-challenge

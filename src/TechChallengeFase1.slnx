@@ -11,5 +11,5 @@
   <Project Path="FIAP.TechChallenge.Fase1.API/FIAP.TechChallenge.Fase1.API.csproj" />
   <Project Path="FIAP.TechChallenge.Fase1.Application/FIAP.TechChallenge.Fase1.Application.csproj" Id="ad665f56-f667-4fd7-bf69-9defdb2f2546" />
   <Project Path="FIAP.TechChallenge.Fase1.Infrastructure/FIAP.TechChallenge.Fase1.Infrastructure.csproj" Id="29a51a8e-c155-4d71-8cbb-045b497f1c75" />
-  <Project Path="FIAP.TechChallenge.Fase1.Model/FIAP.TechChallenge.Fase1.Domain.csproj" Id="a65d3266-579d-4203-bd59-25c30227f081" />
+  <Project Path="FIAP.TechChallenge.Fase1.Domain/FIAP.TechChallenge.Fase1.Domain.csproj" Id="a65d3266-579d-4203-bd59-25c30227f081" />
 </Solution>

@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FIAP.TechChallenge.Fase1.Model\FIAP.TechChallenge.Fase1.Domain.csproj" />
+    <ProjectReference Include="..\FIAP.TechChallenge.Fase1.Domain\FIAP.TechChallenge.Fase1.Domain.csproj" />
   </ItemGroup>
 
 </Project>
