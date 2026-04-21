@@ -3,6 +3,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ListarServicos;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.RecuperarServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.VerificarTempoMedioServico;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,6 +37,17 @@ public sealed class ServicosController : ControllerBase
     public async Task<IActionResult> GetById(Guid id, IRecuperarServicoUseCase useCase, CancellationToken cancellationToken = default)
     {
         var command = new RecuperarServicoCommand { ServicoId = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet("{id:guid}/tempo-medio")]
+    [ProducesResponseType(typeof(VerificarTempoMedioServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTempoMedio(Guid id, IVerificarTempoMedioServicoUseCase useCase, CancellationToken cancellationToken = default)
+    {
+        var command = new VerificarTempoMedioServicoCommand { ServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this);
     }

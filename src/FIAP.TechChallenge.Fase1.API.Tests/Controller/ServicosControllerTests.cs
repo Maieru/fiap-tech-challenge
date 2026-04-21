@@ -7,6 +7,7 @@ namespace FIAP.TechChallenge.Fase1.API.Tests.Controller;
 [TestFixture]
 public sealed class ServicosControllerTests
 {
+    private static int _seedCounter = 9500;
     private CustomWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
     private HttpClient _unauthorizedClient = null!;
@@ -238,10 +239,79 @@ public sealed class ServicosControllerTests
     }
 
     [Test]
+    public async Task GetTempoMedio_ShouldReturnExecutionSummary_WhenServicoHasNoCompletedExecution()
+    {
+        var createRequest = new
+        {
+            Descricao = "Troca de pastilhas",
+            ValorUnitario = 180m
+        };
+
+        var createResponse = await _client.PostAsJsonAsync("/api/servicos", createRequest);
+        var created = await createResponse.Content.ReadFromJsonAsync<ServicoResponse>();
+
+        _ = created.Should().NotBeNull();
+
+        var response = await _client.GetAsync($"/api/servicos/{created!.Id}/tempo-medio");
+        var body = await response.Content.ReadFromJsonAsync<TempoMedioServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = body.Should().NotBeNull();
+            _ = body!.ServicoId.Should().Be(created.Id);
+            _ = body.QuantidadeExecucoes.Should().Be(0);
+            _ = body.TempoMedioMinutos.Should().Be(0m);
+        });
+    }
+
+    [Test]
+    public async Task GetTempoMedio_ShouldReturnExecutionSummary_WhenServicoHasCompletedExecutions()
+    {
+        var servico = await CreateServicoAsync("Troca de bateria", 350m);
+        var cliente = await CreateClientAsync();
+        var veiculo = await CreateVehicleAsync(cliente.Id);
+
+        var ordem1 = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Falha na ignicao");
+        var ordem2 = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Queda de tensao na partida");
+
+        await ConcluirServicoNaOrdemAsync(ordem1.Id, servico.Id, 30);
+        await ConcluirServicoNaOrdemAsync(ordem2.Id, servico.Id, 50);
+
+        var response = await _client.GetAsync($"/api/servicos/{servico.Id}/tempo-medio");
+        var body = await response.Content.ReadFromJsonAsync<TempoMedioServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = body.Should().NotBeNull();
+            _ = body!.ServicoId.Should().Be(servico.Id);
+            _ = body.QuantidadeExecucoes.Should().Be(2);
+            _ = body.TempoMedioMinutos.Should().Be(40m);
+        });
+    }
+
+    [Test]
+    public async Task GetTempoMedio_ShouldReturnNotFound_WhenServicoDoesNotExist()
+    {
+        var response = await _client.GetAsync($"/api/servicos/{Guid.NewGuid()}/tempo-medio");
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Be("Servico nao encontrado.");
+            _ = error.ErrorCode.Should().Be("NotFound");
+        });
+    }
+
+    [Test]
     public async Task AllActions_ShouldReturnUnauthorized_WhenTokenIsMissing()
     {
         var getResponse = await SendUnauthorizedAsync(HttpMethod.Get, "/api/servicos");
         var getByIdResponse = await SendUnauthorizedAsync(HttpMethod.Get, $"/api/servicos/{Guid.NewGuid()}");
+        var getTempoMedioResponse = await SendUnauthorizedAsync(HttpMethod.Get, $"/api/servicos/{Guid.NewGuid()}/tempo-medio");
         var postResponse = await SendUnauthorizedAsync(HttpMethod.Post, "/api/servicos", new
         {
             Descricao = "Alinhamento",
@@ -257,6 +327,7 @@ public sealed class ServicosControllerTests
         {
             _ = getResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = getTempoMedioResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = postResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = putResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         });
@@ -272,11 +343,196 @@ public sealed class ServicosControllerTests
         return await _unauthorizedClient.SendAsync(request);
     }
 
+    private async Task<ServicoResponse> CreateServicoAsync(string descricao, decimal valorUnitario)
+    {
+        var request = new
+        {
+            Descricao = descricao,
+            ValorUnitario = valorUnitario
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/servicos", request);
+        var created = await response.Content.ReadFromJsonAsync<ServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Id.Should().NotBeEmpty();
+        });
+
+        return created!;
+    }
+
+    private async Task<ClienteResponse> CreateClientAsync()
+    {
+        var seed = System.Threading.Interlocked.Increment(ref _seedCounter);
+
+        var request = new
+        {
+            Nome = $"Cliente Servico {seed}",
+            Cpf = GenerateValidCpf(seed),
+            Telefone = $"1198{seed:D7}",
+            Email = $"cliente.servico.{seed}@email.com"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/clientes", request);
+        var created = await response.Content.ReadFromJsonAsync<ClienteResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Id.Should().NotBeEmpty();
+        });
+
+        return created!;
+    }
+
+    private async Task<VeiculoResponse> CreateVehicleAsync(Guid clienteId)
+    {
+        var seed = System.Threading.Interlocked.Increment(ref _seedCounter);
+
+        var request = new
+        {
+            ClienteId = clienteId,
+            Placa = GenerateValidPlaca(seed),
+            Marca = "Toyota",
+            Modelo = "Corolla",
+            Ano = 2025
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/veiculos", request);
+        var created = await response.Content.ReadFromJsonAsync<VeiculoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Id.Should().NotBeEmpty();
+        });
+
+        return created!;
+    }
+
+    private async Task<OrdemServicoResponse> CreateOrdemServicoAsync(Guid clienteId, Guid veiculoId, string descricaoProblema)
+    {
+        var request = new
+        {
+            ClienteId = clienteId,
+            VeiculoId = veiculoId,
+            DescricaoProblema = descricaoProblema
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/ordensservico", request);
+        var created = await response.Content.ReadFromJsonAsync<OrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Id.Should().NotBeEmpty();
+        });
+
+        return created!;
+    }
+
+    private async Task ConcluirServicoNaOrdemAsync(Guid ordemServicoId, Guid servicoId, int tempoGastoMinutos)
+    {
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServicoId}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var addServicoResponse = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServicoId}/addservico", new
+        {
+            ServicoId = servicoId,
+            Quantidade = 1
+        });
+        var servicoDaOrdem = await addServicoResponse.Content.ReadFromJsonAsync<ServicoDaOrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = addServicoResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = servicoDaOrdem.Should().NotBeNull();
+            _ = servicoDaOrdem!.Id.Should().NotBeEmpty();
+        });
+
+        var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServicoId}/solicitar-aprovacao", new { });
+        _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServicoId}/aprovar-execucao", new { });
+        _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var concluirServicoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/servicos/{servicoDaOrdem!.Id}/concluir", new
+        {
+            TempoGastoMinutos = tempoGastoMinutos
+        });
+
+        _ = concluirServicoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    private static string GenerateValidPlaca(int seed)
+    {
+        const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        var first = alphabet[seed / 676 % 26];
+        var second = alphabet[seed / 26 % 26];
+        var third = alphabet[seed % 26];
+        var digits = (seed % 10000).ToString("D4");
+
+        return $"{first}{second}{third}{digits}";
+    }
+
+    private static string GenerateValidCpf(int seed)
+    {
+        var baseNumber = (seed % 999999999).ToString("D9");
+        var digits = baseNumber.Select(c => c - '0').ToArray();
+
+        var firstDigit = CalculateCpfDigit(digits, 10);
+        var secondDigit = CalculateCpfDigit(digits.Append(firstDigit).ToArray(), 11);
+
+        return $"{baseNumber}{firstDigit}{secondDigit}";
+    }
+
+    private static int CalculateCpfDigit(int[] digits, int weightStart)
+    {
+        var sum = 0;
+        var weight = weightStart;
+
+        foreach (var digit in digits)
+        {
+            sum += digit * weight;
+            weight--;
+        }
+
+        var remainder = sum % 11;
+        return remainder < 2 ? 0 : 11 - remainder;
+    }
+
     private sealed class ServicoResponse
     {
         public Guid Id { get; set; }
         public string Descricao { get; set; } = string.Empty;
         public decimal ValorUnitario { get; set; }
+    }
+
+    private sealed class ClienteResponse
+    {
+        public Guid Id { get; set; }
+    }
+
+    private sealed class VeiculoResponse
+    {
+        public Guid Id { get; set; }
+    }
+
+    private sealed class OrdemServicoResponse
+    {
+        public Guid Id { get; set; }
+    }
+
+    private sealed class ServicoDaOrdemServicoResponse
+    {
+        public Guid Id { get; set; }
     }
 
     private sealed class ErrorResponse
@@ -291,6 +547,13 @@ public sealed class ServicosControllerTests
         public int PageSize { get; set; }
         public int TotalItems { get; set; }
         public IReadOnlyCollection<ServicoResponse> Servicos { get; set; } = [];
+    }
+
+    private sealed class TempoMedioServicoResponse
+    {
+        public Guid ServicoId { get; set; }
+        public decimal TempoMedioMinutos { get; set; }
+        public int QuantidadeExecucoes { get; set; }
     }
 }
 

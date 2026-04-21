@@ -1,0 +1,8 @@
+namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.VerificarTempoMedioServico;
+
+public sealed class VerificarTempoMedioServicoResponse
+{
+    public Guid ServicoId { get; init; }
+    public decimal TempoMedioMinutos { get; init; }
+    public int QuantidadeExecucoes { get; init; }
+}

@@ -26,6 +26,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ListarServicos;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.RecuperarServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.VerificarTempoMedioServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.AutenticarUsuario;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.CriarUsuario;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,6 +65,7 @@ public static class ApplicationDependecyInjection
         _ = services.AddScoped<IAtualizarServicoUseCase, AtualizarServicoUseCase>();
         _ = services.AddScoped<IListarServicosUseCase, ListarServicosUseCase>();
         _ = services.AddScoped<IRecuperarServicoUseCase, RecuperarServicoUseCase>();
+        _ = services.AddScoped<IVerificarTempoMedioServicoUseCase, VerificarTempoMedioServicoUseCase>();
         _ = services.AddScoped<IAutenticarUsuarioUseCase, AutenticarUsuarioUseCase>();
         _ = services.AddScoped<ICriarUsuarioUseCase, CriarUsuarioUseCase>();
         return services;

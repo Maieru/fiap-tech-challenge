@@ -38,6 +38,23 @@ public sealed class ServicoDaOrdemDeServicoRepository(AppDbContext context) : IS
         return Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>.Success(servicosDaOrdemResult.Value);
     }
 
+    public async Task<Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>> GetConcluidosByServicoIdAsync(Guid servicoId, CancellationToken cancellationToken = default)
+    {
+        var servicosConcluidosEntity = await context.ServicoDaOrdemDeServico
+            .AsNoTracking()
+            .Where(x => x.ServicoId == servicoId && x.Concluido && x.TempoGastoMinutos.HasValue)
+            .OrderBy(x => x.TempoGastoMinutos)
+            .ThenBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        var servicosConcluidosResult = MapToDomainCollection(servicosConcluidosEntity);
+
+        if (!servicosConcluidosResult.IsSuccess || servicosConcluidosResult.Value is null)
+            return Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>.Failure(servicosConcluidosResult.Error);
+
+        return Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>.Success(servicosConcluidosResult.Value);
+    }
+
     public async Task AddAsync(ServicoDaOrdemDeServico servicoDaOrdemDeServico, CancellationToken cancellationToken = default)
     {
         var servicoDaOrdemEntity = ServicoDaOrdemDeServicoMapper.ToEntity(servicoDaOrdemDeServico);
