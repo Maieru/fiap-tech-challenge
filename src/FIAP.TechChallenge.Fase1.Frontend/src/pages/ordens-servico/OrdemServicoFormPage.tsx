@@ -8,24 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { formatCurrency } from "@/lib/utils";
 import { getApiErrorMessage } from "@/services/api";
 import { clientesService } from "@/services/clientes.service";
 import { ordensServicoService } from "@/services/ordensServico.service";
-import { pecasInsumosService } from "@/services/pecasInsumos.service";
-import { servicosService } from "@/services/servicos.service";
 import { veiculosService } from "@/services/veiculos.service";
 import type { Cliente } from "@/types/cliente";
-import type { PecaInsumo } from "@/types/pecaInsumo";
-import type { Servico } from "@/types/servico";
 import type { Veiculo } from "@/types/veiculo";
-
-interface ItemSelecionado {
-  id: string;
-  descricao: string;
-  valorUnitario: number;
-  quantidade: number;
-}
 
 const initialNovoCliente = {
   nome: "",
@@ -46,8 +34,6 @@ export function OrdemServicoFormPage() {
 
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
-  const [servicosDisponiveis, setServicosDisponiveis] = useState<Servico[]>([]);
-  const [pecasDisponiveis, setPecasDisponiveis] = useState<PecaInsumo[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,29 +45,17 @@ export function OrdemServicoFormPage() {
   const [cadastrarNovoVeiculo, setCadastrarNovoVeiculo] = useState(false);
   const [novoVeiculo, setNovoVeiculo] = useState(initialNovoVeiculo);
 
-  const [servicoSelecionadoId, setServicoSelecionadoId] = useState("");
-  const [servicoQuantidade, setServicoQuantidade] = useState("1");
-  const [servicosSelecionados, setServicosSelecionados] = useState<ItemSelecionado[]>([]);
-
-  const [pecaSelecionadaId, setPecaSelecionadaId] = useState("");
-  const [pecaQuantidade, setPecaQuantidade] = useState("1");
-  const [pecasSelecionadas, setPecasSelecionadas] = useState<ItemSelecionado[]>([]);
-
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       try {
-        const [clientesResponse, veiculosResponse, servicosResponse, pecasResponse] = await Promise.all([
+        const [clientesResponse, veiculosResponse] = await Promise.all([
           clientesService.list({ pageSize: 300 }),
           veiculosService.list({ pageSize: 300 }),
-          servicosService.list({ pageSize: 300 }),
-          pecasInsumosService.list({ pageSize: 300 }),
         ]);
 
         setClientes(clientesResponse.clientes);
         setVeiculos(veiculosResponse.veiculos);
-        setServicosDisponiveis(servicosResponse.servicos);
-        setPecasDisponiveis(pecasResponse.pecasInsumos.filter((item) => item.ativo));
       } catch {
         toast.error("Não foi possível carregar os dados para abertura de OS.");
       } finally {
@@ -96,66 +70,6 @@ export function OrdemServicoFormPage() {
     if (!clienteId) return veiculos;
     return veiculos.filter((veiculo) => veiculo.clienteId === clienteId);
   }, [clienteId, veiculos]);
-
-  const totalServicos = useMemo(
-    () => servicosSelecionados.reduce((acc, item) => acc + item.valorUnitario * item.quantidade, 0),
-    [servicosSelecionados],
-  );
-  const totalPecas = useMemo(
-    () => pecasSelecionadas.reduce((acc, item) => acc + item.valorUnitario * item.quantidade, 0),
-    [pecasSelecionadas],
-  );
-  const totalOrcamento = totalServicos + totalPecas;
-
-  function adicionarServico() {
-    const servico = servicosDisponiveis.find((item) => item.id === servicoSelecionadoId);
-    if (!servico) return;
-
-    const quantidade = Number(servicoQuantidade);
-    if (quantidade <= 0) return;
-
-    setServicosSelecionados((prev) => {
-      const existingIndex = prev.findIndex((item) => item.id === servico.id);
-      if (existingIndex === -1) {
-        return [...prev, { id: servico.id, descricao: servico.descricao, valorUnitario: servico.valorUnitario, quantidade }];
-      }
-
-      const copy = [...prev];
-      copy[existingIndex] = {
-        ...copy[existingIndex],
-        quantidade: copy[existingIndex].quantidade + quantidade,
-      };
-      return copy;
-    });
-
-    setServicoSelecionadoId("");
-    setServicoQuantidade("1");
-  }
-
-  function adicionarPeca() {
-    const peca = pecasDisponiveis.find((item) => item.id === pecaSelecionadaId);
-    if (!peca) return;
-
-    const quantidade = Number(pecaQuantidade);
-    if (quantidade <= 0) return;
-
-    setPecasSelecionadas((prev) => {
-      const existingIndex = prev.findIndex((item) => item.id === peca.id);
-      if (existingIndex === -1) {
-        return [...prev, { id: peca.id, descricao: peca.nome, valorUnitario: peca.precoUnitario, quantidade }];
-      }
-
-      const copy = [...prev];
-      copy[existingIndex] = {
-        ...copy[existingIndex],
-        quantidade: copy[existingIndex].quantidade + quantidade,
-      };
-      return copy;
-    });
-
-    setPecaSelecionadaId("");
-    setPecaQuantidade("1");
-  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -215,20 +129,6 @@ export function OrdemServicoFormPage() {
         descricaoProblema,
       });
 
-      for (const servico of servicosSelecionados) {
-        await ordensServicoService.addServico(ordemCriada.id, {
-          servicoId: servico.id,
-          quantidade: servico.quantidade,
-        });
-      }
-
-      for (const peca of pecasSelecionadas) {
-        await ordensServicoService.addPecaInsumo(ordemCriada.id, {
-          pecaInsumoId: peca.id,
-          quantidade: peca.quantidade,
-        });
-      }
-
       toast.success("Ordem de serviço criada com sucesso.");
       navigate(`/ordens-servico/${ordemCriada.id}`);
     } catch (error) {
@@ -242,7 +142,7 @@ export function OrdemServicoFormPage() {
     <div>
       <PageHeader
         title="Nova Ordem de Serviço"
-        description="Selecione cliente, veículo, itens e acompanhe o orçamento total antes de abrir a OS."
+        description="Cadastre cliente, veículo e descrição do problema para abrir a OS."
       />
 
       {loading ? (
@@ -406,123 +306,7 @@ export function OrdemServicoFormPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Serviços e peças</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-3 md:grid-cols-[1fr_120px_auto]">
-                <div className="space-y-2">
-                  <Label>Adicionar serviço</Label>
-                  <Select value={servicoSelecionadoId} onValueChange={setServicoSelecionadoId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um serviço" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {servicosDisponiveis.map((servico) => (
-                        <SelectItem key={servico.id} value={servico.id}>
-                          {servico.descricao} - {formatCurrency(servico.valorUnitario)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Qtd</Label>
-                  <Input type="number" min="1" value={servicoQuantidade} onChange={(event) => setServicoQuantidade(event.target.value)} />
-                </div>
-                <div className="flex items-end">
-                  <Button type="button" variant="outline" onClick={adicionarServico}>
-                    Adicionar
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2 rounded-lg border p-3">
-                {servicosSelecionados.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nenhum serviço adicionado.</p>
-                ) : (
-                  servicosSelecionados.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-2">
-                      <span className="text-sm">
-                        {item.descricao} x {item.quantidade}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{formatCurrency(item.valorUnitario * item.quantidade)}</span>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setServicosSelecionados((prev) => prev.filter((current) => current.id !== item.id))}
-                        >
-                          Remover
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-[1fr_120px_auto]">
-                <div className="space-y-2">
-                  <Label>Adicionar peça/insumo</Label>
-                  <Select value={pecaSelecionadaId} onValueChange={setPecaSelecionadaId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma peça/insumo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {pecasDisponiveis.map((peca) => (
-                        <SelectItem key={peca.id} value={peca.id}>
-                          {peca.nome} - {formatCurrency(peca.precoUnitario)} (estoque: {peca.quantidadeEstoque})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Qtd</Label>
-                  <Input type="number" min="1" value={pecaQuantidade} onChange={(event) => setPecaQuantidade(event.target.value)} />
-                </div>
-                <div className="flex items-end">
-                  <Button type="button" variant="outline" onClick={adicionarPeca}>
-                    Adicionar
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2 rounded-lg border p-3">
-                {pecasSelecionadas.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nenhuma peça/insumo adicionado.</p>
-                ) : (
-                  pecasSelecionadas.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-2">
-                      <span className="text-sm">
-                        {item.descricao} x {item.quantidade}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{formatCurrency(item.valorUnitario * item.quantidade)}</span>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setPecasSelecionadas((prev) => prev.filter((current) => current.id !== item.id))}
-                        >
-                          Remover
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex flex-col gap-2 pt-6 text-sm sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p>Total serviços: {formatCurrency(totalServicos)}</p>
-                <p>Total peças/insumos: {formatCurrency(totalPecas)}</p>
-                <p className="text-base font-semibold">Orçamento total: {formatCurrency(totalOrcamento)}</p>
-              </div>
+            <CardContent className="flex justify-end gap-2 pt-6">
               <div className="flex gap-2">
                 <Button variant="outline" asChild>
                   <Link to="/ordens-servico">Cancelar</Link>

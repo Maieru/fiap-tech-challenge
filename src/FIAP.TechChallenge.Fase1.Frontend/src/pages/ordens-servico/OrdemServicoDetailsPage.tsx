@@ -5,14 +5,21 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { getApiErrorMessage } from "@/services/api";
 import { clientesService } from "@/services/clientes.service";
 import { ordensServicoService } from "@/services/ordensServico.service";
+import { pecasInsumosService } from "@/services/pecasInsumos.service";
+import { servicosService } from "@/services/servicos.service";
 import { veiculosService } from "@/services/veiculos.service";
 import type { Cliente } from "@/types/cliente";
 import type { OrdemServicoDetalhes, StatusOrdemServico } from "@/types/ordemServico";
+import type { PecaInsumo } from "@/types/pecaInsumo";
+import type { Servico } from "@/types/servico";
 import type { Veiculo } from "@/types/veiculo";
 
 export function OrdemServicoDetailsPage() {
@@ -21,8 +28,15 @@ export function OrdemServicoDetailsPage() {
   const [ordem, setOrdem] = useState<OrdemServicoDetalhes | null>(null);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [veiculo, setVeiculo] = useState<Veiculo | null>(null);
+  const [servicosDisponiveis, setServicosDisponiveis] = useState<Servico[]>([]);
+  const [pecasDisponiveis, setPecasDisponiveis] = useState<PecaInsumo[]>([]);
+  const [servicoSelecionadoId, setServicoSelecionadoId] = useState("");
+  const [servicoQuantidade, setServicoQuantidade] = useState("1");
+  const [pecaSelecionadaId, setPecaSelecionadaId] = useState("");
+  const [pecaQuantidade, setPecaQuantidade] = useState("1");
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [addingItem, setAddingItem] = useState(false);
 
   async function loadData() {
     if (!id) return;
@@ -32,13 +46,17 @@ export function OrdemServicoDetailsPage() {
       const ordemResponse = await ordensServicoService.getById(id);
       setOrdem(ordemResponse);
 
-      const [clienteResponse, veiculoResponse] = await Promise.all([
+      const [clienteResponse, veiculoResponse, servicosResponse, pecasResponse] = await Promise.all([
         clientesService.getById(ordemResponse.clienteId),
         veiculosService.getById(ordemResponse.veiculoId),
+        servicosService.list({ pageSize: 300 }),
+        pecasInsumosService.list({ pageSize: 300 }),
       ]);
 
       setCliente(clienteResponse);
       setVeiculo(veiculoResponse);
+      setServicosDisponiveis(servicosResponse.servicos);
+      setPecasDisponiveis(pecasResponse.pecasInsumos.filter((item) => item.ativo));
     } catch {
       toast.error("Não foi possível carregar os detalhes da ordem.");
     } finally {
@@ -65,6 +83,8 @@ export function OrdemServicoDetailsPage() {
     return actions[ordem.status];
   }, [ordem]);
 
+  const isEmDiagnostico = ordem?.status === 2;
+
   async function handleStatusAdvance() {
     if (!nextAction) return;
 
@@ -77,6 +97,60 @@ export function OrdemServicoDetailsPage() {
       toast.error(getApiErrorMessage(error, "Falha ao atualizar status."));
     } finally {
       setUpdatingStatus(false);
+    }
+  }
+
+  async function handleAdicionarServico() {
+    if (!ordem) return;
+
+    const quantidade = Number(servicoQuantidade);
+    if (!servicoSelecionadoId || quantidade <= 0) {
+      toast.error("Selecione um serviço e informe uma quantidade válida.");
+      return;
+    }
+
+    setAddingItem(true);
+    try {
+      await ordensServicoService.addServico(ordem.id, {
+        servicoId: servicoSelecionadoId,
+        quantidade,
+      });
+
+      toast.success("Serviço adicionado com sucesso.");
+      setServicoSelecionadoId("");
+      setServicoQuantidade("1");
+      await loadData();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Falha ao adicionar serviço."));
+    } finally {
+      setAddingItem(false);
+    }
+  }
+
+  async function handleAdicionarPecaInsumo() {
+    if (!ordem) return;
+
+    const quantidade = Number(pecaQuantidade);
+    if (!pecaSelecionadaId || quantidade <= 0) {
+      toast.error("Selecione uma peça/insumo e informe uma quantidade válida.");
+      return;
+    }
+
+    setAddingItem(true);
+    try {
+      await ordensServicoService.addPecaInsumo(ordem.id, {
+        pecaInsumoId: pecaSelecionadaId,
+        quantidade,
+      });
+
+      toast.success("Peça/insumo adicionado com sucesso.");
+      setPecaSelecionadaId("");
+      setPecaQuantidade("1");
+      await loadData();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Falha ao adicionar peça/insumo."));
+    } finally {
+      setAddingItem(false);
     }
   }
 
@@ -132,6 +206,59 @@ export function OrdemServicoDetailsPage() {
               </CardContent>
             </Card>
           </div>
+
+          {isEmDiagnostico && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Adicionar itens ao diagnóstico</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-6 lg:grid-cols-2">
+                <div className="space-y-3 rounded-md border p-4">
+                  <Label>Adicionar serviço</Label>
+                  <div className="grid gap-3 md:grid-cols-[1fr_120px_auto]">
+                    <Select value={servicoSelecionadoId} onValueChange={setServicoSelecionadoId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um serviço" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {servicosDisponiveis.map((servico) => (
+                          <SelectItem key={servico.id} value={servico.id}>
+                            {servico.descricao} - {formatCurrency(servico.valorUnitario)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input type="number" min="1" value={servicoQuantidade} onChange={(event) => setServicoQuantidade(event.target.value)} />
+                    <Button type="button" variant="outline" onClick={handleAdicionarServico} disabled={addingItem}>
+                      Adicionar
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-3 rounded-md border p-4">
+                  <Label>Adicionar peça/insumo</Label>
+                  <div className="grid gap-3 md:grid-cols-[1fr_120px_auto]">
+                    <Select value={pecaSelecionadaId} onValueChange={setPecaSelecionadaId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma peça/insumo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pecasDisponiveis.map((peca) => (
+                          <SelectItem key={peca.id} value={peca.id}>
+                            {peca.nome} - {formatCurrency(peca.precoUnitario)} (estoque: {peca.quantidadeEstoque})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input type="number" min="1" value={pecaQuantidade} onChange={(event) => setPecaQuantidade(event.target.value)} />
+                    <Button type="button" variant="outline" onClick={handleAdicionarPecaInsumo} disabled={addingItem}>
+                      Adicionar
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
