@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Copy, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { EntityTable } from "@/components/common/EntityTable";
@@ -61,6 +62,17 @@ export function OrdensServicoListPage() {
     [veiculos],
   );
 
+  async function handleGenerateTrackingLink(ordem: OrdemServico) {
+    const url = `${window.location.origin}/acompanhar-ordem/${ordem.id}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link de acompanhamento copiado.");
+    } catch {
+      toast.error("Não foi possível copiar o link de acompanhamento.");
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -93,11 +105,20 @@ export function OrdensServicoListPage() {
             {
               key: "acoes",
               title: "Ações",
-              className: "w-[100px]",
+              className: "w-[220px]",
               render: (ordem) => (
-                <Button variant="outline" size="sm" asChild>
-                  <Link to={`/ordens-servico/${ordem.id}`}>Detalhes</Link>
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" type="button" onClick={() => handleGenerateTrackingLink(ordem)}>
+                    <Copy className="h-3.5 w-3.5" />
+                    Gerar link
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={`/ordens-servico/${ordem.id}`}>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Detalhes
+                    </Link>
+                  </Button>
+                </div>
               ),
             },
           ]}

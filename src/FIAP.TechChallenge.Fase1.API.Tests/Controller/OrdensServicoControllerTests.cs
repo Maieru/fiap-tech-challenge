@@ -376,6 +376,34 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task GetAcompanhamentoById_ShouldReturnOrdemServico_WhenTokenIsMissing()
+    {
+        const int seed = 9031;
+        var cliente = await CreateClientAsync(seed);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(61), "Fiat", "Pulse", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Acompanhamento publico da OS");
+
+        var response = await _unauthorizedClient.GetAsync($"/api/ordensservico/acompanhamento/{ordemServico.Id}");
+        var result = await response.Content.ReadFromJsonAsync<RecuperarAcompanhamentoOrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = result.Should().NotBeNull();
+            _ = result!.Id.Should().Be(ordemServico.Id);
+            _ = result.ClienteId.Should().Be(cliente.Id);
+            _ = result.ClienteNome.Should().Be($"Cliente OS {seed}");
+            _ = result.VeiculoId.Should().Be(veiculo.Id);
+            _ = result.VeiculoMarca.Should().Be("Fiat");
+            _ = result.VeiculoModelo.Should().Be("Pulse");
+            _ = result.VeiculoPlaca.Should().Be(GenerateValidPlaca(61));
+            _ = result.VeiculoAno.Should().Be(2025);
+            _ = result.Status.Should().Be(1);
+            _ = result.DescricaoProblema.Should().Be("Acompanhamento publico da OS");
+        });
+    }
+
+    [Test]
     public async Task FluxoCompleto_ShouldSucceed_FromRecebidaToEntregue()
     {
         var cliente = await CreateClientAsync(9030);
@@ -1330,6 +1358,20 @@ public sealed class OrdensServicoControllerTests
         public decimal ValorTotalServicos { get; set; }
         public decimal ValorTotalPecasInsumos { get; set; }
         public decimal ValorTotalOrdemServico { get; set; }
+    }
+
+    private sealed class RecuperarAcompanhamentoOrdemServicoResponse
+    {
+        public Guid Id { get; set; }
+        public Guid ClienteId { get; set; }
+        public string ClienteNome { get; set; } = string.Empty;
+        public Guid VeiculoId { get; set; }
+        public string VeiculoMarca { get; set; } = string.Empty;
+        public string VeiculoModelo { get; set; } = string.Empty;
+        public string VeiculoPlaca { get; set; } = string.Empty;
+        public int VeiculoAno { get; set; }
+        public string DescricaoProblema { get; set; } = string.Empty;
+        public int Status { get; set; }
     }
 
     private sealed class RecuperarServicoDaOrdemServicoItemResponse

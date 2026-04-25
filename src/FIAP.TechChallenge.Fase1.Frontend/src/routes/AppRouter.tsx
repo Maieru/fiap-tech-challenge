@@ -8,6 +8,7 @@ import { DashboardPage } from "@/pages/dashboard/DashboardPage";
 import { OrdensServicoListPage } from "@/pages/ordens-servico/OrdensServicoListPage";
 import { OrdemServicoDetailsPage } from "@/pages/ordens-servico/OrdemServicoDetailsPage";
 import { OrdemServicoFormPage } from "@/pages/ordens-servico/OrdemServicoFormPage";
+import { OrdemServicoTrackingPage } from "@/pages/ordens-servico/OrdemServicoTrackingPage";
 import { PecaInsumoDetailsPage } from "@/pages/pecas-insumos/PecaInsumoDetailsPage";
 import { PecaInsumoFormPage } from "@/pages/pecas-insumos/PecaInsumoFormPage";
 import { PecasInsumosListPage } from "@/pages/pecas-insumos/PecasInsumosListPage";
@@ -29,6 +30,7 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
+      <Route path="/acompanhar-ordem/:id" element={<OrdemServicoTrackingPage />} />
 
       <Route element={<PrivateRoute />}>
         <Route element={<AdminLayout />}>

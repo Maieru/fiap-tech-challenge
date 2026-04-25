@@ -30,6 +30,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.VerificarTempoMedio
 using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.AutenticarUsuario;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.CriarUsuario;
 using Microsoft.Extensions.DependencyInjection;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AcompanhamentoOrdemServico;
 
 namespace FIAP.TechChallenge.Fase1.Application;
 
@@ -55,6 +56,7 @@ public static class ApplicationDependecyInjection
         _ = services.AddScoped<IFinalizarOrdemServicoUseCase, FinalizarOrdemServicoUseCase>();
         _ = services.AddScoped<IEntregarOrdemServicoUseCase, EntregarOrdemServicoUseCase>();
         _ = services.AddScoped<IListarOrdensServicoUseCase, ListarOrdensServicoUseCase>();
+        _ = services.AddScoped<IAcompanhamentoOrdemServicoUseCase, AcompanhamentoOrdemServicoUseCase>();
         _ = services.AddScoped<IRecuperarOrdemServicoUseCase, RecuperarOrdemServicoUseCase>();
         _ = services.AddScoped<IIncluirPecaInsumoUseCase, IncluirPecaInsumoUseCase>();
         _ = services.AddScoped<IEntradaEstoquePecaInsumoUseCase, EntradaEstoquePecaInsumoUseCase>();

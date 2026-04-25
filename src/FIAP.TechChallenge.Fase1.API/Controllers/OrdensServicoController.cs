@@ -1,4 +1,5 @@
 ﻿using FIAP.TechChallenge.Fase1.API.Extensions;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AcompanhamentoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaInsumoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AprovarExecucaoOrdemServico;
@@ -47,6 +48,18 @@ public sealed class OrdensServicoController : ControllerBase
     public async Task<IActionResult> GetById(Guid id, IRecuperarOrdemServicoUseCase useCase, CancellationToken cancellationToken = default)
     {
         var command = new RecuperarOrdemServicoCommand { OrdemServicoId = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("acompanhamento/{id:guid}")]
+    [ProducesResponseType(typeof(AcompanhamentoOrdemServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetAcompanhamentoById(Guid id, IAcompanhamentoOrdemServicoUseCase useCase, CancellationToken cancellationToken = default)
+    {
+        var command = new AcompanhamentoOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this);
     }

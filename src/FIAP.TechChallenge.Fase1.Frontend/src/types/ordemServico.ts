@@ -48,6 +48,14 @@ export interface OrdemServicoDetalhes extends OrdemServico {
   valorTotalOrdemServico: number;
 }
 
+export interface AcompanhamentoOrdemServico extends OrdemServicoDetalhes {
+  clienteNome: string;
+  veiculoMarca: string;
+  veiculoModelo: string;
+  veiculoPlaca: string;
+  veiculoAno: number;
+}
+
 export interface CreateOrdemServicoPayload {
   clienteId: string;
   veiculoId: string;

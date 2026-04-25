@@ -1,5 +1,6 @@
 import { api } from "@/services/api";
 import type {
+  AcompanhamentoOrdemServico,
   AddPecaOrdemPayload,
   AddServicoOrdemPayload,
   ConcluirServicoOrdemPayload,
@@ -27,6 +28,11 @@ export const ordensServicoService = {
 
   async getById(id: string) {
     const { data } = await api.get<OrdemServicoDetalhes>(`/ordensservico/${id}`);
+    return data;
+  },
+
+  async getAcompanhamentoById(id: string) {
+    const { data } = await api.get<AcompanhamentoOrdemServico>(`/ordensservico/acompanhamento/${id}`);
     return data;
   },
 
