@@ -50,7 +50,12 @@ export function ClienteFormPage() {
   }, [id]);
 
   const documentoLabel = useMemo(() => {
-    if (formData.documento.length <= 11) return "CPF";
+    if (formData.documento.length == 0)
+	    return "CPF/CNPJ";
+
+    if (formData.documento.length <= 11) 
+	    return "CPF";
+
     return "CNPJ";
   }, [formData.documento.length]);
 

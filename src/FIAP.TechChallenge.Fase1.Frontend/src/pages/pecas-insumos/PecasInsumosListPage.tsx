@@ -113,12 +113,12 @@ export function PecasInsumosListPage() {
             },
             {
               key: "acoes",
-              title: "Acoes",
-              className: "sticky right-0 z-10 w-[360px] bg-card",
+              title: "Ações",
+              className: "sticky right-0 z-10 w-[440px] min-w-[440px] bg-card",
               render: (peca) => (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center justify-end gap-2">
                   <Button variant="outline" size="sm" asChild>
-                    <Link to={`/pecas-insumos/${peca.id}`}>Detalhes</Link>
+                          <Link to={`/pecas-insumos/${peca.id}`}>Detalhes</Link>
                   </Button>
                   <Button variant="secondary" size="sm" asChild>
                     <Link to={`/pecas-insumos/${peca.id}/editar`}>Editar</Link>
