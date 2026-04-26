@@ -70,6 +70,17 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
         _ = await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task DeleteAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default)
+    {
+        var ordemServicoEntity = await context.OrdensServico.FirstOrDefaultAsync(x => x.Id == ordemServico.Id, cancellationToken);
+
+        if (ordemServicoEntity is null)
+            return;
+
+        ordemServicoEntity.Ativo = false;
+        _ = await context.SaveChangesAsync(cancellationToken);
+    }
+
     private static Result<List<OrdemServico>> MapToDomainCollection(List<OrdemServicoEntity> ordensServicoEntity)
     {
         var ordensServico = new List<OrdemServico>(ordensServicoEntity.Count);

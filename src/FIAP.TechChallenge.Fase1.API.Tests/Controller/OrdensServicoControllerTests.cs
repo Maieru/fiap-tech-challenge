@@ -376,6 +376,23 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task Delete_ShouldSoftDeleteOrdemServico_WhenOrdemServicoExists()
+    {
+        var cliente = await CreateClientAsync(9032);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(62), "Toyota", "Yaris", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Ordem para exclusao");
+
+        var deleteResponse = await _client.DeleteAsync($"/api/ordensservico/{ordemServico.Id}");
+        var getResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
+
+        Assert.Multiple(() =>
+        {
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            _ = getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        });
+    }
+
+    [Test]
     public async Task GetAcompanhamentoById_ShouldReturnOrdemServico_WhenTokenIsMissing()
     {
         const int seed = 9031;
@@ -1132,6 +1149,7 @@ public sealed class OrdensServicoControllerTests
         });
         var finalizarResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/finalizar", new { });
         var entregarResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/entregar", new { });
+        var deleteResponse = await SendUnauthorizedAsync(HttpMethod.Delete, $"/api/ordensservico/{ordemServicoId}");
 
         Assert.Multiple(() =>
         {
@@ -1146,6 +1164,7 @@ public sealed class OrdensServicoControllerTests
             _ = concluirServicoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = finalizarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = entregarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         });
     }
 

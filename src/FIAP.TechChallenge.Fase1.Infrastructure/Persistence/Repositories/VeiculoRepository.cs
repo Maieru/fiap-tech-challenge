@@ -85,6 +85,17 @@ public sealed class VeiculoRepository(AppDbContext context) : IVeiculoRepository
         _ = await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task DeleteAsync(Veiculo veiculo, CancellationToken cancellationToken = default)
+    {
+        var veiculoEntity = await context.Veiculos.FirstOrDefaultAsync(x => x.Id == veiculo.Id, cancellationToken);
+
+        if (veiculoEntity is null)
+            return;
+
+        veiculoEntity.Ativo = false;
+        _ = await context.SaveChangesAsync(cancellationToken);
+    }
+
     private static Result<List<Veiculo>> MapToDomainCollection(List<VeiculoEntity> veiculosEntity)
     {
         var veiculos = new List<Veiculo>(veiculosEntity.Count);

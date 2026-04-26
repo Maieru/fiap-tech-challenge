@@ -98,6 +98,42 @@ public sealed class UsuariosControllerTests
     }
 
     [Test]
+    public async Task Delete_ShouldSoftDeleteUser_WhenUserExists()
+    {
+        var usuario = $"delete-user-{Guid.NewGuid():N}";
+        var createResponse = await _client.PostAsJsonAsync("/api/usuarios", new
+        {
+            Usuario = usuario,
+            Senha = "SenhaForte@123"
+        });
+        var created = await createResponse.Content.ReadFromJsonAsync<UsuarioResponse>();
+
+        await TestAuthenticationHelper.ConfigureAuthenticatedClientAsync(_client);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/usuarios/{created!.Id}");
+        var loginResponse = await _client.PostAsJsonAsync("/api/usuarios/login", new
+        {
+            Usuario = usuario,
+            Senha = "SenhaForte@123"
+        });
+
+        Assert.Multiple(() =>
+        {
+            _ = createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            _ = loginResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        });
+    }
+
+    [Test]
+    public async Task Delete_ShouldReturnUnauthorized_WhenTokenIsMissing()
+    {
+        var response = await _client.DeleteAsync($"/api/usuarios/{Guid.NewGuid()}");
+
+        _ = response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Test]
     public async Task Post_ShouldReturnConflict_WhenUsuarioAlreadyExists()
     {
         var request = new

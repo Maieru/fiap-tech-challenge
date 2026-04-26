@@ -12,4 +12,5 @@ public interface IVeiculoRepository
     Task<Result<(IReadOnlyCollection<Veiculo> Veiculos, int TotalItems)>> GetPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task AddAsync(Veiculo veiculo, CancellationToken cancellationToken = default);
     Task UpdateAsync(Veiculo veiculo, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Veiculo veiculo, CancellationToken cancellationToken = default);
 }

@@ -25,5 +25,5 @@ public sealed class PecaInsumoEntity
 
     public int QuantidadeEstoque { get; set; }
 
-    public bool Ativo { get; set; }
+    public bool Ativo { get; set; } = true;
 }

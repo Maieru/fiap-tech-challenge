@@ -115,6 +115,21 @@ public sealed class ServicosControllerTests
     }
 
     [Test]
+    public async Task Delete_ShouldSoftDeleteServico_WhenServicoExists()
+    {
+        var servico = await CreateServicoAsync("Servico para exclusao", 120m);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/servicos/{servico.Id}");
+        var getResponse = await _client.GetAsync($"/api/servicos/{servico.Id}");
+
+        Assert.Multiple(() =>
+        {
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            _ = getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        });
+    }
+
+    [Test]
     public async Task GetById_ShouldReturnNotFound_WhenServicoDoesNotExist()
     {
         var response = await _client.GetAsync($"/api/servicos/{Guid.NewGuid()}");
@@ -322,6 +337,7 @@ public sealed class ServicosControllerTests
             Descricao = "Balanceamento",
             ValorUnitario = 79.90m
         });
+        var deleteResponse = await SendUnauthorizedAsync(HttpMethod.Delete, $"/api/servicos/{Guid.NewGuid()}");
 
         Assert.Multiple(() =>
         {
@@ -330,6 +346,7 @@ public sealed class ServicosControllerTests
             _ = getTempoMedioResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = postResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = putResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         });
     }
 

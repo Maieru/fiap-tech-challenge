@@ -1,9 +1,11 @@
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.AtualizarCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.CriarCliente;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ExcluirCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ListarClientes;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.RecuperarCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.EntradaEstoquePecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaInsumo;
+using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.ExcluirPecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.IncluirPecaInsumo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.ListarPecasInsumos;
 using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.RecuperarPecaInsumo;
@@ -13,6 +15,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ConcluirServic
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.EntregarOrdemServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ExcluirOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.FinalizarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnosticoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensServico;
@@ -20,15 +23,18 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.RecuperarOrdem
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.SolicitarAprovacaoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.AtualizarVeiculo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.CriarVeiculo;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.ExcluirVeiculo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.ListarVeiculos;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.RecuperarVeiculo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ExcluirServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ListarServicos;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.RecuperarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.VerificarTempoMedioServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.AutenticarUsuario;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.CriarUsuario;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.ExcluirUsuario;
 using Microsoft.Extensions.DependencyInjection;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AcompanhamentoOrdemServico;
 
@@ -40,10 +46,12 @@ public static class ApplicationDependecyInjection
     {
         _ = services.AddScoped<ICriarClienteUseCase, CriarClienteUseCase>();
         _ = services.AddScoped<IAtualizarClienteUseCase, AtualizarClienteUseCase>();
+        _ = services.AddScoped<IExcluirClienteUseCase, ExcluirClienteUseCase>();
         _ = services.AddScoped<IListarClientesUseCase, ListarClientesUseCase>();
         _ = services.AddScoped<IRecuperarClienteUseCase, RecuperarClienteUseCase>();
         _ = services.AddScoped<ICriarVeiculoUseCase, CriarVeiculoUseCase>();
         _ = services.AddScoped<IAtualizarVeiculoUseCase, AtualizarVeiculoUseCase>();
+        _ = services.AddScoped<IExcluirVeiculoUseCase, ExcluirVeiculoUseCase>();
         _ = services.AddScoped<IListarVeiculosUseCase, ListarVeiculosUseCase>();
         _ = services.AddScoped<IRecuperarVeiculoUseCase, RecuperarVeiculoUseCase>();
         _ = services.AddScoped<ICriarOrdemServicoUseCase, CriarOrdemServicoUseCase>();
@@ -55,21 +63,25 @@ public static class ApplicationDependecyInjection
         _ = services.AddScoped<IConcluirServicoOrdemServicoUseCase, ConcluirServicoOrdemServicoUseCase>();
         _ = services.AddScoped<IFinalizarOrdemServicoUseCase, FinalizarOrdemServicoUseCase>();
         _ = services.AddScoped<IEntregarOrdemServicoUseCase, EntregarOrdemServicoUseCase>();
+        _ = services.AddScoped<IExcluirOrdemServicoUseCase, ExcluirOrdemServicoUseCase>();
         _ = services.AddScoped<IListarOrdensServicoUseCase, ListarOrdensServicoUseCase>();
         _ = services.AddScoped<IAcompanhamentoOrdemServicoUseCase, AcompanhamentoOrdemServicoUseCase>();
         _ = services.AddScoped<IRecuperarOrdemServicoUseCase, RecuperarOrdemServicoUseCase>();
         _ = services.AddScoped<IIncluirPecaInsumoUseCase, IncluirPecaInsumoUseCase>();
         _ = services.AddScoped<IEntradaEstoquePecaInsumoUseCase, EntradaEstoquePecaInsumoUseCase>();
         _ = services.AddScoped<IAtualizarPecaInsumoUseCase, AtualizarPecaInsumoUseCase>();
+        _ = services.AddScoped<IExcluirPecaInsumoUseCase, ExcluirPecaInsumoUseCase>();
         _ = services.AddScoped<IListarPecasInsumosUseCase, ListarPecasInsumosUseCase>();
         _ = services.AddScoped<IRecuperarPecaInsumoUseCase, RecuperarPecaInsumoUseCase>();
         _ = services.AddScoped<ICadastrarServicoUseCase, CadastrarServicoUseCase>();
         _ = services.AddScoped<IAtualizarServicoUseCase, AtualizarServicoUseCase>();
+        _ = services.AddScoped<IExcluirServicoUseCase, ExcluirServicoUseCase>();
         _ = services.AddScoped<IListarServicosUseCase, ListarServicosUseCase>();
         _ = services.AddScoped<IRecuperarServicoUseCase, RecuperarServicoUseCase>();
         _ = services.AddScoped<IVerificarTempoMedioServicoUseCase, VerificarTempoMedioServicoUseCase>();
         _ = services.AddScoped<IAutenticarUsuarioUseCase, AutenticarUsuarioUseCase>();
         _ = services.AddScoped<ICriarUsuarioUseCase, CriarUsuarioUseCase>();
+        _ = services.AddScoped<IExcluirUsuarioUseCase, ExcluirUsuarioUseCase>();
         return services;
     }
 }

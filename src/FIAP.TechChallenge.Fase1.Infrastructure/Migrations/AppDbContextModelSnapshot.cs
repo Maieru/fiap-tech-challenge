@@ -28,6 +28,11 @@ namespace FIAP.TechChallenge.Fase1.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("Cnpj")
                         .HasMaxLength(18)
                         .HasColumnType("character varying(18)");
@@ -60,6 +65,11 @@ namespace FIAP.TechChallenge.Fase1.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<Guid>("ClienteId")
                         .HasColumnType("uuid");
@@ -109,7 +119,9 @@ namespace FIAP.TechChallenge.Fase1.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<bool>("Ativo")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Codigo")
                         .IsRequired()
@@ -141,6 +153,11 @@ namespace FIAP.TechChallenge.Fase1.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Codigo")
                         .IsRequired()
@@ -181,6 +198,11 @@ namespace FIAP.TechChallenge.Fase1.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("Concluido")
                         .HasColumnType("boolean");
 
@@ -217,6 +239,11 @@ namespace FIAP.TechChallenge.Fase1.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("Descricao")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -235,6 +262,11 @@ namespace FIAP.TechChallenge.Fase1.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Login")
                         .IsRequired()
@@ -259,6 +291,11 @@ namespace FIAP.TechChallenge.Fase1.Infrastructure.Migrations
 
                     b.Property<int>("Ano")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<Guid>("ClienteId")
                         .HasColumnType("uuid");

@@ -1,6 +1,7 @@
 ﻿using FIAP.TechChallenge.Fase1.API.Extensions;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.AtualizarCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.CriarCliente;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ExcluirCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ListarClientes;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.RecuperarCliente;
 using Microsoft.AspNetCore.Authorization;
@@ -74,5 +75,15 @@ public sealed class ClientesController : ControllerBase
 
         var result = await useCase.ExecuteAsync(updateCommand, cancellationToken);
         return result.ToActionResult(this);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, IExcluirClienteUseCase useCase, CancellationToken cancellationToken)
+    {
+        var command = new ExcluirClienteCommand { Id = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this, _ => NoContent());
     }
 }

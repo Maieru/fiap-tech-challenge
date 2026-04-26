@@ -9,4 +9,5 @@ public interface IServicoRepository
     Task<Result<(IReadOnlyCollection<Servico> Servicos, int TotalItems)>> GetPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task AddAsync(Servico servico, CancellationToken cancellationToken = default);
     Task UpdateAsync(Servico servico, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Servico servico, CancellationToken cancellationToken = default);
 }

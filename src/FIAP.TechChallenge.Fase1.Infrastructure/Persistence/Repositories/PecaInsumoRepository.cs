@@ -67,6 +67,17 @@ public sealed class PecaInsumoRepository(AppDbContext context) : IPecaInsumoRepo
         _ = await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task DeleteAsync(PecaInsumo pecaInsumo, CancellationToken cancellationToken = default)
+    {
+        var pecaInsumoEntity = await context.PecasInsumos.FirstOrDefaultAsync(x => x.Id == pecaInsumo.Id, cancellationToken);
+
+        if (pecaInsumoEntity is null)
+            return;
+
+        pecaInsumoEntity.Ativo = false;
+        _ = await context.SaveChangesAsync(cancellationToken);
+    }
+
     private static Result<List<PecaInsumo>> MapToDomainCollection(List<PecaInsumoEntity> pecasInsumosEntity)
     {
         var pecasInsumos = new List<PecaInsumo>(pecasInsumosEntity.Count);

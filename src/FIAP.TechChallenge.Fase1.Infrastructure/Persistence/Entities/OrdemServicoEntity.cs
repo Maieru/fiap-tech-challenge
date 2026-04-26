@@ -10,6 +10,8 @@ public sealed class OrdemServicoEntity
     [Key]
     public Guid Id { get; set; }
 
+    public bool Ativo { get; set; } = true;
+
     [Required]
     [ForeignKey("Clientes")]
     public Guid ClienteId { get; set; }

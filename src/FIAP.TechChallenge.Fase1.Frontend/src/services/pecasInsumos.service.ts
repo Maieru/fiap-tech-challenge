@@ -43,4 +43,8 @@ export const pecasInsumosService = {
     const { data } = await api.put(`/pecasinsumos/${id}/entrada-estoque`, payload);
     return data;
   },
+
+  async remove(id: string) {
+    await api.delete(`/pecasinsumos/${id}`);
+  },
 };

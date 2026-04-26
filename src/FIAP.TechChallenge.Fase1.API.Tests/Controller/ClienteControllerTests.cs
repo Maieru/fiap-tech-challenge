@@ -255,6 +255,21 @@ public sealed class ClienteControllerTests
     }
 
     [Test]
+    public async Task Delete_ShouldSoftDeleteClient_WhenClientExists()
+    {
+        var created = await CreateClientAsync(6101);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/clientes/{created.Id}");
+        var getResponse = await _client.GetAsync($"/api/clientes/{created.Id}");
+
+        Assert.Multiple(() =>
+        {
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            _ = getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        });
+    }
+
+    [Test]
     public async Task Update_ShouldReturnNotFound_WhenClientDoesNotExist()
     {
         var nonExistingId = Guid.NewGuid();
@@ -407,6 +422,7 @@ public sealed class ClienteControllerTests
             Telefone = "11988888888",
             Email = "maria.souza@email.com"
         });
+        var deleteResponse = await SendUnauthorizedAsync(HttpMethod.Delete, $"/api/clientes/{Guid.NewGuid()}");
 
         Assert.Multiple(() =>
         {
@@ -414,6 +430,7 @@ public sealed class ClienteControllerTests
             _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = postResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = putResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         });
     }
 

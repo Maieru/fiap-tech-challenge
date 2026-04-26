@@ -6,6 +6,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AprovarExecuca
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ConcluirServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.EntregarOrdemServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ExcluirOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.FinalizarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnosticoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensServico;
@@ -177,5 +178,15 @@ public sealed class OrdensServicoController : ControllerBase
         var command = new EntregarOrdemServicoCommand { OrdemServicoId = id };
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, IExcluirOrdemServicoUseCase useCase, CancellationToken cancellationToken)
+    {
+        var command = new ExcluirOrdemServicoCommand { Id = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this, _ => NoContent());
     }
 }

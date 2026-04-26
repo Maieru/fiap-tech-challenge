@@ -9,6 +9,8 @@ public sealed class ServicoEntity
     [Key]
     public Guid Id { get; set; }
 
+    public bool Ativo { get; set; } = true;
+
     [Required]
     [MaxLength(1000)]
     public string Descricao { get; set; } = string.Empty;

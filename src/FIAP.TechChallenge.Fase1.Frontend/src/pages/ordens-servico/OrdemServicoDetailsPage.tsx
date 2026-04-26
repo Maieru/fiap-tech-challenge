@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Trash2 } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -24,6 +25,7 @@ import type { Veiculo } from "@/types/veiculo";
 
 export function OrdemServicoDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [ordem, setOrdem] = useState<OrdemServicoDetalhes | null>(null);
   const [cliente, setCliente] = useState<Cliente | null>(null);
@@ -39,6 +41,7 @@ export function OrdemServicoDetailsPage() {
   const [addingItem, setAddingItem] = useState(false);
   const [tempoGastoPorServico, setTempoGastoPorServico] = useState<Record<string, string>>({});
   const [concludingServicoId, setConcludingServicoId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function loadData() {
     if (!id) return;
@@ -101,6 +104,24 @@ export function OrdemServicoDetailsPage() {
       toast.error(getApiErrorMessage(error, "Falha ao atualizar status."));
     } finally {
       setUpdatingStatus(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!ordem) return;
+
+    const confirmed = window.confirm(`Excluir a OS #${ordem.id.slice(0, 8).toUpperCase()}?`);
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await ordensServicoService.remove(ordem.id);
+      toast.success("Ordem de servico excluida com sucesso.");
+      navigate("/ordens-servico");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Falha ao excluir ordem de servico."));
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -190,6 +211,12 @@ export function OrdemServicoDetailsPage() {
             {nextAction && (
               <Button onClick={handleStatusAdvance} disabled={updatingStatus}>
                 {updatingStatus ? "Atualizando..." : nextAction.label}
+              </Button>
+            )}
+            {ordem && (
+              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                <Trash2 className="h-4 w-4" />
+                {deleting ? "Excluindo..." : "Excluir"}
               </Button>
             )}
           </div>

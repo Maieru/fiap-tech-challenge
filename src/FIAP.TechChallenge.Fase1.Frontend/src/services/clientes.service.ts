@@ -37,4 +37,8 @@ export const clientesService = {
     const { data } = await api.put(`/clientes/${id}`, payload);
     return data;
   },
+
+  async remove(id: string) {
+    await api.delete(`/clientes/${id}`);
+  },
 };

@@ -9,6 +9,8 @@ public sealed class VeiculoEntity
     [Key]
     public Guid Id { get; set; }
 
+    public bool Ativo { get; set; } = true;
+
     [Required]
     [ForeignKey("Clientes")]
     public Guid ClienteId { get; set; }

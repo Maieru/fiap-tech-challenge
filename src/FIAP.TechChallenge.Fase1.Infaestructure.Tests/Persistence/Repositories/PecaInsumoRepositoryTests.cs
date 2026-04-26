@@ -197,7 +197,7 @@ internal sealed class PecaInsumoRepositoryTests
 
         await repository.UpdateAsync(pecaInsumo);
 
-        var saved = await context.PecasInsumos.AsNoTracking().FirstOrDefaultAsync(x => x.Id == pecaInsumo.Id);
+        var saved = await context.PecasInsumos.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(x => x.Id == pecaInsumo.Id);
 
         Assert.Multiple(() =>
         {

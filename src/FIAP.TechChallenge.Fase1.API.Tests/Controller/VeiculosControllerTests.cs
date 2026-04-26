@@ -210,6 +210,22 @@ public sealed class VeiculosControllerTests
     }
 
     [Test]
+    public async Task Delete_ShouldSoftDeleteVehicle_WhenVehicleExists()
+    {
+        var cliente = await CreateClientAsync(7011);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(12), "Toyota", "Corolla", 2024);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/veiculos/{veiculo.Id}");
+        var getResponse = await _client.GetAsync($"/api/veiculos/{veiculo.Id}");
+
+        Assert.Multiple(() =>
+        {
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            _ = getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        });
+    }
+
+    [Test]
     public async Task Get_ShouldListAllGetByIdGetByPlacaAndGetByClienteId_WhenFiltersAreValid()
     {
         var cliente1 = await CreateClientAsync(7005);
@@ -309,6 +325,7 @@ public sealed class VeiculosControllerTests
             Modelo = "Civic",
             Ano = 2025
         });
+        var deleteResponse = await SendUnauthorizedAsync(HttpMethod.Delete, $"/api/veiculos/{Guid.NewGuid()}");
 
         Assert.Multiple(() =>
         {
@@ -316,6 +333,7 @@ public sealed class VeiculosControllerTests
             _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = postResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = putResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         });
     }
 

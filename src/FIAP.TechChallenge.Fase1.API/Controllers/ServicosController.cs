@@ -1,6 +1,7 @@
 using FIAP.TechChallenge.Fase1.API.Extensions;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ExcluirServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ListarServicos;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.RecuperarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.VerificarTempoMedioServico;
@@ -77,5 +78,15 @@ public sealed class ServicosController : ControllerBase
 
         var result = await useCase.ExecuteAsync(updateCommand, cancellationToken);
         return result.ToActionResult(this);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, IExcluirServicoUseCase useCase, CancellationToken cancellationToken)
+    {
+        var command = new ExcluirServicoCommand { Id = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this, _ => NoContent());
     }
 }

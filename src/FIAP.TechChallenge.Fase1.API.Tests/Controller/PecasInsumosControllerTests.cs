@@ -174,6 +174,30 @@ public sealed class PecasInsumosControllerTests
     }
 
     [Test]
+    public async Task Delete_ShouldSoftDeletePecaInsumo_WhenPecaInsumoExists()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/pecasinsumos", new
+        {
+            Nome = "Item para exclusao",
+            Codigo = "del-pi-001",
+            Descricao = "Item removido via soft delete",
+            PrecoUnitario = 25m,
+            QuantidadeEstoque = 5
+        });
+        var created = await createResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        var deleteResponse = await _client.DeleteAsync($"/api/pecasinsumos/{created!.Id}");
+        var getResponse = await _client.GetAsync($"/api/pecasinsumos/{created.Id}");
+
+        Assert.Multiple(() =>
+        {
+            _ = createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            _ = getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        });
+    }
+
+    [Test]
     public async Task GetByCodigo_ShouldReturnNotFound_WhenPecaInsumoDoesNotExist()
     {
         var response = await _client.GetAsync("/api/pecasinsumos?codigo=nao-existe");
@@ -431,6 +455,7 @@ public sealed class PecasInsumosControllerTests
             PrecoUnitario = 12m,
             Ativo = true
         });
+        var deleteResponse = await SendUnauthorizedAsync(HttpMethod.Delete, $"/api/pecasinsumos/{Guid.NewGuid()}");
 
         Assert.Multiple(() =>
         {
@@ -439,6 +464,7 @@ public sealed class PecasInsumosControllerTests
             _ = postResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = putEntradaEstoqueResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = putResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = deleteResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         });
     }
 

@@ -90,9 +90,12 @@ public sealed class ClienteRepository(AppDbContext context) : IClienteRepository
 
     public async Task DeleteAsync(Cliente cliente, CancellationToken cancellationToken = default)
     {
-        var clienteEntity = ClienteMapper.ToEntity(cliente);
+        var clienteEntity = await context.Clientes.FirstOrDefaultAsync(x => x.Id == cliente.Id, cancellationToken);
 
-        _ = context.Clientes.Remove(clienteEntity);
+        if (clienteEntity is null)
+            return;
+
+        clienteEntity.Ativo = false;
         _ = await context.SaveChangesAsync(cancellationToken);
     }
 }

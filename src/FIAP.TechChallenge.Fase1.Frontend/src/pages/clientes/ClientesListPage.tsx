@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { EntityTable } from "@/components/common/EntityTable";
 import { LoadingState } from "@/components/common/LoadingState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
+import { getApiErrorMessage } from "@/services/api";
 import { clientesService } from "@/services/clientes.service";
 import type { Cliente } from "@/types/cliente";
 
 export function ClientesListPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function loadClientes() {
     setLoading(true);
@@ -18,7 +21,7 @@ export function ClientesListPage() {
       const response = await clientesService.list();
       setClientes(response.clientes);
     } catch {
-      toast.error("Não foi possível carregar os clientes.");
+      toast.error("Nao foi possivel carregar os clientes.");
     } finally {
       setLoading(false);
     }
@@ -27,6 +30,22 @@ export function ClientesListPage() {
   useEffect(() => {
     void loadClientes();
   }, []);
+
+  async function handleDelete(cliente: Cliente) {
+    const confirmed = window.confirm(`Excluir ${cliente.nome}?`);
+    if (!confirmed) return;
+
+    setDeletingId(cliente.id);
+    try {
+      await clientesService.remove(cliente.id);
+      toast.success("Cliente excluido com sucesso.");
+      await loadClientes();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Falha ao excluir cliente."));
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <div>
@@ -58,15 +77,19 @@ export function ClientesListPage() {
             { key: "email", title: "Email", render: (cliente) => cliente.email ?? "-" },
             {
               key: "acoes",
-              title: "Ações",
-              className: "w-[190px]",
+              title: "Acoes",
+              className: "sticky right-0 z-10 w-[280px] bg-card",
               render: (cliente) => (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" asChild>
                     <Link to={`/clientes/${cliente.id}`}>Detalhes</Link>
                   </Button>
                   <Button variant="secondary" size="sm" asChild>
                     <Link to={`/clientes/${cliente.id}/editar`}>Editar</Link>
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(cliente)} disabled={deletingId === cliente.id}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Excluir
                   </Button>
                 </div>
               ),

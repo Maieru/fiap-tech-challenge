@@ -9,6 +9,8 @@ public sealed class UsuarioEntity
     [Key]
     public Guid Id { get; set; }
 
+    public bool Ativo { get; set; } = true;
+
     [Required]
     [MaxLength(100)]
     public string Login { get; set; } = string.Empty;

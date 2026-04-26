@@ -80,4 +80,8 @@ export const ordensServicoService = {
     const { data } = await api.put(`/ordensservico/${id}/entregar`);
     return data;
   },
+
+  async remove(id: string) {
+    await api.delete(`/ordensservico/${id}`);
+  },
 };

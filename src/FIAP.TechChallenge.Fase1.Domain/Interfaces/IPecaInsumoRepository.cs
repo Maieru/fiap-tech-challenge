@@ -11,4 +11,5 @@ public interface IPecaInsumoRepository
     Task<Result<(IReadOnlyCollection<PecaInsumo> PecasInsumos, int TotalItems)>> GetPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task AddAsync(PecaInsumo pecaInsumo, CancellationToken cancellationToken = default);
     Task UpdateAsync(PecaInsumo pecaInsumo, CancellationToken cancellationToken = default);
+    Task DeleteAsync(PecaInsumo pecaInsumo, CancellationToken cancellationToken = default);
 }

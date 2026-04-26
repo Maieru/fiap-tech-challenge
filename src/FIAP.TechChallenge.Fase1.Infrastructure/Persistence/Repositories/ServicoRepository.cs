@@ -52,6 +52,17 @@ public sealed class ServicoRepository(AppDbContext context) : IServicoRepository
         _ = await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task DeleteAsync(Servico servico, CancellationToken cancellationToken = default)
+    {
+        var servicoEntity = await context.Servicos.FirstOrDefaultAsync(x => x.Id == servico.Id, cancellationToken);
+
+        if (servicoEntity is null)
+            return;
+
+        servicoEntity.Ativo = false;
+        _ = await context.SaveChangesAsync(cancellationToken);
+    }
+
     private static Result<List<Servico>> MapToDomainCollection(List<ServicoEntity> servicosEntity)
     {
         var servicos = new List<Servico>(servicosEntity.Count);

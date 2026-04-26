@@ -1,18 +1,22 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Trash2 } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
+import { getApiErrorMessage } from "@/services/api";
 import { pecasInsumosService } from "@/services/pecasInsumos.service";
 import type { PecaInsumo } from "@/types/pecaInsumo";
 
 export function PecaInsumoDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [peca, setPeca] = useState<PecaInsumo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -33,15 +37,39 @@ export function PecaInsumoDetailsPage() {
     void loadPeca();
   }, [id]);
 
+  async function handleDelete() {
+    if (!peca) return;
+
+    const confirmed = window.confirm(`Excluir ${peca.nome}?`);
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await pecasInsumosService.remove(peca.id);
+      toast.success("Peca/insumo excluido com sucesso.");
+      navigate("/pecas-insumos");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Falha ao excluir peca/insumo."));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div>
       <PageHeader
         title="Detalhes da peça/insumo"
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {id && (
               <Button variant="secondary" asChild>
                 <Link to={`/pecas-insumos/${id}/editar`}>Editar</Link>
+              </Button>
+            )}
+            {peca && (
+              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                <Trash2 className="h-4 w-4" />
+                {deleting ? "Excluindo..." : "Excluir"}
               </Button>
             )}
             <Button variant="outline" asChild>

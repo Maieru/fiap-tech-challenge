@@ -39,4 +39,8 @@ export const veiculosService = {
     const { data } = await api.put(`/veiculos/${id}`, payload);
     return data;
   },
+
+  async remove(id: string) {
+    await api.delete(`/veiculos/${id}`);
+  },
 };

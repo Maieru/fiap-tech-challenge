@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { EntityTable } from "@/components/common/EntityTable";
@@ -21,6 +22,7 @@ export function PecasInsumosListPage() {
   const [selectedPeca, setSelectedPeca] = useState<PecaInsumo | null>(null);
   const [quantidadeEntrada, setQuantidadeEntrada] = useState("1");
   const [isSavingStock, setIsSavingStock] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function loadPecas() {
     setLoading(true);
@@ -28,7 +30,7 @@ export function PecasInsumosListPage() {
       const response = await pecasInsumosService.list();
       setPecas(response.pecasInsumos);
     } catch {
-      toast.error("Não foi possível carregar as peças e insumos.");
+      toast.error("Nao foi possivel carregar as pecas e insumos.");
     } finally {
       setLoading(false);
     }
@@ -63,14 +65,30 @@ export function PecasInsumosListPage() {
     }
   }
 
+  async function handleDelete(peca: PecaInsumo) {
+    const confirmed = window.confirm(`Excluir ${peca.nome}?`);
+    if (!confirmed) return;
+
+    setDeletingId(peca.id);
+    try {
+      await pecasInsumosService.remove(peca.id);
+      toast.success("Peca/insumo excluido com sucesso.");
+      await loadPecas();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Falha ao excluir peca/insumo."));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div>
       <PageHeader
-        title="Peças e Insumos"
-        description="Controle de cadastro e estoque de peças e materiais da oficina."
+        title="Pecas e Insumos"
+        description="Controle de cadastro e estoque de pecas e materiais da oficina."
         actions={
           <Button asChild>
-            <Link to="/pecas-insumos/novo">Nova peça/insumo</Link>
+            <Link to="/pecas-insumos/novo">Nova peca/insumo</Link>
           </Button>
         }
       />
@@ -81,11 +99,11 @@ export function PecasInsumosListPage() {
         <EntityTable
           data={pecas}
           rowKey={(peca) => peca.id}
-          emptyMessage="Nenhuma peça cadastrada."
+          emptyMessage="Nenhuma peca cadastrada."
           columns={[
             { key: "nome", title: "Item", render: (peca) => peca.nome },
-            { key: "codigo", title: "Código", render: (peca) => peca.codigo },
-            { key: "valor", title: "Valor unitário", render: (peca) => formatCurrency(peca.precoUnitario) },
+            { key: "codigo", title: "Codigo", render: (peca) => peca.codigo },
+            { key: "valor", title: "Valor unitario", render: (peca) => formatCurrency(peca.precoUnitario) },
             { key: "estoque", title: "Estoque", render: (peca) => peca.quantidadeEstoque },
             {
               key: "status",
@@ -95,8 +113,8 @@ export function PecasInsumosListPage() {
             },
             {
               key: "acoes",
-              title: "Ações",
-              className: "w-[280px]",
+              title: "Acoes",
+              className: "sticky right-0 z-10 w-[360px] bg-card",
               render: (peca) => (
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" asChild>
@@ -107,6 +125,10 @@ export function PecasInsumosListPage() {
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => openEntradaEstoqueDialog(peca)}>
                     Entrada estoque
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(peca)} disabled={deletingId === peca.id}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Excluir
                   </Button>
                 </div>
               ),

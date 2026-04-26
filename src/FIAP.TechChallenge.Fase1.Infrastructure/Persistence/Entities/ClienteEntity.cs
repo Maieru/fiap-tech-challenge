@@ -9,6 +9,8 @@ public sealed class ClienteEntity
     [Key]
     public Guid Id { get; set; }
 
+    public bool Ativo { get; set; } = true;
+
     [Required]
     [MaxLength(200)]
     public string Nome { get; set; } = string.Empty;

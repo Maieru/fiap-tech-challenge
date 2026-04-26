@@ -16,4 +16,5 @@ public interface IOrdemServicoRepository
         CancellationToken cancellationToken = default);
     Task AddAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default);
     Task UpdateAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default);
+    Task DeleteAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default);
 }

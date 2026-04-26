@@ -9,6 +9,8 @@ public sealed class ServicoDaOrdemDeServicoEntity
     [Key]
     public Guid Id { get; set; }
 
+    public bool Ativo { get; set; } = true;
+
     [Required]
     public Guid OrdemServicoId { get; set; }
 
