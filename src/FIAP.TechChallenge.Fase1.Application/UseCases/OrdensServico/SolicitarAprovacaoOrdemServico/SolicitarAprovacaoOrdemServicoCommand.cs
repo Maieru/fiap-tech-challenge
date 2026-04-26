@@ -2,5 +2,6 @@ namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.SolicitarA
 
 public sealed class SolicitarAprovacaoOrdemServicoCommand
 {
+    [Description("Identificador da ordem de servico a enviar para aprovacao.")]
     public Guid OrdemServicoId { get; init; }
 }

@@ -2,5 +2,6 @@ namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.RecuperarServic
 
 public sealed class RecuperarServicoCommand
 {
+    [Description("Identificador do servico.")]
     public Guid ServicoId { get; init; }
 }
