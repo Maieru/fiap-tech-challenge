@@ -2,6 +2,5 @@ namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.Acompanham
 
 public sealed class AcompanhamentoOrdemServicoCommand
 {
-    [Description("Identificador da ordem de servico para consulta publica de acompanhamento.")]
     public Guid OrdemServicoId { get; init; }
 }
