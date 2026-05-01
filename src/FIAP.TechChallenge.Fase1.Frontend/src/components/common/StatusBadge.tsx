@@ -12,6 +12,7 @@ const variantByStatus: Record<StatusOrdemServico, "secondary" | "info" | "warnin
   4: "default",
   5: "success",
   6: "success",
+  7: "secondary",
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {

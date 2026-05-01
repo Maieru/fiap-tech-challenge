@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, XCircle } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -84,6 +84,7 @@ export function OrdemServicoDetailsPage() {
       4: { label: "Finalizar OS", run: () => ordensServicoService.finalizar(ordem.id) },
       5: { label: "Marcar como entregue", run: () => ordensServicoService.entregar(ordem.id) },
       6: null,
+      7: null,
     };
 
     return actions[ordem.status];
@@ -122,6 +123,24 @@ export function OrdemServicoDetailsPage() {
       toast.error(getApiErrorMessage(error, "Falha ao excluir ordem de servico."));
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleCancel() {
+    if (!ordem) return;
+
+    const confirmed = window.confirm(`Cancelar a OS #${ordem.id.slice(0, 8).toUpperCase()} e devolver os itens reservados ao estoque?`);
+    if (!confirmed) return;
+
+    setUpdatingStatus(true);
+    try {
+      await ordensServicoService.cancelar(ordem.id);
+      toast.success("Ordem de servico cancelada e estoque devolvido.");
+      await loadData();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Falha ao cancelar ordem de servico."));
+    } finally {
+      setUpdatingStatus(false);
     }
   }
 
@@ -211,6 +230,12 @@ export function OrdemServicoDetailsPage() {
             {nextAction && (
               <Button onClick={handleStatusAdvance} disabled={updatingStatus}>
                 {updatingStatus ? "Atualizando..." : nextAction.label}
+              </Button>
+            )}
+            {ordem?.status === 3 && (
+              <Button variant="destructive" type="button" onClick={handleCancel} disabled={updatingStatus}>
+                <XCircle className="h-4 w-4" />
+                {updatingStatus ? "Cancelando..." : "Cancelar"}
               </Button>
             )}
             {ordem && (

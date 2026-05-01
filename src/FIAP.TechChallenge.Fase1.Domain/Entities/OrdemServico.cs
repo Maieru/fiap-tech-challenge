@@ -133,6 +133,16 @@ public sealed class OrdemServico
         return Result<bool>.Success(true);
     }
 
+    public Result<bool> Cancelar()
+    {
+        if (Status != StatusOrdemServico.AguardandoAprovacao)
+            return Result<bool>.Failure(new Error("Somente ordens de serviço aguardando aprovação podem ser canceladas."));
+
+        Status = StatusOrdemServico.Cancelada;
+
+        return Result<bool>.Success(true);
+    }
+
     public Result<bool> Finalizar(IReadOnlyCollection<ServicoDaOrdemDeServico> servicosDaOrdemServico)
     {
         if (Status != StatusOrdemServico.EmExecucao)
@@ -187,6 +197,17 @@ public sealed class OrdemServico
 
     private static Result<bool> IsStatusValid(StatusOrdemServico status, DateTime? dataInicioDiagnostico, DateTime? dataEnvioAprovacao, DateTime? dataInicioExecucao, DateTime? dataFinalizacao, DateTime? dataEntrega)
     {
+        if (status == StatusOrdemServico.Cancelada)
+        {
+            if (dataInicioDiagnostico is null)
+                return Result<bool>.Failure(new Error("A ordem de serviço cancelada deve possuir data de início do diagnóstico."));
+
+            if (dataEnvioAprovacao is null)
+                return Result<bool>.Failure(new Error("A ordem de serviço cancelada deve possuir data de envio para aprovação."));
+
+            return Result<bool>.Success(true);
+        }
+
         if (status >= StatusOrdemServico.EmDiagnostico && dataInicioDiagnostico is null)
             return Result<bool>.Failure(new Error("A ordem de serviço em diagnóstico ou posterior deve possuir data de início do diagnóstico."));
 

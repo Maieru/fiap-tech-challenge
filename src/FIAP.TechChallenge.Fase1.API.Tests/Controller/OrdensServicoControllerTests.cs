@@ -936,6 +936,87 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task Cancelar_ShouldSucceed_AndReturnReservedStock_WhenOrdemServicoIsAguardandoAprovacao()
+    {
+        var cliente = await CreateClientAsync(9040);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(70), "Honda", "Fit", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Ruido no freio dianteiro");
+        var pecaInsumo = await CreatePecaInsumoAsync("Pastilha de freio dianteira", "pst-os-9040", "Jogo dianteiro", 210m, 12);
+
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var addPecaInsumoResponse = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addpecainsumo", new
+        {
+            PecaInsumoId = pecaInsumo.Id,
+            Quantidade = 4
+        });
+        _ = addPecaInsumoResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var pecaReservadaResponse = await _client.GetAsync($"/api/pecasinsumos/{pecaInsumo.Id}");
+        var pecaReservada = await pecaReservadaResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
+        _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/cancelar", new { });
+        var updated = await response.Content.ReadFromJsonAsync<CancelarOrdemServicoResponse>();
+
+        var pecaDevolvidaResponse = await _client.GetAsync($"/api/pecasinsumos/{pecaInsumo.Id}");
+        var pecaDevolvida = await pecaDevolvidaResponse.Content.ReadFromJsonAsync<PecaInsumoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = pecaReservadaResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = pecaReservada.Should().NotBeNull();
+            _ = pecaReservada!.QuantidadeEstoque.Should().Be(8);
+
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = updated.Should().NotBeNull();
+            _ = updated!.Id.Should().Be(ordemServico.Id);
+            _ = updated.Status.Should().Be(7);
+
+            _ = pecaDevolvidaResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = pecaDevolvida.Should().NotBeNull();
+            _ = pecaDevolvida!.QuantidadeEstoque.Should().Be(12);
+        });
+    }
+
+    [Test]
+    public async Task Cancelar_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
+    {
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{Guid.NewGuid()}/cancelar", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("Ordem");
+            _ = error.Error.Should().Contain("encontrada");
+            _ = error.ErrorCode.Should().Be("NotFound");
+        });
+    }
+
+    [Test]
+    public async Task Cancelar_ShouldReturnBadRequest_WhenOrdemServicoIsNotAguardandoAprovacao()
+    {
+        var cliente = await CreateClientAsync(9041);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(71), "Fiat", "Cronos", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Falha no sensor de temperatura");
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/cancelar", new { });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("aguardando aprovação");
+        });
+    }
+
+    [Test]
     public async Task ConcluirServico_ShouldSucceed_WhenRequestIsValid()
     {
         var cliente = await CreateClientAsync(9026);
@@ -1143,6 +1224,7 @@ public sealed class OrdensServicoControllerTests
         var iniciarDiagnosticoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/iniciar-diagnostico", new { });
         var solicitarAprovacaoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/solicitar-aprovacao", new { });
         var aprovarExecucaoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/aprovar-execucao", new { });
+        var cancelarResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/cancelar", new { });
         var concluirServicoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/servicos/{servicoDaOrdemServicoId}/concluir", new
         {
             TempoGastoMinutos = 30
@@ -1161,6 +1243,7 @@ public sealed class OrdensServicoControllerTests
             _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = cancelarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = concluirServicoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = finalizarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = entregarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -1472,6 +1555,12 @@ public sealed class OrdensServicoControllerTests
         public Guid Id { get; set; }
         public int Status { get; set; }
         public DateTime DataInicioExecucao { get; set; }
+    }
+
+    private sealed class CancelarOrdemServicoResponse
+    {
+        public Guid Id { get; set; }
+        public int Status { get; set; }
     }
 
     private sealed class FinalizarOrdemServicoResponse

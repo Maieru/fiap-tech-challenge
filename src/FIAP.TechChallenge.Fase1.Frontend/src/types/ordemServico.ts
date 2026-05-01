@@ -1,6 +1,6 @@
 import type { PagedResponse } from "@/types/api";
 
-export type StatusOrdemServico = 1 | 2 | 3 | 4 | 5 | 6;
+export type StatusOrdemServico = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export interface OrdemServico {
   id: string;
@@ -87,4 +87,5 @@ export const STATUS_ORDEM_LABELS: Record<StatusOrdemServico, string> = {
   4: "Em execução",
   5: "Finalizada",
   6: "Entregue",
+  7: "Cancelada",
 };

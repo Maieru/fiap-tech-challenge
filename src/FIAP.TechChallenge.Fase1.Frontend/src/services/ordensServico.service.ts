@@ -66,6 +66,11 @@ export const ordensServicoService = {
     return data;
   },
 
+  async cancelar(id: string) {
+    const { data } = await api.put(`/ordensservico/${id}/cancelar`);
+    return data;
+  },
+
   async concluirServico(servicoDaOrdemServicoId: string, payload: ConcluirServicoOrdemPayload) {
     const { data } = await api.put(`/ordensservico/servicos/${servicoDaOrdemServicoId}/concluir`, payload);
     return data;
