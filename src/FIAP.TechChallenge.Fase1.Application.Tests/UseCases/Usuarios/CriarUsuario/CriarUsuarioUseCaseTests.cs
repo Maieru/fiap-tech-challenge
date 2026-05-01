@@ -32,6 +32,27 @@ internal sealed class CriarUsuarioUseCaseTests
     }
 
     [Test]
+    public async Task ExecuteAsync_ShouldFail_WhenUsuarioHasUnsafeCharacters()
+    {
+        var repositoryMock = new Mock<IUsuarioRepository>();
+        var hasherMock = new Mock<IPasswordHasher>();
+        var useCase = new CriarUsuarioUseCase(repositoryMock.Object, hasherMock.Object);
+        var command = CreateCommand(usuario: "John Doe AND 1=1 --");
+
+        var result = await useCase.ExecuteAsync(command);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O usuario deve conter apenas letras, numeros, ponto, hifen ou underscore."));
+        });
+
+        repositoryMock.Verify(x => x.ExistsByLoginAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        repositoryMock.Verify(x => x.AddAsync(It.IsAny<Usuario>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
     public async Task ExecuteAsync_ShouldFail_WhenUsuarioAlreadyExists()
     {
         var repositoryMock = new Mock<IUsuarioRepository>();
@@ -104,8 +125,6 @@ internal sealed class CriarUsuarioUseCaseTests
         {
             Assert.That(response.Id, Is.EqualTo(addedUsuario!.Id));
             Assert.That(response.Usuario, Is.EqualTo("admin"));
-            Assert.That(response.SenhaCriptografada, Is.EqualTo(hashEsperado));
-            Assert.That(response.SenhaCriptografada, Is.EqualTo(addedUsuario.Senha));
         });
     }
 

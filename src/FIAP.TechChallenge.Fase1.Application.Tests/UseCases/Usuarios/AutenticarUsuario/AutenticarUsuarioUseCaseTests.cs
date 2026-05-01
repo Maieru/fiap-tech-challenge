@@ -57,6 +57,33 @@ internal sealed class AutenticarUsuarioUseCaseTests
     }
 
     [Test]
+    public async Task ExecuteAsync_ShouldFail_WhenUsuarioHasUnsafeCharacters()
+    {
+        var repositoryMock = new Mock<IUsuarioRepository>();
+        var passwordHasherMock = new Mock<IPasswordHasher>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var useCase = new AutenticarUsuarioUseCase(repositoryMock.Object, passwordHasherMock.Object, tokenServiceMock.Object);
+
+        var result = await useCase.ExecuteAsync(new AutenticarUsuarioCommand
+        {
+            Usuario = "John Doe AND 1=1 --",
+            Senha = "SenhaForte@123"
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O usuario deve conter apenas letras, numeros, ponto, hifen ou underscore."));
+            Assert.That(result.Error.Code, Is.EqualTo(ErrorCode.BadRequest));
+        });
+
+        repositoryMock.Verify(x => x.GetByLoginAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        passwordHasherMock.Verify(x => x.VerifyHashedPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        tokenServiceMock.Verify(x => x.GenerateToken(It.IsAny<Usuario>()), Times.Never);
+    }
+
+    [Test]
     public async Task ExecuteAsync_ShouldSucceed_WhenCredentialsAreValid()
     {
         var repositoryMock = new Mock<IUsuarioRepository>();

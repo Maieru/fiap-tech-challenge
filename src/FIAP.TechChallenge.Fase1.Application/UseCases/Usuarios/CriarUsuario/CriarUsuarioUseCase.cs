@@ -12,6 +12,7 @@ public sealed class CriarUsuarioUseCase(IUsuarioRepository usuarioRepository, IP
     public async Task<Result<CriarUsuarioResponse>> ExecuteAsync(CriarUsuarioCommand command, CancellationToken cancellationToken = default)
     {
         var senhaResult = ValidateSenha(command.Senha);
+
         if (!senhaResult.IsSuccess)
             return Result<CriarUsuarioResponse>.Failure(senhaResult.Error);
 

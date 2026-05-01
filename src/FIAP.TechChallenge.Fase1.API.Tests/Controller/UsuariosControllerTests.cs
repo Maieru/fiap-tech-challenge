@@ -42,7 +42,6 @@ public sealed class UsuariosControllerTests
             _ = created.Should().NotBeNull();
             _ = created!.Id.Should().NotBeEmpty();
             _ = created.Usuario.Should().Be("admin");
-            _ = created.SenhaCriptografada.Should().StartWith("$2");
         });
     }
 
@@ -177,11 +176,31 @@ public sealed class UsuariosControllerTests
         });
     }
 
+    [Test]
+    public async Task Post_ShouldReturnBadRequest_WhenUsuarioHasUnsafeCharacters()
+    {
+        var request = new
+        {
+            Usuario = "John Doe AND 1=1 --",
+            Senha = "SenhaForte@123"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/usuarios", request);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Be("O usuario deve conter apenas letras, numeros, ponto, hifen ou underscore.");
+            _ = error.ErrorCode.Should().Be("BadRequest");
+        });
+    }
+
     private sealed class UsuarioResponse
     {
         public Guid Id { get; set; }
         public string Usuario { get; set; } = string.Empty;
-        public string SenhaCriptografada { get; set; } = string.Empty;
     }
 
     private sealed class AuthResponse

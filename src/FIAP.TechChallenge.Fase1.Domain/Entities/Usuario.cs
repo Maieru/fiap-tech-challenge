@@ -1,9 +1,12 @@
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+using System.Text.RegularExpressions;
 
 namespace FIAP.TechChallenge.Fase1.Domain.Entities;
 
 public sealed class Usuario
 {
+    private static readonly Regex LoginPattern = new("^[a-z0-9._-]+$", RegexOptions.Compiled);
+
     public Guid Id { get; private set; }
     public string Login { get; private set; }
     public string Senha { get; private set; }
@@ -41,7 +44,7 @@ public sealed class Usuario
         return Result<Usuario>.Success(new Usuario(id, loginResult.Value, senhaCriptografadaResult.Value));
     }
 
-    private static Result<string> ValidateLogin(string login)
+    public static Result<string> ValidateLogin(string login)
     {
         if (string.IsNullOrWhiteSpace(login))
             return Result<string>.Failure(new Error("O usuário é obrigatório."));
@@ -53,6 +56,9 @@ public sealed class Usuario
 
         if (normalized.Length > 100)
             return Result<string>.Failure(new Error("O usuário deve ter no máximo 100 caracteres."));
+
+        if (!LoginPattern.IsMatch(normalized))
+            return Result<string>.Failure(new Error("O usuario deve conter apenas letras, numeros, ponto, hifen ou underscore."));
 
         return Result<string>.Success(normalized);
     }
