@@ -38,6 +38,14 @@ if (!app.Environment.IsEnvironment("Testing"))
     _ = app.UseHttpsRedirection();
 }
 
+app.Use(async (context, next) =>
+{
+    _ = context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+    _ = context.Response.Headers.TryAdd("Cross-Origin-Resource-Policy", "same-origin");
+
+    await next();
+});
+
 app.UseCors(CorsPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
