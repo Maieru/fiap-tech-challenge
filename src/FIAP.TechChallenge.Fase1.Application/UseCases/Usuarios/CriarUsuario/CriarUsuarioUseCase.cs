@@ -33,7 +33,6 @@ public sealed class CriarUsuarioUseCase(IUsuarioRepository usuarioRepository, IP
         {
             Id = usuario.Id,
             Usuario = usuario.Login,
-            SenhaCriptografada = usuario.Senha
         });
     }
 
