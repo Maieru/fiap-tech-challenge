@@ -3,9 +3,10 @@ using System.Text.RegularExpressions;
 
 namespace FIAP.TechChallenge.Fase1.Domain.Entities;
 
-public sealed class Usuario
+public sealed partial class Usuario
 {
-    private static readonly Regex LoginPattern = new("^[a-z0-9._-]+$", RegexOptions.Compiled);
+    [GeneratedRegex("^[a-z0-9._-]+$", RegexOptions.Compiled)]
+    private static partial Regex LoginPattern();
 
     public Guid Id { get; private set; }
     public string Login { get; private set; }
@@ -57,7 +58,7 @@ public sealed class Usuario
         if (normalized.Length > 100)
             return Result<string>.Failure(new Error("O usuário deve ter no máximo 100 caracteres."));
 
-        if (!LoginPattern.IsMatch(normalized))
+        if (!LoginPattern().IsMatch(normalized))
             return Result<string>.Failure(new Error("O usuario deve conter apenas letras, numeros, ponto, hifen ou underscore."));
 
         return Result<string>.Success(normalized);
@@ -70,4 +71,5 @@ public sealed class Usuario
 
         return Result<string>.Success(senhaCriptografada.Trim());
     }
+
 }
