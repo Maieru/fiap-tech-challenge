@@ -3,6 +3,16 @@ export interface LoginRequest {
   senha: string;
 }
 
+export interface RegisterRequest {
+  usuario: string;
+  senha: string;
+}
+
+export interface RegisterResponse {
+  id: string;
+  usuario: string;
+}
+
 export interface LoginResponse {
   token: string;
   tipoToken: string;
