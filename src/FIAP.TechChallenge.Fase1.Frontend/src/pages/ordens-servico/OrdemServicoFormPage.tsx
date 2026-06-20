@@ -85,14 +85,31 @@ export function OrdemServicoFormPage() {
           return;
         }
 
-        const clienteCriado = await clientesService.create({
-          nome: novoCliente.nome,
-          telefone: novoCliente.telefone,
-          email: novoCliente.email || undefined,
-          cpf: documentoLimpo.length <= 11 ? documentoLimpo : undefined,
-          cnpj: documentoLimpo.length > 11 ? documentoLimpo : undefined,
+        if (!novoVeiculo.placa || !novoVeiculo.marca || !novoVeiculo.modelo || !novoVeiculo.ano) {
+          toast.error("Preencha os dados do novo veiculo.");
+          return;
+        }
+
+        const ordemCriada = await ordensServicoService.createWithClienteEVeiculo({
+          cliente: {
+            nome: novoCliente.nome,
+            telefone: novoCliente.telefone,
+            email: novoCliente.email || undefined,
+            cpf: documentoLimpo.length <= 11 ? documentoLimpo : undefined,
+            cnpj: documentoLimpo.length > 11 ? documentoLimpo : undefined,
+          },
+          veiculo: {
+            placa: novoVeiculo.placa.toUpperCase(),
+            marca: novoVeiculo.marca,
+            modelo: novoVeiculo.modelo,
+            ano: Number(novoVeiculo.ano),
+          },
+          descricaoProblema,
         });
-        finalClienteId = clienteCriado.id;
+
+        toast.success("Ordem de servico criada com sucesso.");
+        navigate(`/ordens-servico/${ordemCriada.id}`);
+        return;
       }
 
       if (!finalClienteId) {

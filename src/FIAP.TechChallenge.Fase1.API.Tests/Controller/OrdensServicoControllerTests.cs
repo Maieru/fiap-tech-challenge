@@ -58,6 +58,60 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task CreateComClienteEVeiculo_ShouldSucceed_WhenRequestIsValid()
+    {
+        var request = new
+        {
+            Cliente = new
+            {
+                Nome = "Cliente OS Completa",
+                Cpf = GenerateValidCpf(9101),
+                Telefone = "11989101001",
+                Email = "cliente.os.completa@email.com"
+            },
+            Veiculo = new
+            {
+                Placa = GenerateValidPlaca(71),
+                Marca = "Honda",
+                Modelo = "Fit",
+                Ano = 2021
+            },
+            DescricaoProblema = "Cliente informou falha ao ligar pela manha."
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/ordensservico/com-cliente-veiculo", request);
+        var created = await response.Content.ReadFromJsonAsync<OrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Id.Should().NotBeEmpty();
+            _ = created.ClienteId.Should().NotBeEmpty();
+            _ = created.VeiculoId.Should().NotBeEmpty();
+            _ = created.DescricaoProblema.Should().Be("Cliente informou falha ao ligar pela manha.");
+            _ = created.Status.Should().Be(1);
+            _ = created.DataCriacao.Should().BeAfter(DateTime.UtcNow.AddMinutes(-5));
+        });
+
+        var acompanhamentoResponse = await _client.GetAsync($"/api/ordensservico/acompanhamento/{created!.Id}");
+        var acompanhamento = await acompanhamentoResponse.Content.ReadFromJsonAsync<RecuperarAcompanhamentoOrdemServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = acompanhamentoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = acompanhamento.Should().NotBeNull();
+            _ = acompanhamento!.ClienteId.Should().Be(created.ClienteId);
+            _ = acompanhamento.ClienteNome.Should().Be("Cliente OS Completa");
+            _ = acompanhamento.VeiculoId.Should().Be(created.VeiculoId);
+            _ = acompanhamento.VeiculoMarca.Should().Be("Honda");
+            _ = acompanhamento.VeiculoModelo.Should().Be("Fit");
+            _ = acompanhamento.VeiculoPlaca.Should().Be(GenerateValidPlaca(71));
+            _ = acompanhamento.VeiculoAno.Should().Be(2021);
+        });
+    }
+
+    [Test]
     public async Task Create_ShouldReturnNotFound_WhenClienteDoesNotExist()
     {
         var request = new
@@ -1211,6 +1265,23 @@ public sealed class OrdensServicoControllerTests
             VeiculoId = Guid.NewGuid(),
             DescricaoProblema = "Teste sem token"
         });
+        var postComClienteEVeiculoResponse = await SendUnauthorizedAsync(HttpMethod.Post, "/api/ordensservico/com-cliente-veiculo", new
+        {
+            Cliente = new
+            {
+                Nome = "Cliente sem token",
+                Cpf = GenerateValidCpf(9040),
+                Telefone = "11989040000"
+            },
+            Veiculo = new
+            {
+                Placa = GenerateValidPlaca(90),
+                Marca = "Fiat",
+                Modelo = "Argo",
+                Ano = 2023
+            },
+            DescricaoProblema = "Teste sem token"
+        });
         var addServicoResponse = await SendUnauthorizedAsync(HttpMethod.Post, $"/api/ordensservico/{ordemServicoId}/addservico", new
         {
             ServicoId = Guid.NewGuid(),
@@ -1238,6 +1309,7 @@ public sealed class OrdensServicoControllerTests
             _ = getResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = postResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = postComClienteEVeiculoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = addServicoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = addPecaInsumoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

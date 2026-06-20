@@ -1,4 +1,5 @@
 import type { PagedResponse } from "@/types/api";
+import type { CreateClientePayload } from "@/types/cliente";
 
 export type StatusOrdemServico = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -59,6 +60,17 @@ export interface AcompanhamentoOrdemServico extends OrdemServicoDetalhes {
 export interface CreateOrdemServicoPayload {
   clienteId: string;
   veiculoId: string;
+  descricaoProblema: string;
+}
+
+export interface CreateOrdemServicoComClienteEVeiculoPayload {
+  cliente: CreateClientePayload;
+  veiculo: {
+    placa: string;
+    marca: string;
+    modelo: string;
+    ano: number;
+  };
   descricaoProblema: string;
 }
 

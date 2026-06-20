@@ -4,6 +4,7 @@ import type {
   AddPecaOrdemPayload,
   AddServicoOrdemPayload,
   ConcluirServicoOrdemPayload,
+  CreateOrdemServicoComClienteEVeiculoPayload,
   CreateOrdemServicoPayload,
   ListOrdensServicoResponse,
   OrdemServicoDetalhes,
@@ -38,6 +39,11 @@ export const ordensServicoService = {
 
   async create(payload: CreateOrdemServicoPayload) {
     const { data } = await api.post<{ id: string }>("/ordensservico", payload);
+    return data;
+  },
+
+  async createWithClienteEVeiculo(payload: CreateOrdemServicoComClienteEVeiculoPayload) {
+    const { data } = await api.post<{ id: string }>("/ordensservico/com-cliente-veiculo", payload);
     return data;
   },
 

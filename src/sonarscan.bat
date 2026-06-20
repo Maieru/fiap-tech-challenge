@@ -1,4 +1,4 @@
-dotnet sonarscanner begin /k:"FiapFase1" /d:sonar.host.url="http://localhost:9000"  /d:sonar.token="sqp_c65ca74097e6cb83cf48141072f915825b122f7a" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml   /d:sonar.exclusions="**/Migrations/**,**/FIAP.TechChallenge.Fase1.Frontend/**"
+dotnet sonarscanner begin /k:"FiapFase1" /d:sonar.host.url="http://localhost:9000"  /d:sonar.token="sqp_c65ca74097e6cb83cf48141072f915825b122f7a" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml   /d:sonar.exclusions="**/Migrations/**,**/FIAP.TechChallenge.Fase1.Frontend/**" /d:sonar.scm.exclusions.disabled=true
 
 dotnet build  .\TechChallengeFase1.slnx --no-incremental
 dotnet-coverage collect "dotnet test .\TechChallengeFase1.slnx" -f xml -o coverage.xml

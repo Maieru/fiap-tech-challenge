@@ -6,6 +6,7 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AprovarExecuca
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CancelarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ConcluirServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
+using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServicoComClienteEVeiculo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.EntregarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ExcluirOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.FinalizarOrdemServico;
@@ -74,6 +75,16 @@ public sealed class OrdensServicoController : ControllerBase
     {
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this, value => CreatedAtAction(nameof(Post), new { id = value.Id }, value));
+    }
+
+    [HttpPost("com-cliente-veiculo")]
+    [ProducesResponseType(typeof(CriarOrdemServicoResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PostComClienteEVeiculo(ICriarOrdemServicoComClienteEVeiculoUseCase useCase, CriarOrdemServicoComClienteEVeiculoCommand command, CancellationToken cancellationToken)
+    {
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this, value => CreatedAtAction(nameof(GetById), new { id = value.Id }, value));
     }
 
     [HttpPost("{id:guid}/addservico")]
