@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
-using FIAP.TechChallenge.Fase1.API.Tests;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace FIAP.TechChallenge.Fase1.API.Tests.Controller;
 
@@ -471,6 +471,47 @@ public sealed class OrdensServicoControllerTests
             _ = result.VeiculoAno.Should().Be(2025);
             _ = result.Status.Should().Be(1);
             _ = result.DescricaoProblema.Should().Be("Acompanhamento publico da OS");
+        });
+    }
+
+    [Test]
+    public async Task GetStatusById_ShouldReturnOnlyIdAndStatus_WhenOrdemServicoExists()
+    {
+        var cliente = await CreateClientAsync(9033);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(63), "Jeep", "Renegade", 2024);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Consulta de status da OS");
+
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}/status");
+        var json = await response.Content.ReadAsStringAsync();
+        using var payload = JsonDocument.Parse(json);
+        var properties = payload.RootElement.EnumerateObject().Select(x => x.Name).ToArray();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = properties.Should().BeEquivalentTo(["id", "status"]);
+            _ = properties.Length.Should().Be(2);
+            _ = payload.RootElement.GetProperty("id").GetGuid().Should().Be(ordemServico.Id);
+            _ = payload.RootElement.GetProperty("status").GetInt32().Should().Be(2);
+        });
+    }
+
+    [Test]
+    public async Task GetStatusById_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
+    {
+        var response = await _client.GetAsync($"/api/ordensservico/{Guid.NewGuid()}/status");
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("Ordem");
+            _ = error.Error.Should().Contain("encontrada");
+            _ = error.ErrorCode.Should().Be("NotFound");
         });
     }
 
@@ -1259,6 +1300,7 @@ public sealed class OrdensServicoControllerTests
 
         var getResponse = await SendUnauthorizedAsync(HttpMethod.Get, "/api/ordensservico");
         var getByIdResponse = await SendUnauthorizedAsync(HttpMethod.Get, $"/api/ordensservico/{ordemServicoId}");
+        var getStatusByIdResponse = await SendUnauthorizedAsync(HttpMethod.Get, $"/api/ordensservico/{ordemServicoId}/status");
         var postResponse = await SendUnauthorizedAsync(HttpMethod.Post, "/api/ordensservico", new
         {
             ClienteId = Guid.NewGuid(),
@@ -1308,6 +1350,7 @@ public sealed class OrdensServicoControllerTests
         {
             _ = getResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = getByIdResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            _ = getStatusByIdResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = postResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = postComClienteEVeiculoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = addServicoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

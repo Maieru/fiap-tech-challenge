@@ -1,7 +1,7 @@
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
-using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
+using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +28,7 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        IQueryable<OrdemServicoEntity> query = context.OrdensServico.AsNoTracking();
+        var query = context.OrdensServico.AsNoTracking();
 
         if (clienteId.HasValue)
             query = query.Where(x => x.ClienteId == clienteId.Value);
