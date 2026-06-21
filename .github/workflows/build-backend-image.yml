@@ -5,7 +5,7 @@ env:
   SOLUTION_FILE: './src/TechChallengeFase1.slnx'
 
   DOCKERFILE_PATH: './src/FIAP.TechChallenge.Fase1.API/Dockerfile'
-  DOCKER_CONTEXT: './src'
+  DOCKER_BUILD_CONTEXT: './src'
 
   AWS_REGION: 'us-east-1'
   ECR_REPOSITORY: 'fiap-ecr-repository'
@@ -59,23 +59,17 @@ jobs:
       - name: Verificar identidade AWS
         run: aws sts get-caller-identity
 
-      - name: Login manual no Amazon ECR
-        run: |
-          docker_registry="575638747623.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com"
-  
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} \
-            | docker login \
-              --username AWS \
-              --password-stdin \
-              "$docker_registry"
-
+      - name: Login no Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        
       - name: Build da imagem Docker
         run: |
           docker build \
             -f ${{ env.DOCKERFILE_PATH }} \
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} \
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest \
-            ${{ env.DOCKER_CONTEXT }}
+            ${{ env.DOCKER_BUILD_CONTEXT }}
 
       - name: Push da imagem Docker para o ECR
         run: |
