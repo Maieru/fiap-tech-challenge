@@ -59,9 +59,15 @@ jobs:
       - name: Verificar identidade AWS
         run: aws sts get-caller-identity
 
-      - name: Login no Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Login manual no Amazon ECR
+        run: |
+          docker_registry="575638747623.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com"
+  
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} \
+            | docker login \
+              --username AWS \
+              --password-stdin \
+              "$docker_registry"
 
       - name: Build da imagem Docker
         run: |
