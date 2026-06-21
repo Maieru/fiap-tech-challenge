@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.RecuperarServico;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.RecuperarServico;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
@@ -85,3 +85,4 @@ internal sealed class RecuperarServicoUseCaseTests
         return servicoResult.Value!;
     }
 }
+

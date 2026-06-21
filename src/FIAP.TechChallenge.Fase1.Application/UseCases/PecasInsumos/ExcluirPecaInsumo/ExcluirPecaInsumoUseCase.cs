@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.ExcluirPecaInsumo;
@@ -19,3 +19,4 @@ public sealed class ExcluirPecaInsumoUseCase(IPecaInsumoRepository pecaInsumoRep
         return Result<ExcluirPecaInsumoResponse>.Success(new ExcluirPecaInsumoResponse { Id = command.Id });
     }
 }
+

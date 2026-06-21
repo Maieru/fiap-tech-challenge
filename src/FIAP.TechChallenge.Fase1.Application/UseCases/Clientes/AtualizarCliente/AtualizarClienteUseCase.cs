@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
 
@@ -74,3 +74,4 @@ public sealed class AtualizarClienteUseCase(IClienteRepository clienteRepository
             : Result<Email?>.Success(emailResult.Value);
     }
 }
+

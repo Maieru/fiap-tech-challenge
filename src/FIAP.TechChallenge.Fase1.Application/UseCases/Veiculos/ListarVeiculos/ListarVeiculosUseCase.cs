@@ -118,3 +118,4 @@ public sealed class ListarVeiculosUseCase(IVeiculoRepository veiculoRepository) 
 }
 
 
+

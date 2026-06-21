@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
@@ -80,3 +80,4 @@ public sealed class ServicoRepository(AppDbContext context) : IServicoRepository
         return Result<List<Servico>>.Success(servicos);
     }
 }
+

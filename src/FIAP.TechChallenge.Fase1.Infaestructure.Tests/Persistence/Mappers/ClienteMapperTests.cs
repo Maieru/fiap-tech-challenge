@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
@@ -151,3 +151,4 @@ internal sealed class ClienteMapperTests
         return Cliente.Create("Empresa Teste", null, cnpj, telefone, null).Value!;
     }
 }
+

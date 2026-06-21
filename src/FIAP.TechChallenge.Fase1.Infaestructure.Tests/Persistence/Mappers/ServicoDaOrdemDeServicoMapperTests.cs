@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Mappers;
@@ -95,3 +95,4 @@ internal sealed class ServicoDaOrdemDeServicoMapperTests
         });
     }
 }
+

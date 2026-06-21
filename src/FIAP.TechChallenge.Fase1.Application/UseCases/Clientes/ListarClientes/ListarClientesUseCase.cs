@@ -114,3 +114,4 @@ public sealed class ListarClientesUseCase(IClienteRepository clienteRepository) 
         };
     }
 }
+

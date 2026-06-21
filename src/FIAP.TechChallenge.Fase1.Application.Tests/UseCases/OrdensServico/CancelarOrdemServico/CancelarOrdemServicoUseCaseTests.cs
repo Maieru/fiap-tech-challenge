@@ -229,3 +229,4 @@ internal sealed class CancelarOrdemServicoUseCaseTests
         return pecaOuInsumoDaOrdemResult.Value!;
     }
 }
+

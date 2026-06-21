@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
@@ -47,3 +47,4 @@ internal static class TestAuthenticationHelper
         public string TipoToken { get; set; } = string.Empty;
     }
 }
+

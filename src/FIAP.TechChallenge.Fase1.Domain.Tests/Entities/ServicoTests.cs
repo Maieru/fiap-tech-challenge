@@ -22,7 +22,7 @@ internal sealed class ServicoTests
     [Test]
     public void Create_ShouldFail_WhenValorUnitarioIsNegative()
     {
-        var result = Servico.Create("Troca de óleo", -1m);
+        var result = Servico.Create("Troca de Óleo", -1m);
 
         Assert.Multiple(() =>
         {
@@ -153,3 +153,4 @@ internal sealed class ServicoTests
         });
     }
 }
+

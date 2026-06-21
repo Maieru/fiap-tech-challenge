@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.ExcluirVeiculo;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.ExcluirVeiculo;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
@@ -59,3 +59,4 @@ internal sealed class ExcluirVeiculoUseCaseTests
         return Veiculo.Create(Guid.NewGuid(), placa, "Toyota", "Corolla", 2024).Value!;
     }
 }
+

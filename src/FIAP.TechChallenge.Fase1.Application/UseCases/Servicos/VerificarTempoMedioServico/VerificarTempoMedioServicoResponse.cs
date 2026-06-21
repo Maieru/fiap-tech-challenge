@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.VerificarTempoMedioServico;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.VerificarTempoMedioServico;
 
 public sealed class VerificarTempoMedioServicoResponse
 {
@@ -6,3 +6,4 @@ public sealed class VerificarTempoMedioServicoResponse
     public decimal TempoMedioMinutos { get; init; }
     public int QuantidadeExecucoes { get; init; }
 }
+

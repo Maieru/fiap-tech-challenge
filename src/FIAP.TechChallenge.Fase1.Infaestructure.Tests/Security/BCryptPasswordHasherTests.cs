@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Infrastructure.Security;
+﻿using FIAP.TechChallenge.Fase1.Infrastructure.Security;
 
 namespace FIAP.TechChallenge.Fase1.Infaestructure.Tests.Security;
 
@@ -43,3 +43,4 @@ internal sealed class BCryptPasswordHasherTests
         Assert.That(isValid, Is.False);
     }
 }
+

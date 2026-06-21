@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 
 namespace FIAP.TechChallenge.Fase1.Domain.Interfaces;
@@ -14,3 +14,4 @@ public interface IVeiculoRepository
     Task UpdateAsync(Veiculo veiculo, CancellationToken cancellationToken = default);
     Task DeleteAsync(Veiculo veiculo, CancellationToken cancellationToken = default);
 }
+

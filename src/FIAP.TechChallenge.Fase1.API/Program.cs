@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application;
+﻿using FIAP.TechChallenge.Fase1.Application;
 using FIAP.TechChallenge.Fase1.Infrastructure;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
 using Scalar.AspNetCore;
@@ -51,3 +51,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 await app.RunAsync();
+

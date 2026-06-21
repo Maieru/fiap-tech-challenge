@@ -275,3 +275,4 @@ internal sealed class ConcluirServicoOrdemServicoUseCaseTests
         return servicoDaOrdemResult.Value!;
     }
 }
+

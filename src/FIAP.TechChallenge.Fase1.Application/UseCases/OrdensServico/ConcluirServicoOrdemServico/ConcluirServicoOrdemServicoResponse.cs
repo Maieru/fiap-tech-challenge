@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ConcluirServicoOrdemServico;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ConcluirServicoOrdemServico;
 
 public sealed class ConcluirServicoOrdemServicoResponse
 {
@@ -8,3 +8,4 @@ public sealed class ConcluirServicoOrdemServicoResponse
     public int TempoGastoMinutos { get; init; }
     public bool Concluido { get; init; }
 }
+

@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
 
@@ -21,3 +21,4 @@ public static class UsuarioMapper
         return Usuario.Rehydrate(entity.Id, entity.Login, entity.Senha);
     }
 }
+

@@ -240,3 +240,4 @@ internal class CNPJTests
         });
     }
 }
+

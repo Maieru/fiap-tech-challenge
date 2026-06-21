@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
 
@@ -72,3 +72,4 @@ public sealed class AtualizarVeiculoUseCase(IVeiculoRepository veiculoRepository
             : Result<Placa>.Success(placaResult.Value);
     }
 }
+

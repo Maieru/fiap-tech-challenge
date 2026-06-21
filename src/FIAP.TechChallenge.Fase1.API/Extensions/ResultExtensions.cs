@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.TechChallenge.Fase1.API.Extensions;
@@ -36,3 +36,4 @@ public static class ResultExtensions
 
     private sealed record ErrorActionResponse(string Error, string ErrorCode);
 }
+

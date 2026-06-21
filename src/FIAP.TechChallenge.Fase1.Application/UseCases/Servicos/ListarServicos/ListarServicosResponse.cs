@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ListarServicos;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ListarServicos;
 
 public sealed class ListarServicosResponse
 {
@@ -14,3 +14,4 @@ public sealed class ListarServicoItemResponse
     public string Descricao { get; init; } = string.Empty;
     public decimal ValorUnitario { get; init; }
 }
+

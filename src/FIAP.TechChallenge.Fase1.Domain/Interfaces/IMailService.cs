@@ -6,3 +6,4 @@ public interface IMailService
 {
     public Task<Result<bool>> SendMail(string to, string subject, string body);
 }
+

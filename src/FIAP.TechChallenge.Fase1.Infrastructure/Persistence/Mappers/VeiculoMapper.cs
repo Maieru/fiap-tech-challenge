@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
@@ -30,3 +30,4 @@ public static class VeiculoMapper
         return Veiculo.Rehydrate(entity.Id, entity.ClienteId, placaResult.Value!, entity.Marca, entity.Modelo, entity.Ano);
     }
 }
+

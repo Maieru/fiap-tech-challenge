@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.ListarPecasInsumos;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.ListarPecasInsumos;
 
 public sealed class ListarPecasInsumosCommand
 {
@@ -6,3 +6,4 @@ public sealed class ListarPecasInsumosCommand
     public int PageNumber { get; init; } = 1;
     public int PageSize { get; init; } = 10;
 }
+

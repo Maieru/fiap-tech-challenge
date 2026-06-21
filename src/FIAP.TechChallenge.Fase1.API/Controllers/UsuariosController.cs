@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.API.Extensions;
+﻿using FIAP.TechChallenge.Fase1.API.Extensions;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.AutenticarUsuario;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.CriarUsuario;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.ExcluirUsuario;
@@ -47,3 +47,4 @@ public sealed class UsuariosController : ControllerBase
         return result.ToActionResult(this, _ => NoContent());
     }
 }
+

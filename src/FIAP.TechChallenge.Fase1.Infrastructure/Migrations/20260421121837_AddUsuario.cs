@@ -33,3 +33,4 @@ namespace FIAP.TechChallenge.Fase1.Infrastructure.Migrations
         }
     }
 }
+

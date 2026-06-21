@@ -86,3 +86,4 @@ public sealed class ServicoDaOrdemDeServicoRepository(AppDbContext context) : IS
         return Result<IReadOnlyCollection<ServicoDaOrdemDeServico>>.Success(servicosDaOrdem);
     }
 }
+

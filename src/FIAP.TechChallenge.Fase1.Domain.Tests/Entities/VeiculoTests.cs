@@ -362,3 +362,4 @@ internal class VeiculoTests
         return result.Value!;
     }
 }
+

@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Entities;
+﻿using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Mappers;
@@ -56,3 +56,4 @@ public sealed class UsuarioRepository(AppDbContext context) : IUsuarioRepository
         _ = await context.SaveChangesAsync(cancellationToken);
     }
 }
+

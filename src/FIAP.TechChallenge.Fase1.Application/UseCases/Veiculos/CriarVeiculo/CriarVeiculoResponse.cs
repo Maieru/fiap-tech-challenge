@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.CriarVeiculo;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.CriarVeiculo;
 
 public sealed class CriarVeiculoResponse
 {
@@ -9,3 +9,4 @@ public sealed class CriarVeiculoResponse
     public string Modelo { get; init; } = string.Empty;
     public int Ano { get; init; }
 }
+

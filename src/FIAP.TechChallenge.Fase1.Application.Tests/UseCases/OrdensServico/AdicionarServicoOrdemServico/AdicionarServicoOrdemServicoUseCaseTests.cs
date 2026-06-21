@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
@@ -235,3 +235,4 @@ internal sealed class AdicionarServicoOrdemServicoUseCaseTests
         return servicoResult.Value!;
     }
 }
+

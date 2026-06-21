@@ -45,7 +45,7 @@ internal sealed class PecaOuInsumoDaOrdemDeServicoMapperTests
             Id = Guid.NewGuid(),
             OrdemServicoId = Guid.NewGuid(),
             PecaInsumoId = Guid.NewGuid(),
-            Nome = "Filtro de óleo",
+            Nome = "Filtro de Óleo",
             Codigo = "FO-456",
             Descricao = "Aplicação linha leve",
             PrecoUnitario = 39.5m,
@@ -95,3 +95,4 @@ internal sealed class PecaOuInsumoDaOrdemDeServicoMapperTests
         });
     }
 }
+

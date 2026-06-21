@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Entities;
+﻿using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Infrastructure.Security;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -36,3 +36,4 @@ internal sealed class JwtTokenServiceTests
         });
     }
 }
+

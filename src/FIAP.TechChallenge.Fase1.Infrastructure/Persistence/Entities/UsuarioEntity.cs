@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
@@ -19,3 +19,4 @@ public sealed class UsuarioEntity
     [MaxLength(500)]
     public string Senha { get; set; } = string.Empty;
 }
+

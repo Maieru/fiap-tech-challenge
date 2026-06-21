@@ -203,3 +203,4 @@ internal sealed class CriarVeiculoUseCaseTests
         return clienteResult.Value!;
     }
 }
+

@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Enums;
+﻿using FIAP.TechChallenge.Fase1.Domain.Enums;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -107,3 +107,4 @@ internal sealed class SoftDeleteQueryFilterTests
             new PecaOuInsumoDaOrdemDeServicoEntity { Id = Guid.NewGuid(), OrdemServicoId = ordemAtivaId, PecaInsumoId = Guid.NewGuid(), Nome = "Peca OS inativa", Codigo = "POS-0", PrecoUnitario = 15m, Quantidade = 1, Ativo = false });
     }
 }
+

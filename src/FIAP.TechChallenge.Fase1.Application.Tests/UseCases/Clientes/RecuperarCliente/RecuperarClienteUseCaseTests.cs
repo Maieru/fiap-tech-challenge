@@ -99,3 +99,4 @@ internal sealed class RecuperarClienteUseCaseTests
         return clienteResult.Value!;
     }
 }
+

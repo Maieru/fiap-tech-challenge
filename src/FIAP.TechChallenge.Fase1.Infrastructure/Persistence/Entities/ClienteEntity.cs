@@ -27,3 +27,4 @@ public sealed class ClienteEntity
     [MaxLength(200)]
     public string? Email { get; set; }
 }
+

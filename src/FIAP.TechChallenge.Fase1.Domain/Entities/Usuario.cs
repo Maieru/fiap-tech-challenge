@@ -27,7 +27,7 @@ public sealed partial class Usuario
     public static Result<Usuario> Rehydrate(Guid id, string login, string senhaCriptografada)
     {
         if (id == Guid.Empty)
-            return Result<Usuario>.Failure(new Error("O id do usuário é inválido."));
+            return Result<Usuario>.Failure(new Error("O id do usuÃ¡rio é inválido."));
 
         return Create(id, login, senhaCriptografada);
     }
@@ -48,15 +48,15 @@ public sealed partial class Usuario
     public static Result<string> ValidateLogin(string login)
     {
         if (string.IsNullOrWhiteSpace(login))
-            return Result<string>.Failure(new Error("O usuário é obrigatório."));
+            return Result<string>.Failure(new Error("O usuÃ¡rio é obrigatório."));
 
         var normalized = login.Trim().ToLowerInvariant();
 
         if (normalized.Length < 3)
-            return Result<string>.Failure(new Error("O usuário deve ter no mínimo 3 caracteres."));
+            return Result<string>.Failure(new Error("O usuÃ¡rio deve ter no mÃ­nimo 3 caracteres."));
 
         if (normalized.Length > 100)
-            return Result<string>.Failure(new Error("O usuário deve ter no máximo 100 caracteres."));
+            return Result<string>.Failure(new Error("O usuÃ¡rio deve ter no máximo 100 caracteres."));
 
         if (!LoginPattern().IsMatch(normalized))
             return Result<string>.Failure(new Error("O usuario deve conter apenas letras, numeros, ponto, hifen ou underscore."));
@@ -73,3 +73,4 @@ public sealed partial class Usuario
     }
 
 }
+

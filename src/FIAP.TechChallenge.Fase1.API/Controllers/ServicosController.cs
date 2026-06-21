@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.API.Extensions;
+﻿using FIAP.TechChallenge.Fase1.API.Extensions;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ExcluirServico;
@@ -84,3 +84,4 @@ public sealed class ServicosController : ControllerBase
         return result.ToActionResult(this, _ => NoContent());
     }
 }
+

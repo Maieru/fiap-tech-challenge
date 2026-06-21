@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.AtualizarCliente;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.AtualizarCliente;
 
 public sealed class AtualizarClienteResponse
 {
@@ -9,3 +9,4 @@ public sealed class AtualizarClienteResponse
     public string? Cnpj { get; init; }
     public string? Email { get; init; }
 }
+

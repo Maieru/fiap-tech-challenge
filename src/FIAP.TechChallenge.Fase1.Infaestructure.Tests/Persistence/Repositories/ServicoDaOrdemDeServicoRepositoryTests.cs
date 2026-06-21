@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Entities;
+﻿using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
@@ -249,3 +249,4 @@ internal sealed class ServicoDaOrdemDeServicoRepositoryTests
         return new AppDbContext(options);
     }
 }
+

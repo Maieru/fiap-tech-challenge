@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ListarClientes;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ListarClientes;
 
 public sealed class ListarClientesCommand
 {
@@ -7,3 +7,4 @@ public sealed class ListarClientesCommand
     public int PageNumber { get; init; } = 1;
     public int PageSize { get; init; } = 10;
 }
+

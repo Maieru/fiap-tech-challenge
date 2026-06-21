@@ -99,3 +99,4 @@ public sealed class ClienteRepository(AppDbContext context) : IClienteRepository
         _ = await context.SaveChangesAsync(cancellationToken);
     }
 }
+

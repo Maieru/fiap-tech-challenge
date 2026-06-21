@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
@@ -36,3 +36,4 @@ public sealed class AtualizarServicoUseCase(IServicoRepository servicoRepository
         });
     }
 }
+

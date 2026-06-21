@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 
 namespace FIAP.TechChallenge.Fase1.Domain.Interfaces;
@@ -11,3 +11,4 @@ public interface IServicoRepository
     Task UpdateAsync(Servico servico, CancellationToken cancellationToken = default);
     Task DeleteAsync(Servico servico, CancellationToken cancellationToken = default);
 }
+

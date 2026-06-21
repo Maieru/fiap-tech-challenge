@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.CriarCliente;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.CriarCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServicoComClienteEVeiculo;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.CriarVeiculo;
@@ -198,3 +198,4 @@ internal sealed class CriarOrdemServicoComClienteEVeiculoUseCaseTests
             DescricaoProblema = descricaoProblema
         };
 }
+

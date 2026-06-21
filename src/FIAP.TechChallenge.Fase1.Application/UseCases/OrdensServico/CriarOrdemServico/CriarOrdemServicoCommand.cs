@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 
 public sealed class CriarOrdemServicoCommand
 {
@@ -6,3 +6,4 @@ public sealed class CriarOrdemServicoCommand
     public Guid VeiculoId { get; init; }
     public string DescricaoProblema { get; init; } = string.Empty;
 }
+

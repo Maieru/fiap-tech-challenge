@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.EntradaEstoquePecaInsumo;
@@ -32,3 +32,4 @@ public sealed class EntradaEstoquePecaInsumoUseCase(IPecaInsumoRepository pecaIn
         });
     }
 }
+

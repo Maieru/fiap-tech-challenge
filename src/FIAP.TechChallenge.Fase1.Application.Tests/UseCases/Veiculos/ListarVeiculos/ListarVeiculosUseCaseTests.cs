@@ -122,7 +122,7 @@ internal sealed class ListarVeiculosUseCaseTests
 
         _ = repositoryMock
             .Setup(x => x.GetByPlacaAsync("ABC1234", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Veiculo>.Failure(new Error("VeÃ­culo nÃ£o encontrado.")));
+            .ReturnsAsync(Result<Veiculo>.Failure(new Error("Veículo não encontrado.")));
 
         var useCase = new ListarVeiculosUseCase(repositoryMock.Object);
 
@@ -132,7 +132,7 @@ internal sealed class ListarVeiculosUseCaseTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("VeÃ­culo nÃ£o encontrado."));
+            Assert.That(result.Error.Description, Is.EqualTo("Veículo não encontrado."));
         });
     }
 
@@ -191,3 +191,4 @@ internal sealed class ListarVeiculosUseCaseTests
         return veiculoResult.Value!;
     }
 }
+

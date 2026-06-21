@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaInsumo;
@@ -70,3 +70,4 @@ public sealed class AtualizarPecaInsumoUseCase(IPecaInsumoRepository pecaInsumoR
         return codigo?.Trim().ToUpperInvariant() ?? string.Empty;
     }
 }
+

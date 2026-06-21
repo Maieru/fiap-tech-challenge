@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.CadastrarServico;
 
 public sealed class CadastrarServicoResponse
 {
@@ -6,3 +6,4 @@ public sealed class CadastrarServicoResponse
     public string Descricao { get; init; } = string.Empty;
     public decimal ValorUnitario { get; init; }
 }
+

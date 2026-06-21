@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿namespace FIAP.TechChallenge.Fase1.Domain.Abstractions;
 
 public record Error(string Description, ErrorCode Code = ErrorCode.BadRequest)
 {
@@ -16,3 +16,4 @@ public record Error(string Description, ErrorCode Code = ErrorCode.BadRequest)
 
     public static Error InvalidValue(string entity, string field, string value) => new($"Invalid value '{value}' for field '{field}' in {entity}.", ErrorCode.BadRequest);
 }
+

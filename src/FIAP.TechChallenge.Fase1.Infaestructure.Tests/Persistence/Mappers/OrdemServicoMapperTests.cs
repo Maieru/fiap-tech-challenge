@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
@@ -103,3 +103,4 @@ internal sealed class OrdemServicoMapperTests
         });
     }
 }
+

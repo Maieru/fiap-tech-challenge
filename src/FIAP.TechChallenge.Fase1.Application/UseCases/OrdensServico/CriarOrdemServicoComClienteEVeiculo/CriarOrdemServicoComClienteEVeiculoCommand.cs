@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.CriarCliente;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.CriarCliente;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServicoComClienteEVeiculo;
 
@@ -16,3 +16,4 @@ public sealed class CriarVeiculoOrdemServicoCommand
     public string Modelo { get; init; } = string.Empty;
     public int Ano { get; init; }
 }
+

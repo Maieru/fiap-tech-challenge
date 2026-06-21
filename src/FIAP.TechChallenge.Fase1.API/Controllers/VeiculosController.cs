@@ -82,3 +82,4 @@ public sealed class VeiculosController : ControllerBase
         return result.ToActionResult(this, _ => NoContent());
     }
 }
+

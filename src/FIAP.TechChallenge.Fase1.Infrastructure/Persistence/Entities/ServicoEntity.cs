@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
@@ -18,3 +18,4 @@ public sealed class ServicoEntity
     [Column(TypeName = "decimal(18,2)")]
     public decimal ValorUnitario { get; set; }
 }
+

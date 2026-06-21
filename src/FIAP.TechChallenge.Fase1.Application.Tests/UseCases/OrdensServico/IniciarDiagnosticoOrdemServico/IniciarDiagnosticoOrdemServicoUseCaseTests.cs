@@ -126,3 +126,4 @@ internal sealed class IniciarDiagnosticoOrdemServicoUseCaseTests
         return ordemServicoResult.Value!;
     }
 }
+

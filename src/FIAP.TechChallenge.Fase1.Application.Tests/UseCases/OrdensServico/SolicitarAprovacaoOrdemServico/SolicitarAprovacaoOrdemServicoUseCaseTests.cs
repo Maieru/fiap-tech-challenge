@@ -306,3 +306,4 @@ internal sealed class SolicitarAprovacaoOrdemServicoUseCaseTests
         return clienteResult.Value!;
     }
 }
+

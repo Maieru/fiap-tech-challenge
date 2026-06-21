@@ -97,3 +97,4 @@ internal sealed class RecuperarVeiculoUseCaseTests
         return veiculoResult.Value!;
     }
 }
+

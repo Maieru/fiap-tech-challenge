@@ -135,3 +135,4 @@ internal sealed class CriarUsuarioUseCaseTests
             Senha = senha
         };
 }
+

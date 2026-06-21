@@ -91,3 +91,4 @@ public sealed class Servico
         return Result<bool>.Success(true);
     }
 }
+

@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaInsumo;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaInsumo;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
@@ -279,3 +279,4 @@ internal sealed class AtualizarPecaInsumoUseCaseTests
         return pecaInsumoResult.Value!;
     }
 }
+

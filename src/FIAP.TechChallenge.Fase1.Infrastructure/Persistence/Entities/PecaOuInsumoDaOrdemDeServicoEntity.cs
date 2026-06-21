@@ -40,3 +40,4 @@ public sealed class PecaOuInsumoDaOrdemDeServicoEntity
     [ForeignKey(nameof(OrdemServicoId))]
     public OrdemServicoEntity OrdemServico { get; set; } = null!;
 }
+

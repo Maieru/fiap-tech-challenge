@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Entities;
+﻿using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -39,3 +39,4 @@ public sealed class JwtTokenService(string issuer, string audience, SymmetricSec
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
+

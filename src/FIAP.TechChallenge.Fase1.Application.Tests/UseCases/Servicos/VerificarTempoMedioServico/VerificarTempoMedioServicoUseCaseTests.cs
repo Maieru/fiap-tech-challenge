@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.VerificarTempoMedioServico;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.VerificarTempoMedioServico;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
@@ -154,3 +154,4 @@ internal sealed class VerificarTempoMedioServicoUseCaseTests
         return servicoDaOrdemResult.Value!;
     }
 }
+

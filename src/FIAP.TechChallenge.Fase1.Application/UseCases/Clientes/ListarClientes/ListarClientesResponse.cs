@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ListarClientes;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ListarClientes;
 
 public sealed class ListarClientesResponse
 {
@@ -17,3 +17,4 @@ public sealed class ListarClienteItemResponse
     public string? Cnpj { get; init; }
     public string? Email { get; init; }
 }
+

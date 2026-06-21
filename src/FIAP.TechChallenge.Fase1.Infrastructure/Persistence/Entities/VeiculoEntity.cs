@@ -33,3 +33,4 @@ public sealed class VeiculoEntity
     [ForeignKey(nameof(ClienteId))]
     public ClienteEntity Cliente { get; set; } = null!;
 }
+

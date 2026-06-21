@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.AtualizarServico;
 
 public sealed class AtualizarServicoResponse
 {
@@ -6,3 +6,4 @@ public sealed class AtualizarServicoResponse
     public string Descricao { get; init; } = string.Empty;
     public decimal ValorUnitario { get; init; }
 }
+

@@ -149,3 +149,4 @@ public sealed class ServicoDaOrdemDeServico
         return Result<bool>.Success(true);
     }
 }
+

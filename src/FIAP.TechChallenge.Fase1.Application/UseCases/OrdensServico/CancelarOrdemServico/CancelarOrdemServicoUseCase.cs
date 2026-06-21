@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using System.Transactions;
 
@@ -60,3 +60,4 @@ public sealed class CancelarOrdemServicoUseCase(
         });
     }
 }
+

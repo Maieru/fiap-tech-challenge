@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
@@ -72,3 +72,4 @@ public sealed class ListarOrdensServicoUseCase(IOrdemServicoRepository ordemServ
         };
     }
 }
+

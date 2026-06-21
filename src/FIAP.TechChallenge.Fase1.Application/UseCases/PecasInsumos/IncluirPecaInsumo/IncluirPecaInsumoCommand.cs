@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.IncluirPecaInsumo;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.IncluirPecaInsumo;
 
 public sealed class IncluirPecaInsumoCommand
 {
@@ -8,3 +8,4 @@ public sealed class IncluirPecaInsumoCommand
     public decimal PrecoUnitario { get; init; }
     public int QuantidadeEstoque { get; init; }
 }
+

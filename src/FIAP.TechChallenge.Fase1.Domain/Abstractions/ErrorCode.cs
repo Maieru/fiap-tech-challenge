@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿namespace FIAP.TechChallenge.Fase1.Domain.Abstractions;
 
 public enum ErrorCode
 {
@@ -11,3 +11,4 @@ public enum ErrorCode
     UnprocessableEntity = 6,
     InternalServerError = 7
 }
+

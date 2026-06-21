@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaInsumo;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.AtualizarPecaInsumo;
 
 public sealed class AtualizarPecaInsumoCommand
 {
@@ -9,3 +9,4 @@ public sealed class AtualizarPecaInsumoCommand
     public decimal PrecoUnitario { get; init; }
     public bool Ativo { get; init; }
 }
+

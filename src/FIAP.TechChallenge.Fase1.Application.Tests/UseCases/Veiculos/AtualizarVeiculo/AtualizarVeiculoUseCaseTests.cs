@@ -220,3 +220,4 @@ internal sealed class AtualizarVeiculoUseCaseTests
         return veiculoResult.Value!;
     }
 }
+

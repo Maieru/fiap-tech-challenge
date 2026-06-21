@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarServicoOrdemServico;
 
 public sealed class AdicionarServicoOrdemServicoResponse
 {
@@ -12,3 +12,4 @@ public sealed class AdicionarServicoOrdemServicoResponse
     public int? TempoGastoMinutos { get; init; }
     public bool Concluido { get; init; }
 }
+

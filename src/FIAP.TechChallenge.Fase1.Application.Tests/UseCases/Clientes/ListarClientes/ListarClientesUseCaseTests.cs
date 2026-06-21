@@ -204,3 +204,4 @@ internal sealed class ListarClientesUseCaseTests
         return clienteResult.Value!;
     }
 }
+

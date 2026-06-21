@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Entities;
@@ -95,3 +95,4 @@ public sealed class PecaInsumoRepository(AppDbContext context) : IPecaInsumoRepo
         return Result<List<PecaInsumo>>.Success(pecasInsumos);
     }
 }
+

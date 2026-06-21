@@ -71,7 +71,7 @@ internal sealed class PecaOuInsumoDaOrdemDeServicoTests
             Assert.That(entity.Id, Is.Not.EqualTo(Guid.Empty));
             Assert.That(entity.OrdemServicoId, Is.EqualTo(ordemServicoId));
             Assert.That(entity.PecaInsumoId, Is.EqualTo(pecaInsumo.Id));
-            Assert.That(entity.Nome, Is.EqualTo("Filtro de óleo"));
+            Assert.That(entity.Nome, Is.EqualTo("Filtro de Óleo"));
             Assert.That(entity.Codigo, Is.EqualTo("FLT01"));
             Assert.That(entity.Descricao, Is.EqualTo("Marca X"));
             Assert.That(entity.PrecoUnitario, Is.EqualTo(25m));
@@ -267,7 +267,7 @@ internal sealed class PecaOuInsumoDaOrdemDeServicoTests
         {
             Nome = "  Filtro premium  ",
             Codigo = "  flt99  ",
-            Descricao = "  descrição técnica  "
+            Descricao = "  Descrição técnica  "
         };
 
         var result = PecaOuInsumoDaOrdemDeServico.Rehydrate(snapshot);
@@ -288,7 +288,7 @@ internal sealed class PecaOuInsumoDaOrdemDeServicoTests
             Assert.That(entity.PecaInsumoId, Is.EqualTo(snapshot.PecaInsumoId));
             Assert.That(entity.Nome, Is.EqualTo("Filtro premium"));
             Assert.That(entity.Codigo, Is.EqualTo("FLT99"));
-            Assert.That(entity.Descricao, Is.EqualTo("descrição técnica"));
+            Assert.That(entity.Descricao, Is.EqualTo("Descrição técnica"));
             Assert.That(entity.PrecoUnitario, Is.EqualTo(snapshot.PrecoUnitario));
             Assert.That(entity.Quantidade, Is.EqualTo(snapshot.Quantidade));
             Assert.That(entity.ValorTotal, Is.EqualTo(snapshot.PrecoUnitario * snapshot.Quantidade));
@@ -442,7 +442,7 @@ internal sealed class PecaOuInsumoDaOrdemDeServicoTests
 
     private static PecaInsumo CreatePecaInsumoValida()
     {
-        var result = PecaInsumo.Create("  Filtro de óleo  ", "  flt01  ", "  Marca X  ", 25m, 10);
+        var result = PecaInsumo.Create("  Filtro de Óleo  ", "  flt01  ", "  Marca X  ", 25m, 10);
 
         Assert.Multiple(() =>
         {
@@ -488,3 +488,4 @@ internal sealed class PecaOuInsumoDaOrdemDeServicoTests
         return result.Value!;
     }
 }
+

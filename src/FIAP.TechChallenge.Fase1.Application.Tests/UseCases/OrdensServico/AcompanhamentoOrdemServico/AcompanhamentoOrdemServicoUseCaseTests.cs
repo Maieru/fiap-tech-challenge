@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AcompanhamentoOrdemServico;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AcompanhamentoOrdemServico;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
@@ -305,3 +305,4 @@ internal sealed class AcompanhamentoOrdemServicoUseCaseTests
         return pecaInsumoDaOrdemResult.Value!;
     }
 }
+

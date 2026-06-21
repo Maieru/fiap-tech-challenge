@@ -75,3 +75,4 @@ public sealed class Placa : IEquatable<Placa>
 
     public static bool operator !=(Placa? left, Placa? right) => !Equals(left, right);
 }
+

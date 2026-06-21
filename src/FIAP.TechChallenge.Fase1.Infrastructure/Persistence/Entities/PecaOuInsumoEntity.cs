@@ -27,3 +27,4 @@ public sealed class PecaInsumoEntity
 
     public bool Ativo { get; set; } = true;
 }
+

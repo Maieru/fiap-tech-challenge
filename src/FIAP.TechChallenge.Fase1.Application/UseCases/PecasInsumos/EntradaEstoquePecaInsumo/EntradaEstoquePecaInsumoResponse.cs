@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.EntradaEstoquePecaInsumo;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.EntradaEstoquePecaInsumo;
 
 public sealed class EntradaEstoquePecaInsumoResponse
 {
@@ -8,3 +8,4 @@ public sealed class EntradaEstoquePecaInsumoResponse
     public int QuantidadeEntrada { get; init; }
     public int QuantidadeEstoque { get; init; }
 }
+

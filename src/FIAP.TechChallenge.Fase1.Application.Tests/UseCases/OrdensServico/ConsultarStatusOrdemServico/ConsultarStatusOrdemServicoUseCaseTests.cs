@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ConsultarStatusOrdemServico;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ConsultarStatusOrdemServico;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
@@ -104,3 +104,4 @@ internal sealed class ConsultarStatusOrdemServicoUseCaseTests
         return ordemServico;
     }
 }
+

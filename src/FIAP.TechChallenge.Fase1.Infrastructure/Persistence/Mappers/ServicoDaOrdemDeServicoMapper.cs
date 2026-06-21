@@ -36,3 +36,4 @@ public static class ServicoDaOrdemDeServicoMapper
         return ServicoDaOrdemDeServico.Rehydrate(snapshot);
     }
 }
+

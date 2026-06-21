@@ -226,3 +226,4 @@ public sealed class OrdemServico
         return Result<bool>.Success(true);
     }
 }
+

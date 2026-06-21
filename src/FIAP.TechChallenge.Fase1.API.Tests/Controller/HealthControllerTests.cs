@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -72,3 +72,4 @@ public sealed class HealthControllerTests
         public bool Exists { get; set; }
     }
 }
+

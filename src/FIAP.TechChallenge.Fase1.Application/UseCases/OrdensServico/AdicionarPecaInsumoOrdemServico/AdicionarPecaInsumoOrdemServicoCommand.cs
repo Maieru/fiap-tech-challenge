@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaInsumoOrdemServico;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AdicionarPecaInsumoOrdemServico;
 
 public sealed class AdicionarPecaInsumoOrdemServicoCommand
 {
@@ -6,3 +6,4 @@ public sealed class AdicionarPecaInsumoOrdemServicoCommand
     public Guid PecaInsumoId { get; init; }
     public int Quantidade { get; init; }
 }
+

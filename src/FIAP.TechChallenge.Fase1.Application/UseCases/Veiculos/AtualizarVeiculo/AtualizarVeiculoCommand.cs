@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.AtualizarVeiculo;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.AtualizarVeiculo;
 
 public sealed class AtualizarVeiculoCommand
 {
@@ -8,3 +8,4 @@ public sealed class AtualizarVeiculoCommand
     public string Modelo { get; init; } = string.Empty;
     public int Ano { get; init; }
 }
+

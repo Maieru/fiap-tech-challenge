@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.ListarVeiculos;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.ListarVeiculos;
 
 public sealed class ListarVeiculosCommand
 {
@@ -7,3 +7,4 @@ public sealed class ListarVeiculosCommand
     public int PageNumber { get; init; } = 1;
     public int PageSize { get; init; } = 10;
 }
+

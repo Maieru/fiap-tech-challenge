@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.CriarCliente;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.CriarCliente;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.CriarVeiculo;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
@@ -38,3 +38,4 @@ public sealed class CriarOrdemServicoComClienteEVeiculoUseCase(ICriarClienteUseC
         }, cancellationToken);
     }
 }
+

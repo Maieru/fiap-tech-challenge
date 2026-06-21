@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.Servicos.ExcluirServico;
@@ -19,3 +19,4 @@ public sealed class ExcluirServicoUseCase(IServicoRepository servicoRepository) 
         return Result<ExcluirServicoResponse>.Success(new ExcluirServicoResponse { Id = command.Id });
     }
 }
+

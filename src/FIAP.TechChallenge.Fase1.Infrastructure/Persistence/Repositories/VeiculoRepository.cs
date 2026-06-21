@@ -113,3 +113,4 @@ public sealed class VeiculoRepository(AppDbContext context) : IVeiculoRepository
         return Result<List<Veiculo>>.Success(veiculos);
     }
 }
+

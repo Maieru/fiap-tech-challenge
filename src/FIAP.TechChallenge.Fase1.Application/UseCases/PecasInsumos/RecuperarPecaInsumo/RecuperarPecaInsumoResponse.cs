@@ -1,4 +1,4 @@
-namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.RecuperarPecaInsumo;
+﻿namespace FIAP.TechChallenge.Fase1.Application.UseCases.PecasInsumos.RecuperarPecaInsumo;
 
 public sealed class RecuperarPecaInsumoResponse
 {
@@ -10,3 +10,4 @@ public sealed class RecuperarPecaInsumoResponse
     public int QuantidadeEstoque { get; init; }
     public bool Ativo { get; init; }
 }
+

@@ -49,3 +49,4 @@ public sealed class CriarUsuarioUseCase(IUsuarioRepository usuarioRepository, IP
     }
 
 }
+

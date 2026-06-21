@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ExcluirOrdemServico;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ExcluirOrdemServico;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
@@ -52,3 +52,4 @@ internal sealed class ExcluirOrdemServicoUseCaseTests
         repositoryMock.Verify(x => x.DeleteAsync(It.IsAny<OrdemServico>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
+

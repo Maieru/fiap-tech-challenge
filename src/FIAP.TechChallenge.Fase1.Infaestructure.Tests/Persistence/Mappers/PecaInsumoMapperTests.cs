@@ -40,7 +40,7 @@ internal sealed class PecaInsumoMapperTests
         var entity = new PecaInsumoEntity
         {
             Id = Guid.NewGuid(),
-            Nome = "Filtro de óleo",
+            Nome = "Filtro de Óleo",
             Codigo = "FO-456",
             Descricao = "Aplicação linha leve",
             PrecoUnitario = 39.5m,
@@ -89,3 +89,4 @@ internal sealed class PecaInsumoMapperTests
         });
     }
 }
+

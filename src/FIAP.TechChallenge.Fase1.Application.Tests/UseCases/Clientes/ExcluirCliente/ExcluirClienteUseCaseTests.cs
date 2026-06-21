@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ExcluirCliente;
+﻿using FIAP.TechChallenge.Fase1.Application.UseCases.Clientes.ExcluirCliente;
 using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
@@ -61,3 +61,4 @@ internal sealed class ExcluirClienteUseCaseTests
         return Cliente.Create("Cliente Teste", cpf, null, telefone, null).Value!;
     }
 }
+

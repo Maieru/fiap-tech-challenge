@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.Veiculos.ExcluirVeiculo;
@@ -19,3 +19,4 @@ public sealed class ExcluirVeiculoUseCase(IVeiculoRepository veiculoRepository) 
         return Result<ExcluirVeiculoResponse>.Success(new ExcluirVeiculoResponse { Id = command.Id });
     }
 }
+

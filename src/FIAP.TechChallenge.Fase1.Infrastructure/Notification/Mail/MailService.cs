@@ -11,3 +11,4 @@ public sealed class MailService : IMailService
         return Result<bool>.Success(true);
     }
 }
+

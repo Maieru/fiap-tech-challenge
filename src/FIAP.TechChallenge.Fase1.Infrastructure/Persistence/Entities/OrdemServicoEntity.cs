@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Enums;
+﻿using FIAP.TechChallenge.Fase1.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -42,3 +42,4 @@ public sealed class OrdemServicoEntity
     [ForeignKey(nameof(VeiculoId))]
     public VeiculoEntity Veiculo { get; set; } = null!;
 }
+

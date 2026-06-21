@@ -83,3 +83,4 @@ public static class InfraestructureDependecyInjection
         _ = services.AddSingleton<ITokenService>(_ => new JwtTokenService(issuer, audience, symmetricSecurityKey, accessTokenMinutes));
     }
 }
+

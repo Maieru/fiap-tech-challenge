@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+Ôªøusing FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
 
@@ -16,7 +16,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A ordem de serviÁo deve estar associada a um cliente v·lido."));
+            Assert.That(result.Error.Description, Is.EqualTo("A ordem de servi√ßo deve estar associada a um cliente v√°lido."));
         });
     }
 
@@ -42,7 +42,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A data de criaÁ„o da ordem de serviÁo È obrigatÛria."));
+            Assert.That(result.Error.Description, Is.EqualTo("A data de cria√ß√£o da ordem de servi√ßo √© obrigat√≥ria."));
         });
     }
 
@@ -55,7 +55,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A ordem de serviÁo deve estar associada a um veÌculo v·lido."));
+            Assert.That(result.Error.Description, Is.EqualTo("A ordem de servi√ßo deve estar associada a um ve√≠culo v√°lido."));
         });
     }
 
@@ -81,7 +81,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A ordem de serviÁo aguardando aprovaÁ„o ou posterior deve possuir data de envio para aprovaÁ„o."));
+            Assert.That(result.Error.Description, Is.EqualTo("A ordem de servi√ßo aguardando aprova√ß√£o ou posterior deve possuir data de envio para aprova√ß√£o."));
         });
     }
 
@@ -107,7 +107,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A ordem de serviÁo em execuÁ„o ou posterior deve possuir data de inÌcio da execuÁ„o."));
+            Assert.That(result.Error.Description, Is.EqualTo("A ordem de servi√ßo em execu√ß√£o ou posterior deve possuir data de in√≠cio da execu√ß√£o."));
         });
     }
 
@@ -133,7 +133,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A ordem de serviÁo finalizada ou entregue deve possuir data de finalizaÁ„o."));
+            Assert.That(result.Error.Description, Is.EqualTo("A ordem de servi√ßo finalizada ou entregue deve possuir data de finaliza√ß√£o."));
         });
     }
 
@@ -159,7 +159,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A ordem de serviÁo entregue deve possuir data de entrega."));
+            Assert.That(result.Error.Description, Is.EqualTo("A ordem de servi√ßo entregue deve possuir data de entrega."));
         });
     }
 
@@ -172,7 +172,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A descriÁ„o do problema È obrigatÛria."));
+            Assert.That(result.Error.Description, Is.EqualTo("A descri√ß√£o do problema √© obrigat√≥ria."));
         });
     }
 
@@ -187,7 +187,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de serviÁo em diagnÛstico podem aguardar aprovaÁ„o."));
+            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de servi√ßo em diagn√≥stico podem aguardar aprova√ß√£o."));
             Assert.That(ordemServico.Status, Is.EqualTo(StatusOrdemServico.Recebida));
             Assert.That(ordemServico.DataEnvioAprovacao, Is.Null);
         });
@@ -204,7 +204,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de serviÁo aguardando aprovaÁ„o podem ser aprovadas."));
+            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de servi√ßo aguardando aprova√ß√£o podem ser aprovadas."));
             Assert.That(ordemServico.Status, Is.EqualTo(StatusOrdemServico.Recebida));
             Assert.That(ordemServico.DataInicioExecucao, Is.Null);
         });
@@ -221,7 +221,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de serviÁo em execuÁ„o podem ser finalizadas."));
+            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de servi√ßo em execu√ß√£o podem ser finalizadas."));
             Assert.That(ordemServico.Status, Is.EqualTo(StatusOrdemServico.Recebida));
             Assert.That(ordemServico.DataFinalizacao, Is.Null);
         });
@@ -236,7 +236,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A descriÁ„o do problema deve ter pelo menos 3 caracteres."));
+            Assert.That(result.Error.Description, Is.EqualTo("A descri√ß√£o do problema deve ter pelo menos 3 caracteres."));
         });
     }
 
@@ -249,7 +249,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A descriÁ„o do problema deve ter no m·ximo 1000 caracteres."));
+            Assert.That(result.Error.Description, Is.EqualTo("A descri√ß√£o do problema deve ter no m√°ximo 1000 caracteres."));
         });
     }
 
@@ -309,7 +309,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("O id da ordem de serviÁo È inv·lido."));
+            Assert.That(result.Error.Description, Is.EqualTo("O id da ordem de servi√ßo √© inv√°lido."));
         });
     }
 
@@ -335,7 +335,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
-            Assert.That(result.Error.Description, Is.EqualTo("A ordem de serviÁo em diagnÛstico ou posterior deve possuir data de inÌcio do diagnÛstico."));
+            Assert.That(result.Error.Description, Is.EqualTo("A ordem de servi√ßo em diagn√≥stico ou posterior deve possuir data de in√≠cio do diagn√≥stico."));
         });
     }
 
@@ -401,7 +401,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de serviÁo recebidas podem iniciar diagnÛstico."));
+            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de servi√ßo recebidas podem iniciar diagn√≥stico."));
         });
     }
 
@@ -509,7 +509,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de serviÁo com todos os serviÁos concluÌdos podem ser finalizadas."));
+            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de servi√ßo com todos os servi√ßos conclu√≠dos podem ser finalizadas."));
             Assert.That(ordemServico.Status, Is.EqualTo(StatusOrdemServico.EmExecucao));
             Assert.That(ordemServico.DataFinalizacao, Is.Null);
         });
@@ -526,7 +526,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de serviÁo em execuÁ„o podem concluir serviÁos."));
+            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de servi√ßo em execu√ß√£o podem concluir servi√ßos."));
         });
     }
 
@@ -559,7 +559,7 @@ internal class OrdemServicoTests
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.False);
-            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de serviÁo finalizadas podem ser entregues."));
+            Assert.That(result.Error.Description, Is.EqualTo("Somente ordens de servi√ßo finalizadas podem ser entregues."));
             Assert.That(ordemServico.Status, Is.EqualTo(StatusOrdemServico.Recebida));
             Assert.That(ordemServico.DataEntrega, Is.Null);
         });
@@ -588,8 +588,9 @@ internal class OrdemServicoTests
 
     private static OrdemServico CreateOrdemServicoValida()
     {
-        var result = OrdemServico.Create(Guid.NewGuid(), Guid.NewGuid(), "Falha ao ligar o veÌculo");
+        var result = OrdemServico.Create(Guid.NewGuid(), Guid.NewGuid(), "Falha ao ligar o ve√≠culo");
         return result.Value!;
     }
 }
+
 

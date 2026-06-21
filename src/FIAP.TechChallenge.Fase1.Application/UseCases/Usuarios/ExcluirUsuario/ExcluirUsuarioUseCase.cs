@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.Usuarios.ExcluirUsuario;
@@ -19,3 +19,4 @@ public sealed class ExcluirUsuarioUseCase(IUsuarioRepository usuarioRepository) 
         return Result<ExcluirUsuarioResponse>.Success(new ExcluirUsuarioResponse { Id = command.Id });
     }
 }
+

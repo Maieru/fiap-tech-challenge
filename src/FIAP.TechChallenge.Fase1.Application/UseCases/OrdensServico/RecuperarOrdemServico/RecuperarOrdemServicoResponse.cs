@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Enums;
+﻿using FIAP.TechChallenge.Fase1.Domain.Enums;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.RecuperarOrdemServico;
 
@@ -47,3 +47,4 @@ public sealed class RecuperarPecaInsumoDaOrdemServicoItemResponse
     public int Quantidade { get; init; }
     public decimal ValorTotal { get; init; }
 }
+

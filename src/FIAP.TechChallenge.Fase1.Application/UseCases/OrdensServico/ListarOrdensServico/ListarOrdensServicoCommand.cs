@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Enums;
+﻿using FIAP.TechChallenge.Fase1.Domain.Enums;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensServico;
 
@@ -12,3 +12,4 @@ public sealed class ListarOrdensServicoCommand
     public int PageNumber { get; init; } = 1;
     public int PageSize { get; init; } = 10;
 }
+

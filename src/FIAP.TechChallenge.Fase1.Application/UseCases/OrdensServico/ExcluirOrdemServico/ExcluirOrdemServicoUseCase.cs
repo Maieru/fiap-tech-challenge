@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ExcluirOrdemServico;
@@ -19,3 +19,4 @@ public sealed class ExcluirOrdemServicoUseCase(IOrdemServicoRepository ordemServ
         return Result<ExcluirOrdemServicoResponse>.Success(new ExcluirOrdemServicoResponse { Id = command.Id });
     }
 }
+

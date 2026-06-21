@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
+﻿using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -79,3 +79,4 @@ public sealed class HealthController(IServiceProvider serviceProvider) : Control
 
     public sealed record EnvironmentVariableStatus(string Name, bool Exists);
 }
+

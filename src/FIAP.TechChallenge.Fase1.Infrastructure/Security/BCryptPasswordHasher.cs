@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Interfaces;
+﻿using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Infrastructure.Security;
 
@@ -14,3 +14,4 @@ public sealed class BCryptPasswordHasher : IPasswordHasher
         return BCrypt.Net.BCrypt.Verify(providedPassword, hashedPassword);
     }
 }
+

@@ -1,4 +1,4 @@
-using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
 
@@ -20,3 +20,4 @@ public interface IOrdemServicoRepository
     Task UpdateAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default);
     Task DeleteAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default);
 }
+
