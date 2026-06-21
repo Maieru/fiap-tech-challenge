@@ -1,0 +1,25 @@
+name: Deploy
+
+on:
+  workflow_dispatch: 
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciais AWS via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Verificar identidade AWS
+        run: aws sts get-caller-identity
