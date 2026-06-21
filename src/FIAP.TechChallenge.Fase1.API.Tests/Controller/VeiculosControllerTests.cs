@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using FIAP.TechChallenge.Fase1.API.Tests;
+using FluentAssertions;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -460,5 +459,4 @@ public sealed class VeiculosControllerTests
         public string ErrorCode { get; set; } = string.Empty;
     }
 }
-
 

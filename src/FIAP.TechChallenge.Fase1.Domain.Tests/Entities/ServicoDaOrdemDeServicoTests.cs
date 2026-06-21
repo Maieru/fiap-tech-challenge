@@ -1,4 +1,4 @@
-﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 
 namespace FIAP.TechChallenge.Fase1.Domain.Tests.Entities;
@@ -71,7 +71,7 @@ internal sealed class ServicoDaOrdemDeServicoTests
             Assert.That(entity.Id, Is.Not.EqualTo(Guid.Empty));
             Assert.That(entity.OrdemServicoId, Is.EqualTo(ordemServicoId));
             Assert.That(entity.ServicoId, Is.EqualTo(servico.Id));
-            Assert.That(entity.Descricao, Is.EqualTo("Troca de Ã³leo"));
+            Assert.That(entity.Descricao, Is.EqualTo("Troca de Óleo"));
             Assert.That(entity.ValorUnitario, Is.EqualTo(150m));
             Assert.That(entity.Quantidade, Is.EqualTo(3));
             Assert.That(entity.ValorTotal, Is.EqualTo(450m));
@@ -386,7 +386,7 @@ internal sealed class ServicoDaOrdemDeServicoTests
 
     private static Servico CreateServicoValido()
     {
-        var result = Servico.Create("  Troca de Ã³leo  ", 150m);
+        var result = Servico.Create("  Troca de Óleo  ", 150m);
 
         Assert.Multiple(() =>
         {
@@ -423,7 +423,7 @@ internal sealed class ServicoDaOrdemDeServicoTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
-            "servi�o",
+            "serviço",
             10m,
             1,
             null,
