@@ -44,7 +44,7 @@ resource "aws_iam_role" "github_actions" {
 
 resource "aws_iam_policy" "github_actions_deploy_policy" {
   name        = "fiap-policy-github-actions"
-  description = "Permissoes para pipeline CI/CD do projeto FIAP Oficina"
+  description = "Permissoes para pipeline CI/CD do projeto FIAP"
 
   policy = jsonencode({
     Version = "2012-10-17"
