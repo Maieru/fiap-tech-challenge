@@ -9,11 +9,13 @@ import type {
   ListOrdensServicoResponse,
   OrdemServicoDetalhes,
   SortDirection,
+  StatusOrdemServico,
 } from "@/types/ordemServico";
 
 interface ListOrdensParams {
   pageNumber?: number;
   pageSize?: number;
+  status?: StatusOrdemServico[];
   statusSortDirection?: SortDirection;
   dataAberturaSortDirection?: SortDirection;
 }
@@ -24,8 +26,12 @@ export const ordensServicoService = {
       params: {
         pageNumber: params.pageNumber ?? 1,
         pageSize: params.pageSize ?? 30,
+        status: params.status,
         statusSortDirection: params.statusSortDirection,
         dataAberturaSortDirection: params.dataAberturaSortDirection,
+      },
+      paramsSerializer: {
+        indexes: null,
       },
     });
 

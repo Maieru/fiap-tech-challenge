@@ -29,7 +29,7 @@ internal sealed class ListarOrdensServicoUseCaseTests
             x => x.GetPagedAsync(
                 It.IsAny<Guid?>(),
                 It.IsAny<Guid?>(),
-                It.IsAny<StatusOrdemServico?>(),
+                It.IsAny<IReadOnlyCollection<StatusOrdemServico>>(),
                 It.IsAny<SortDirection?>(),
                 It.IsAny<SortDirection?>(),
                 It.IsAny<int>(),
@@ -82,7 +82,7 @@ internal sealed class ListarOrdensServicoUseCaseTests
             .Setup(x => x.GetPagedAsync(
                 clienteId,
                 veiculoId,
-                StatusOrdemServico.EmDiagnostico,
+                It.Is<IReadOnlyCollection<StatusOrdemServico>>(status => status.SequenceEqual(new[] { StatusOrdemServico.EmDiagnostico, StatusOrdemServico.EmExecucao })),
                 SortDirection.Asc,
                 SortDirection.Desc,
                 1,
@@ -96,7 +96,7 @@ internal sealed class ListarOrdensServicoUseCaseTests
         {
             ClienteId = clienteId,
             VeiculoId = veiculoId,
-            Status = StatusOrdemServico.EmDiagnostico,
+            Status = [StatusOrdemServico.EmDiagnostico, StatusOrdemServico.EmExecucao],
             StatusSortDirection = SortDirection.Asc,
             DataAberturaSortDirection = SortDirection.Desc,
             PageNumber = 1,
@@ -120,7 +120,7 @@ internal sealed class ListarOrdensServicoUseCaseTests
             x => x.GetPagedAsync(
                 clienteId,
                 veiculoId,
-                StatusOrdemServico.EmDiagnostico,
+                It.Is<IReadOnlyCollection<StatusOrdemServico>>(status => status.SequenceEqual(new[] { StatusOrdemServico.EmDiagnostico, StatusOrdemServico.EmExecucao })),
                 SortDirection.Asc,
                 SortDirection.Desc,
                 1,

@@ -10,7 +10,7 @@ public interface IOrdemServicoRepository
     Task<Result<(IReadOnlyCollection<OrdemServico> OrdensServico, int TotalItems)>> GetPagedAsync(
         Guid? clienteId,
         Guid? veiculoId,
-        StatusOrdemServico? status,
+        IReadOnlyCollection<StatusOrdemServico> status,
         SortDirection? statusSortDirection,
         SortDirection? dataAberturaSortDirection,
         int pageNumber,

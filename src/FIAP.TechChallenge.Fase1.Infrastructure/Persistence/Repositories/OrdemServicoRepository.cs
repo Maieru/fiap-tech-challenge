@@ -23,7 +23,7 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
     public async Task<Result<(IReadOnlyCollection<OrdemServico> OrdensServico, int TotalItems)>> GetPagedAsync(
         Guid? clienteId,
         Guid? veiculoId,
-        StatusOrdemServico? status,
+        IReadOnlyCollection<StatusOrdemServico> status,
         SortDirection? statusSortDirection,
         SortDirection? dataAberturaSortDirection,
         int pageNumber,
@@ -38,8 +38,8 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
         if (veiculoId.HasValue)
             query = query.Where(x => x.VeiculoId == veiculoId.Value);
 
-        if (status.HasValue)
-            query = query.Where(x => x.Status == status.Value);
+        if (status.Count > 0)
+            query = query.Where(x => status.Contains(x.Status));
 
         var totalItems = await query.CountAsync(cancellationToken);
 

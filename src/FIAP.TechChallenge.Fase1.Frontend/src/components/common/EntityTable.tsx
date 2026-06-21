@@ -17,8 +17,6 @@ interface EntityTableProps<T> {
 }
 
 export function EntityTable<T>({ data, columns, rowKey, emptyMessage = "Nenhum registro encontrado." }: EntityTableProps<T>) {
-  if (data.length === 0) return <EmptyState message={emptyMessage} />;
-
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
       <Table>
@@ -32,15 +30,23 @@ export function EntityTable<T>({ data, columns, rowKey, emptyMessage = "Nenhum r
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((row) => (
-            <TableRow key={rowKey(row)}>
-              {columns.map((column) => (
-                <TableCell key={column.key} className={column.className}>
-                  {column.render(row)}
-                </TableCell>
-              ))}
+          {data.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={columns.length}>
+                <EmptyState message={emptyMessage} />
+              </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            data.map((row) => (
+              <TableRow key={rowKey(row)}>
+                {columns.map((column) => (
+                  <TableCell key={column.key} className={column.className}>
+                    {column.render(row)}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

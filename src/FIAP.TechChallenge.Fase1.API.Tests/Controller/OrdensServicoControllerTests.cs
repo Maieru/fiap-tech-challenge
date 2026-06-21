@@ -411,6 +411,40 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task Get_ShouldFilterByMultipleStatusAndKeepOrdering_WhenMultipleStatusAreInformed()
+    {
+        var cliente = await CreateClientAsync(9042);
+
+        var veiculo1 = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(94), "Toyota", "Etios", 2021);
+        var veiculo2 = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(95), "Honda", "HR-V", 2022);
+        var veiculo3 = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(96), "Fiat", "Pulse", 2023);
+
+        var ordemAguardandoAprovacao = await CreateOrdemServicoAsync(cliente.Id, veiculo1.Id, "Ordem aguardando aprovacao");
+        await MoveToAguardandoAprovacaoAsync(ordemAguardandoAprovacao.Id);
+        await Task.Delay(20);
+
+        var ordemEmExecucao = await CreateOrdemServicoAsync(cliente.Id, veiculo2.Id, "Ordem em execucao");
+        await MoveToAguardandoAprovacaoAsync(ordemEmExecucao.Id);
+        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemEmExecucao.Id}/aprovar-execucao", new { });
+        _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        await Task.Delay(20);
+
+        var ordemRecebida = await CreateOrdemServicoAsync(cliente.Id, veiculo3.Id, "Ordem recebida fora do filtro");
+
+        var response = await _client.GetAsync("/api/ordensservico?status=3&status=4&statusSortDirection=Asc&dataAberturaSortDirection=Desc&pageNumber=1&pageSize=10");
+        var result = await response.Content.ReadFromJsonAsync<ListarOrdensServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = result.Should().NotBeNull();
+            _ = result!.OrdensServico.Select(x => x.Id).Should().Equal(ordemAguardandoAprovacao.Id, ordemEmExecucao.Id);
+            _ = result.OrdensServico.Any(x => x.Id == ordemRecebida.Id).Should().BeFalse();
+            _ = result.OrdensServico.Select(x => x.Status).Should().Equal(3, 4);
+        });
+    }
+
+    [Test]
     public async Task GetById_ShouldReturnOrdemServicoComServicosEPecasInsumos()
     {
         var cliente = await CreateClientAsync(9016);
@@ -1475,6 +1509,15 @@ public sealed class OrdensServicoControllerTests
         });
 
         return created!;
+    }
+
+    private async Task MoveToAguardandoAprovacaoAsync(Guid ordemServicoId)
+    {
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServicoId}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServicoId}/solicitar-aprovacao", new { });
+        _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     private async Task<ServicoResponse> CreateServicoAsync(string descricao, decimal valorUnitario)

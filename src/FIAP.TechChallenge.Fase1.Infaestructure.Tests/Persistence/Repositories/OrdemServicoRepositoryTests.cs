@@ -84,7 +84,7 @@ internal sealed class OrdemServicoRepositoryTests
         var result = await repository.GetPagedAsync(
             clienteId,
             veiculoId,
-            StatusOrdemServico.EmDiagnostico,
+            [StatusOrdemServico.EmDiagnostico],
             statusSortDirection: null,
             dataAberturaSortDirection: null,
             pageNumber: 1,
@@ -117,7 +117,7 @@ internal sealed class OrdemServicoRepositoryTests
         var result = await repository.GetPagedAsync(
             clienteId: null,
             veiculoId: null,
-            status: null,
+            status: [],
             statusSortDirection: null,
             dataAberturaSortDirection: null,
             pageNumber: 1,
@@ -130,6 +130,41 @@ internal sealed class OrdemServicoRepositoryTests
             Assert.That(result.Value.OrdensServico, Has.Count.EqualTo(2));
             Assert.That(result.Value.OrdensServico.First().Id, Is.EqualTo(ordemMaisRecente.Id));
             Assert.That(result.Value.OrdensServico.Skip(1).First().Id, Is.EqualTo(ordemIntermediaria.Id));
+        });
+    }
+
+    [Test]
+    public async Task GetPagedAsync_ShouldReturnFilteredOrders_WhenMultipleStatusAreInformed()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        var aguardandoAprovacao = CreateEntity(status: StatusOrdemServico.AguardandoAprovacao);
+        var emExecucao = CreateEntity(status: StatusOrdemServico.EmExecucao);
+        var recebida = CreateEntity(status: StatusOrdemServico.Recebida);
+        var finalizada = CreateEntity(status: StatusOrdemServico.Finalizada);
+
+        await using var context = CreateContext(databaseName);
+        context.OrdensServico.AddRange(recebida, emExecucao, finalizada, aguardandoAprovacao);
+        _ = await context.SaveChangesAsync();
+
+        var repository = new OrdemServicoRepository(context);
+
+        var result = await repository.GetPagedAsync(
+            clienteId: null,
+            veiculoId: null,
+            status: [StatusOrdemServico.AguardandoAprovacao, StatusOrdemServico.EmExecucao],
+            statusSortDirection: SortDirection.Asc,
+            dataAberturaSortDirection: null,
+            pageNumber: 1,
+            pageSize: 10);
+
+        var ids = result.Value.OrdensServico.Select(x => x.Id).ToArray();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value.TotalItems, Is.EqualTo(2));
+            Assert.That(ids, Is.EqualTo(new[] { aguardandoAprovacao.Id, emExecucao.Id }));
         });
     }
 
@@ -160,7 +195,7 @@ internal sealed class OrdemServicoRepositoryTests
         var result = await repository.GetPagedAsync(
             clienteId: null,
             veiculoId: null,
-            status: null,
+            status: [],
             statusSortDirection: SortDirection.Asc,
             dataAberturaSortDirection: SortDirection.Desc,
             pageNumber: 1,
@@ -193,7 +228,7 @@ internal sealed class OrdemServicoRepositoryTests
         var result = await repository.GetPagedAsync(
             clienteId: null,
             veiculoId: null,
-            status: null,
+            status: [],
             statusSortDirection: SortDirection.Desc,
             dataAberturaSortDirection: null,
             pageNumber: 1,
@@ -226,7 +261,7 @@ internal sealed class OrdemServicoRepositoryTests
         var result = await repository.GetPagedAsync(
             clienteId: null,
             veiculoId: null,
-            status: null,
+            status: [],
             statusSortDirection: null,
             dataAberturaSortDirection: SortDirection.Asc,
             pageNumber: 1,
