@@ -23,6 +23,36 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Verificar arquivos não UTF-8
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+      
+          extensions = {'.cs', '.csproj', '.sln', '.slnx', '.json', '.yml', '.yaml', '.md'}
+          invalid_files = []
+      
+          for path in Path('.').rglob('*'):
+              if not path.is_file():
+                  continue
+      
+              if path.suffix.lower() not in extensions:
+                  continue
+      
+              try:
+                  path.read_text(encoding='utf-8')
+              except UnicodeDecodeError as ex:
+                  invalid_files.append((path, ex))
+      
+          if invalid_files:
+              print("Arquivos que NÃO estão em UTF-8:")
+              for path, ex in invalid_files:
+                  print(f"- {path}: {ex}")
+              raise SystemExit(1)
+      
+          print("Todos os arquivos verificados estão em UTF-8.")
+          PY
           
       - name: Restaurar dependências
         run: dotnet restore ${{ env.SOLUTION_FILE }}
