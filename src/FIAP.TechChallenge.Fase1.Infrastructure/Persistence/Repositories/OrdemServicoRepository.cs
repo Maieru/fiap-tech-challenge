@@ -24,6 +24,8 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
         Guid? clienteId,
         Guid? veiculoId,
         StatusOrdemServico? status,
+        SortDirection? statusSortDirection,
+        SortDirection? dataAberturaSortDirection,
         int pageNumber,
         int pageSize,
         CancellationToken cancellationToken = default)
@@ -41,8 +43,9 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
 
         var totalItems = await query.CountAsync(cancellationToken);
 
-        var ordensServicoEntity = await query
-            .OrderByDescending(x => x.DataCriacao)
+        var orderedQuery = ApplyOrdering(query, statusSortDirection, dataAberturaSortDirection);
+
+        var ordensServicoEntity = await orderedQuery
             .ThenBy(x => x.Id)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
@@ -54,6 +57,44 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
             return Result<(IReadOnlyCollection<OrdemServico> OrdensServico, int TotalItems)>.Failure(ordensServicoResult.Error);
 
         return Result<(IReadOnlyCollection<OrdemServico> OrdensServico, int TotalItems)>.Success((ordensServicoResult.Value, totalItems));
+    }
+
+    private static IOrderedQueryable<OrdemServicoEntity> ApplyOrdering(
+        IQueryable<OrdemServicoEntity> query,
+        SortDirection? statusSortDirection,
+        SortDirection? dataAberturaSortDirection)
+    {
+        IOrderedQueryable<OrdemServicoEntity>? orderedQuery = null;
+
+        if (statusSortDirection.HasValue)
+        {
+            orderedQuery = statusSortDirection.Value == SortDirection.Asc
+                ? query.OrderBy(x => x.Status)
+                : query.OrderByDescending(x => x.Status);
+        }
+
+        if (dataAberturaSortDirection.HasValue)
+        {
+            orderedQuery = orderedQuery is null
+                ? OrderByDataAbertura(query, dataAberturaSortDirection.Value)
+                : ThenByDataAbertura(orderedQuery, dataAberturaSortDirection.Value);
+        }
+
+        return orderedQuery ?? query.OrderByDescending(x => x.DataCriacao);
+    }
+
+    private static IOrderedQueryable<OrdemServicoEntity> OrderByDataAbertura(IQueryable<OrdemServicoEntity> query, SortDirection sortDirection)
+    {
+        return sortDirection == SortDirection.Asc
+            ? query.OrderBy(x => x.DataCriacao)
+            : query.OrderByDescending(x => x.DataCriacao);
+    }
+
+    private static IOrderedQueryable<OrdemServicoEntity> ThenByDataAbertura(IOrderedQueryable<OrdemServicoEntity> query, SortDirection sortDirection)
+    {
+        return sortDirection == SortDirection.Asc
+            ? query.ThenBy(x => x.DataCriacao)
+            : query.ThenByDescending(x => x.DataCriacao);
     }
 
     public async Task AddAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default)

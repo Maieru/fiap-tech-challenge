@@ -26,7 +26,15 @@ internal sealed class ListarOrdensServicoUseCaseTests
         });
 
         repositoryMock.Verify(
-            x => x.GetPagedAsync(It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<StatusOrdemServico?>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            x => x.GetPagedAsync(
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<StatusOrdemServico?>(),
+                It.IsAny<SortDirection?>(),
+                It.IsAny<SortDirection?>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -71,7 +79,15 @@ internal sealed class ListarOrdensServicoUseCaseTests
         var ordem = CreateOrdemServico(clienteId, veiculoId, StatusOrdemServico.EmDiagnostico, "Ruido na direcao");
 
         _ = repositoryMock
-            .Setup(x => x.GetPagedAsync(clienteId, veiculoId, StatusOrdemServico.EmDiagnostico, 1, 10, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetPagedAsync(
+                clienteId,
+                veiculoId,
+                StatusOrdemServico.EmDiagnostico,
+                SortDirection.Asc,
+                SortDirection.Desc,
+                1,
+                10,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<(IReadOnlyCollection<OrdemServico> OrdensServico, int TotalItems)>.Success((new[] { ordem }, 1)));
 
         var useCase = new ListarOrdensServicoUseCase(repositoryMock.Object);
@@ -81,6 +97,8 @@ internal sealed class ListarOrdensServicoUseCaseTests
             ClienteId = clienteId,
             VeiculoId = veiculoId,
             Status = StatusOrdemServico.EmDiagnostico,
+            StatusSortDirection = SortDirection.Asc,
+            DataAberturaSortDirection = SortDirection.Desc,
             PageNumber = 1,
             PageSize = 10
         });
@@ -99,7 +117,15 @@ internal sealed class ListarOrdensServicoUseCaseTests
         });
 
         repositoryMock.Verify(
-            x => x.GetPagedAsync(clienteId, veiculoId, StatusOrdemServico.EmDiagnostico, 1, 10, It.IsAny<CancellationToken>()),
+            x => x.GetPagedAsync(
+                clienteId,
+                veiculoId,
+                StatusOrdemServico.EmDiagnostico,
+                SortDirection.Asc,
+                SortDirection.Desc,
+                1,
+                10,
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

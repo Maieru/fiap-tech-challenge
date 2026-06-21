@@ -2,6 +2,7 @@ import type { PagedResponse } from "@/types/api";
 import type { CreateClientePayload } from "@/types/cliente";
 
 export type StatusOrdemServico = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type SortDirection = "Asc" | "Desc";
 
 export interface OrdemServico {
   id: string;

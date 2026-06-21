@@ -11,6 +11,8 @@ public interface IOrdemServicoRepository
         Guid? clienteId,
         Guid? veiculoId,
         StatusOrdemServico? status,
+        SortDirection? statusSortDirection,
+        SortDirection? dataAberturaSortDirection,
         int pageNumber,
         int pageSize,
         CancellationToken cancellationToken = default);

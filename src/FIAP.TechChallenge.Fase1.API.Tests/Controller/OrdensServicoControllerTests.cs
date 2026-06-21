@@ -379,6 +379,38 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task Get_ShouldOrderByStatusAscAndDataAberturaDesc_WhenSortsAreInformed()
+    {
+        var cliente = await CreateClientAsync(9041);
+
+        var veiculo1 = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(91), "Toyota", "Etios", 2021);
+        var veiculo2 = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(92), "Honda", "HR-V", 2022);
+        var veiculo3 = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(93), "Fiat", "Pulse", 2023);
+
+        var ordemRecebidaAntiga = await CreateOrdemServicoAsync(cliente.Id, veiculo1.Id, "Primeira ordem recebida");
+        await Task.Delay(20);
+        var ordemRecebidaRecente = await CreateOrdemServicoAsync(cliente.Id, veiculo2.Id, "Segunda ordem recebida");
+        await Task.Delay(20);
+        var ordemEmDiagnostico = await CreateOrdemServicoAsync(cliente.Id, veiculo3.Id, "Ordem em diagnostico");
+
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemEmDiagnostico.Id}/iniciar-diagnostico", new { });
+        _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await _client.GetAsync("/api/ordensservico?statusSortDirection=Asc&dataAberturaSortDirection=Desc&pageNumber=1&pageSize=10");
+        var result = await response.Content.ReadFromJsonAsync<ListarOrdensServicoResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = result.Should().NotBeNull();
+            _ = result!.OrdensServico.Select(x => x.Id).Should().Equal(
+                ordemRecebidaRecente.Id,
+                ordemRecebidaAntiga.Id,
+                ordemEmDiagnostico.Id);
+        });
+    }
+
+    [Test]
     public async Task GetById_ShouldReturnOrdemServicoComServicosEPecasInsumos()
     {
         var cliente = await CreateClientAsync(9016);
@@ -1562,6 +1594,7 @@ public sealed class OrdensServicoControllerTests
         public Guid ClienteId { get; set; }
         public Guid VeiculoId { get; set; }
         public int Status { get; set; }
+        public DateTime DataCriacao { get; set; }
     }
 
     private sealed class RecuperarOrdemServicoResponse

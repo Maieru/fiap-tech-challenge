@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Copy, ExternalLink, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Copy, ExternalLink, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { EntityTable } from "@/components/common/EntityTable";
@@ -13,8 +13,11 @@ import { clientesService } from "@/services/clientes.service";
 import { ordensServicoService } from "@/services/ordensServico.service";
 import { veiculosService } from "@/services/veiculos.service";
 import type { Cliente } from "@/types/cliente";
-import type { OrdemServico } from "@/types/ordemServico";
+import type { OrdemServico, SortDirection } from "@/types/ordemServico";
 import type { Veiculo } from "@/types/veiculo";
+
+type SortColumn = "status" | "dataAbertura";
+type SortState = Partial<Record<SortColumn, SortDirection>>;
 
 export function OrdensServicoListPage() {
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
@@ -22,12 +25,17 @@ export function OrdensServicoListPage() {
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sortState, setSortState] = useState<SortState>({});
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [ordensResponse, clientesResponse, veiculosResponse] = await Promise.all([
-        ordensServicoService.list({ pageSize: 100 }),
+        ordensServicoService.list({
+          pageSize: 100,
+          statusSortDirection: sortState.status,
+          dataAberturaSortDirection: sortState.dataAbertura,
+        }),
         clientesService.list({ pageSize: 300 }),
         veiculosService.list({ pageSize: 300 }),
       ]);
@@ -40,11 +48,11 @@ export function OrdensServicoListPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [sortState]);
 
   useEffect(() => {
     void loadData();
-  }, []);
+  }, [loadData]);
 
   const clienteById = useMemo(
     () =>
@@ -91,6 +99,39 @@ export function OrdensServicoListPage() {
     }
   }
 
+  function handleSort(column: SortColumn) {
+    setSortState((current) => {
+      const nextDirection = getNextSortDirection(current[column]);
+      const next = { ...current };
+
+      if (nextDirection) {
+        next[column] = nextDirection;
+      } else {
+        delete next[column];
+      }
+
+      return next;
+    });
+  }
+
+  function renderSortableHeader(label: string, column: SortColumn) {
+    const direction = sortState[column];
+    const Icon = direction === "Asc" ? ArrowUp : direction === "Desc" ? ArrowDown : ArrowUpDown;
+    const title = direction === "Asc" ? "Ordenado ascendente" : direction === "Desc" ? "Ordenado descendente" : "Sem ordenacao";
+
+    return (
+      <button
+        type="button"
+        className="-ml-2 inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        title={title}
+        onClick={() => handleSort(column)}
+      >
+        {label}
+        <Icon className="h-3.5 w-3.5" />
+      </button>
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -118,8 +159,8 @@ export function OrdensServicoListPage() {
             },
             { key: "cliente", title: "Cliente", render: (ordem) => clienteById[ordem.clienteId] ?? ordem.clienteId },
             { key: "veiculo", title: "Veiculo", render: (ordem) => veiculoById[ordem.veiculoId] ?? ordem.veiculoId },
-            { key: "status", title: "Status", render: (ordem) => <StatusBadge status={ordem.status} /> },
-            { key: "abertura", title: "Abertura", render: (ordem) => formatDateTime(ordem.dataCriacao) },
+            { key: "status", title: renderSortableHeader("Status", "status"), render: (ordem) => <StatusBadge status={ordem.status} /> },
+            { key: "abertura", title: renderSortableHeader("Abertura", "dataAbertura"), render: (ordem) => formatDateTime(ordem.dataCriacao) },
             {
               key: "acoes",
               title: "Acoes",
@@ -148,4 +189,10 @@ export function OrdensServicoListPage() {
       )}
     </div>
   );
+}
+
+function getNextSortDirection(direction?: SortDirection): SortDirection | undefined {
+  if (!direction) return "Asc";
+  if (direction === "Asc") return "Desc";
+  return undefined;
 }

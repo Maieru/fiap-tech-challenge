@@ -25,6 +25,8 @@ public sealed class ListarOrdensServicoUseCase(IOrdemServicoRepository ordemServ
             command.ClienteId,
             command.VeiculoId,
             command.Status,
+            command.StatusSortDirection,
+            command.DataAberturaSortDirection,
             command.PageNumber,
             command.PageSize,
             cancellationToken);

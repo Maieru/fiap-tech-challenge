@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 interface EntityTableColumn<T> {
   key: string;
-  title: string;
+  title: ReactNode;
   className?: string;
   render: (row: T) => ReactNode;
 }

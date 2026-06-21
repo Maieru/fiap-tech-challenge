@@ -85,6 +85,8 @@ internal sealed class OrdemServicoRepositoryTests
             clienteId,
             veiculoId,
             StatusOrdemServico.EmDiagnostico,
+            statusSortDirection: null,
+            dataAberturaSortDirection: null,
             pageNumber: 1,
             pageSize: 10);
 
@@ -116,6 +118,8 @@ internal sealed class OrdemServicoRepositoryTests
             clienteId: null,
             veiculoId: null,
             status: null,
+            statusSortDirection: null,
+            dataAberturaSortDirection: null,
             pageNumber: 1,
             pageSize: 2);
 
@@ -126,6 +130,114 @@ internal sealed class OrdemServicoRepositoryTests
             Assert.That(result.Value.OrdensServico, Has.Count.EqualTo(2));
             Assert.That(result.Value.OrdensServico.First().Id, Is.EqualTo(ordemMaisRecente.Id));
             Assert.That(result.Value.OrdensServico.Skip(1).First().Id, Is.EqualTo(ordemIntermediaria.Id));
+        });
+    }
+
+    [Test]
+    public async Task GetPagedAsync_ShouldOrderByStatusAscAndDataAberturaDesc_WhenBothSortsAreInformed()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        var recebidaAntiga = CreateEntity(
+            status: StatusOrdemServico.Recebida,
+            dataCriacao: new DateTime(2026, 04, 10, 8, 0, 0, DateTimeKind.Utc));
+        var recebidaRecente = CreateEntity(
+            status: StatusOrdemServico.Recebida,
+            dataCriacao: new DateTime(2026, 04, 12, 8, 0, 0, DateTimeKind.Utc));
+        var emDiagnostico = CreateEntity(
+            status: StatusOrdemServico.EmDiagnostico,
+            dataCriacao: new DateTime(2026, 04, 11, 8, 0, 0, DateTimeKind.Utc));
+        var finalizada = CreateEntity(
+            status: StatusOrdemServico.Finalizada,
+            dataCriacao: new DateTime(2026, 04, 09, 8, 0, 0, DateTimeKind.Utc));
+
+        await using var context = CreateContext(databaseName);
+        context.OrdensServico.AddRange(finalizada, recebidaAntiga, emDiagnostico, recebidaRecente);
+        _ = await context.SaveChangesAsync();
+
+        var repository = new OrdemServicoRepository(context);
+
+        var result = await repository.GetPagedAsync(
+            clienteId: null,
+            veiculoId: null,
+            status: null,
+            statusSortDirection: SortDirection.Asc,
+            dataAberturaSortDirection: SortDirection.Desc,
+            pageNumber: 1,
+            pageSize: 10);
+
+        var ids = result.Value.OrdensServico.Select(x => x.Id).ToArray();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(ids, Is.EqualTo(new[] { recebidaRecente.Id, recebidaAntiga.Id, emDiagnostico.Id, finalizada.Id }));
+        });
+    }
+
+    [Test]
+    public async Task GetPagedAsync_ShouldOrderByStatusDesc_WhenStatusSortIsInformed()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        var recebida = CreateEntity(status: StatusOrdemServico.Recebida);
+        var emDiagnostico = CreateEntity(status: StatusOrdemServico.EmDiagnostico);
+        var finalizada = CreateEntity(status: StatusOrdemServico.Finalizada);
+
+        await using var context = CreateContext(databaseName);
+        context.OrdensServico.AddRange(recebida, finalizada, emDiagnostico);
+        _ = await context.SaveChangesAsync();
+
+        var repository = new OrdemServicoRepository(context);
+
+        var result = await repository.GetPagedAsync(
+            clienteId: null,
+            veiculoId: null,
+            status: null,
+            statusSortDirection: SortDirection.Desc,
+            dataAberturaSortDirection: null,
+            pageNumber: 1,
+            pageSize: 10);
+
+        var ids = result.Value.OrdensServico.Select(x => x.Id).ToArray();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(ids, Is.EqualTo(new[] { finalizada.Id, emDiagnostico.Id, recebida.Id }));
+        });
+    }
+
+    [Test]
+    public async Task GetPagedAsync_ShouldOrderByDataAberturaAsc_WhenDataAberturaSortIsInformed()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        var ordemMaisAntiga = CreateEntity(dataCriacao: new DateTime(2026, 04, 10, 8, 0, 0, DateTimeKind.Utc));
+        var ordemIntermediaria = CreateEntity(dataCriacao: new DateTime(2026, 04, 11, 8, 0, 0, DateTimeKind.Utc));
+        var ordemMaisRecente = CreateEntity(dataCriacao: new DateTime(2026, 04, 12, 8, 0, 0, DateTimeKind.Utc));
+
+        await using var context = CreateContext(databaseName);
+        context.OrdensServico.AddRange(ordemMaisRecente, ordemMaisAntiga, ordemIntermediaria);
+        _ = await context.SaveChangesAsync();
+
+        var repository = new OrdemServicoRepository(context);
+
+        var result = await repository.GetPagedAsync(
+            clienteId: null,
+            veiculoId: null,
+            status: null,
+            statusSortDirection: null,
+            dataAberturaSortDirection: SortDirection.Asc,
+            pageNumber: 1,
+            pageSize: 10);
+
+        var ids = result.Value.OrdensServico.Select(x => x.Id).ToArray();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(ids, Is.EqualTo(new[] { ordemMaisAntiga.Id, ordemIntermediaria.Id, ordemMaisRecente.Id }));
         });
     }
 

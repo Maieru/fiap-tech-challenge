@@ -8,11 +8,14 @@ import type {
   CreateOrdemServicoPayload,
   ListOrdensServicoResponse,
   OrdemServicoDetalhes,
+  SortDirection,
 } from "@/types/ordemServico";
 
 interface ListOrdensParams {
   pageNumber?: number;
   pageSize?: number;
+  statusSortDirection?: SortDirection;
+  dataAberturaSortDirection?: SortDirection;
 }
 
 export const ordensServicoService = {
@@ -21,6 +24,8 @@ export const ordensServicoService = {
       params: {
         pageNumber: params.pageNumber ?? 1,
         pageSize: params.pageSize ?? 30,
+        statusSortDirection: params.statusSortDirection,
+        dataAberturaSortDirection: params.dataAberturaSortDirection,
       },
     });
 
