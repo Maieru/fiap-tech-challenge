@@ -15,7 +15,6 @@ using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.IniciarDiagnos
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.ListarOrdensServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.RecuperarOrdemServico;
 using FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.SolicitarAprovacaoOrdemServico;
-using FIAP.TechChallenge.Fase1.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,30 +28,9 @@ public sealed class OrdensServicoController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(ListarOrdensServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get(
-        IListarOrdensServicoUseCase useCase,
-        Guid? clienteId,
-        Guid? veiculoId,
-        StatusOrdemServico? status,
-        SortDirection? statusSortDirection,
-        SortDirection? dataAberturaSortDirection,
-        int pageNumber = 1,
-        int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(IListarOrdensServicoUseCase useCase, [FromQuery] ListarOrdensServicoCommand command, CancellationToken cancellationToken = default)
     {
-        var command = new ListarOrdensServicoCommand
-        {
-            ClienteId = clienteId,
-            VeiculoId = veiculoId,
-            Status = status,
-            StatusSortDirection = statusSortDirection,
-            DataAberturaSortDirection = dataAberturaSortDirection,
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
-
         var result = await useCase.ExecuteAsync(command, cancellationToken);
-
         return result.ToActionResult(this);
     }
 

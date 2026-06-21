@@ -19,20 +19,13 @@ public sealed class PecasInsumosController : ControllerBase
     [ProducesResponseType(typeof(ListarPecasInsumosResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get(IListarPecasInsumosUseCase useCase, string? codigo, int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(IListarPecasInsumosUseCase useCase, [FromQuery] ListarPecasInsumosCommand command, CancellationToken cancellationToken = default)
     {
-        var command = new ListarPecasInsumosCommand
-        {
-            Codigo = codigo,
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
-
         var result = await useCase.ExecuteAsync(command, cancellationToken);
 
         return result.ToActionResult(this, value =>
         {
-            if (!string.IsNullOrWhiteSpace(codigo))
+            if (!string.IsNullOrWhiteSpace(command.Codigo))
                 return Ok(value.PecasInsumos.First());
 
             return Ok(value);

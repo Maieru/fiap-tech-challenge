@@ -18,21 +18,13 @@ public sealed class ClientesController : ControllerBase
     [ProducesResponseType(typeof(ListarClientesResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get(IListarClientesUseCase useCase, string? cpf, string? cnpj, int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(IListarClientesUseCase useCase, [FromQuery] ListarClientesCommand command, CancellationToken cancellationToken = default)
     {
-        var command = new ListarClientesCommand
-        {
-            Cpf = cpf,
-            Cnpj = cnpj,
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
-
         var result = await useCase.ExecuteAsync(command, cancellationToken);
 
         return result.ToActionResult(this, value =>
         {
-            if (!string.IsNullOrWhiteSpace(cpf) || !string.IsNullOrWhiteSpace(cnpj))
+            if (!string.IsNullOrWhiteSpace(command.Cpf) || !string.IsNullOrWhiteSpace(command.Cnpj))
                 return Ok(value.Clientes.First());
 
             return Ok(value);

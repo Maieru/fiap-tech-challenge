@@ -18,21 +18,13 @@ public sealed class VeiculosController : ControllerBase
     [ProducesResponseType(typeof(ListarVeiculosResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get(IListarVeiculosUseCase useCase, string? placa, Guid? clienteId, int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(IListarVeiculosUseCase useCase, [FromQuery] ListarVeiculosCommand command, CancellationToken cancellationToken = default)
     {
-        var command = new ListarVeiculosCommand
-        {
-            Placa = placa,
-            ClienteId = clienteId,
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
-
         var result = await useCase.ExecuteAsync(command, cancellationToken);
 
         return result.ToActionResult(this, value =>
         {
-            if (!string.IsNullOrWhiteSpace(placa))
+            if (!string.IsNullOrWhiteSpace(command.Placa))
                 return Ok(value.Veiculos.First());
 
             return Ok(value);

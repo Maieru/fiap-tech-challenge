@@ -19,14 +19,8 @@ public sealed class ServicosController : ControllerBase
     [ProducesResponseType(typeof(ListarServicosResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get(IListarServicosUseCase useCase, int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get(IListarServicosUseCase useCase, [FromQuery] ListarServicosCommand command, CancellationToken cancellationToken = default)
     {
-        var command = new ListarServicosCommand
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
-
         var result = await useCase.ExecuteAsync(command, cancellationToken);
         return result.ToActionResult(this);
     }
