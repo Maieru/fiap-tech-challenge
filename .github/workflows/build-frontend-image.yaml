@@ -2,7 +2,7 @@ name: Push Frontend
 
 env:
   AWS_REGION: 'us-east-1'
-  ECR_REPOSITORY: 'fiap-ecr-repository'
+  ECR_REPOSITORY: 'fiap-ecr-frontend-repository'
   IMAGE_TAG: ${{ github.sha }}
 
   DOCKERFILE_PATH: './src/FIAP.TechChallenge.Fase1.Frontend/Dockerfile' 
@@ -41,8 +41,8 @@ jobs:
         run: |
           docker build \
             -f ${{ env.DOCKERFILE_PATH }} \
-            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:frontend-${{ env.IMAGE_TAG }} \
-            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:frontend-latest \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest \
             ${{ env.DOCKER_BUILD_CONTEXT }}
 
       - name: Push da imagem Docker para o ECR
