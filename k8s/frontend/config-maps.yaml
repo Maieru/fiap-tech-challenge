@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fiap-frontend-config
+  namespace: fiap-frontend
+data:
+  API_UPSTREAM: "http://fiap-backend-service.fiap-backend.svc.cluster.local:8080"

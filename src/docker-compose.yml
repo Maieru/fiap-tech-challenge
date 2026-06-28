@@ -31,7 +31,7 @@ services:
       context: ./FIAP.TechChallenge.Fase1.Frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: http://localhost:8080/api
+        API_UPSTREAM: http://localhost:8080/api
     container_name: fiap-techchallenge-frontend
     depends_on:
       - fiap.techchallenge.fase1.api

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiap-frontend-deployment
+  namespace: fiap-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fiap-frontend
+  template:
+    metadata:
+      labels:
+        app: fiap-frontend
+    spec:
+      imagePullSecrets:
+        - name: ecr-frontend-secret
+      containers:
+        - name: fiap-frontend
+          image: 575638747623.dkr.ecr.us-east-1.amazonaws.com/fiap-ecr-frontend-repository:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: fiap-frontend-config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

@@ -11,7 +11,7 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
 }
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5251/api",
+  baseURL: "/api",
   timeout: 20000,
 });
 
