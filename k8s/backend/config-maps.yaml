@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fiap-backend-config
+  namespace: fiap-backend
+data:
+  ASPNETCORE_ENVIRONMENT: "Development"
+  ASPNETCORE_URLS: "http://+:8080"
+  Jwt__Issuer: "fiap-techchallenge"
+  Jwt__Audience: "fiap-techchallenge-client"
+  Jwt__AccessTokenMinutes: "60"

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiap-backend-deployment
+  namespace: fiap-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fiap-backend
+  template:
+    metadata:
+      labels:
+        app: fiap-backend
+    spec:
+      imagePullSecrets:
+        - name: ecr-secret
+      containers:
+        - name: fiap-backend
+          image: 575638747623.dkr.ecr.us-east-1.amazonaws.com/fiap-ecr-backend-repository:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: fiap-backend-config
+            - secretRef:
+                name: fiap-backend-secret
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
