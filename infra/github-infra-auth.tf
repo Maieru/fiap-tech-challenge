@@ -148,6 +148,7 @@ resource "aws_iam_policy" "github_actions_infra_policy" {
         Sid    = "IamOidcProviderAccess"
         Effect = "Allow"
         Action = [
+          "iam:UpdateAssumeRolePolicy",
           "iam:GetOpenIDConnectProvider",
           "iam:CreateOpenIDConnectProvider",
           "iam:DeleteOpenIDConnectProvider",

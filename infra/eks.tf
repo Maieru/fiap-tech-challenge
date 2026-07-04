@@ -15,10 +15,15 @@ module "eks" {
   subnet_ids = module.vpc.public_subnets
 
   addons = {
-    coredns                = {}
-    kube-proxy             = {}
-    vpc-cni                = {}
-    eks-pod-identity-agent = {}
+    coredns    = {}
+    kube-proxy = {}
+    vpc-cni = {
+      before_compute = true
+    }
+
+    eks-pod-identity-agent = {
+      before_compute = true
+    }
   }
 
   eks_managed_node_groups = {
@@ -28,6 +33,27 @@ module "eks" {
       min_size     = 1
       max_size     = 2
       desired_size = 1
+
+      iam_role_additional_policies = {
+        AmazonEKSWorkerNodePolicy          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        AmazonEKS_CNI_Policy               = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      }
     }
   }
 }
+
+# resource "helm_release" "metrics_server" {
+#   name       = "metrics-server"
+#   repository = "https://kubernetes-sigs.github.io/metrics-server/"
+#   chart      = "metrics-server"
+#   namespace  = "kube-system"
+# }
+
+# resource "helm_release" "external_secrets" {
+#   name             = "external-secrets"
+#   repository       = "https://charts.external-secrets.io"
+#   chart            = "external-secrets"
+#   namespace        = "external-secrets"
+#   create_namespace = true
+# }
