@@ -1,11 +1,11 @@
 resource "aws_secretsmanager_secret" "secret-manager-backend" {
   count = var.create_rds_instance && var.create_eks_instance ? 1 : 0
 
-  name  = "fiap-secret-manager-backend"
+  name = "fiap-secret-manager-backend"
 }
 
 resource "aws_secretsmanager_secret_version" "backend" {
-  count     = var.create_rds_instance && var.create_eks_instance ? 1 : 0
+  count = var.create_rds_instance && var.create_eks_instance ? 1 : 0
 
   secret_id = aws_secretsmanager_secret.secret-manager-backend[0].id
 
