@@ -42,13 +42,12 @@ resource "aws_iam_policy" "github_actions_infra_policy" {
         Sid    = "TerraformStateS3Access"
         Effect = "Allow"
         Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket",
-          "s3:GetBucketPolicy"
+          "s3:*"
         ]
-        Resource = "*"
+        Resource = [
+          "arn:aws:s3:::fiap-s3-terraform-backend",
+          "arn:aws:s3:::fiap-s3-terraform-backend/*"
+        ]
       },
       {
         Sid    = "TerraformStateLockAccess"
@@ -169,7 +168,25 @@ resource "aws_iam_policy" "github_actions_infra_policy" {
           "sts:GetCallerIdentity"
         ]
         Resource = "*"
-      }
+      },
+      {
+        Sid    = "KmsAccess"
+        Effect = "Allow"
+        Action = [
+          "kms:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "EksAmiParameterRead"
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = "arn:aws:ssm:${var.aws_region}::parameter/aws/service/eks/optimized-ami/*"
+      },
     ]
   })
 }
