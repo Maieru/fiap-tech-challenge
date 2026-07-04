@@ -1,23 +1,33 @@
-# module "eks" {
-#   source  = "terraform-aws-modules/eks/aws"
-#   version = "21.24.0"
+module "eks" {
+  count = var.create_eks_instance ? 1 : 0
 
-#   name               = "fiap-eks-cluster"
-#   kubernetes_version = "1.35"
+  source  = "terraform-aws-modules/eks/aws"
+  version = "21.24.0"
 
-#   endpoint_public_access                   = true
-#   enable_cluster_creator_admin_permissions = true
+  name               = "fiap-eks-cluster"
+  kubernetes_version = "1.35"
 
-#   vpc_id     = module.vpc.vpc_id
-#   subnet_ids = module.vpc.public_subnets
+  endpoint_public_access                   = true
+  endpoint_private_access                  = true
+  enable_cluster_creator_admin_permissions = true
 
-#   eks_managed_node_groups = {
-#     node-group = {
-#       instance_types = ["t3.small"]
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
 
-#       min_size     = 1
-#       max_size     = 2
-#       desired_size = 1
-#     }
-#   }
-# }
+  addons = {
+    coredns                = {}
+    kube-proxy             = {}
+    vpc-cni                = {}
+    eks-pod-identity-agent = {}
+  }
+  
+  eks_managed_node_groups = {
+    fiap-node-group = {
+      instance_types = ["t3.small"]
+
+      min_size     = 1
+      max_size     = 2
+      desired_size = 1
+    }
+  }
+}
