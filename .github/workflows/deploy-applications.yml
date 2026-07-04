@@ -31,6 +31,14 @@ jobs:
       - name: Configurar acesso ao EKS
         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
+      - name: Verificar acesso ao cluster
+        run: kubectl auth can-i '*' '*' --all-namespaces
+
+      - name: Atualizar External Secrets
+        run: |
+          kubectl rollout restart deployment/external-secrets -n external-secrets
+          kubectl rollout status deployment/external-secrets -n external-secrets --timeout=2m
+
       - name: Aplicar manifests
         run: |
           kubectl apply -f k8s/backend/application

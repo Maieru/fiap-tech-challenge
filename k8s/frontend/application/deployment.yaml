@@ -13,8 +13,6 @@ spec:
       labels:
         app: fiap-frontend
     spec:
-      imagePullSecrets:
-        - name: ecr-frontend-secret
       containers:
         - name: fiap-frontend
           image: 575638747623.dkr.ecr.us-east-1.amazonaws.com/fiap-ecr-frontend-repository:latest
