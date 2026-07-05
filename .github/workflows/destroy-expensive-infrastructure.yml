@@ -1,4 +1,4 @@
-name: 1.Destroy Expensive AWS Infrastructure
+name: 2.Destroy Expensive AWS Infrastructure
 
 on:
   schedule:
