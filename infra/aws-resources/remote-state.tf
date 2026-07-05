@@ -3,7 +3,7 @@ data "terraform_remote_state" "bootstrap" {
 
   config = {
     bucket = "fiap-s3-terraform-backend"
-    key    = "terraform/boostrap/terraform.tfstate"
+    key    = "terraform/bootstrap/terraform.tfstate"
     region = "us-east-1"
   }
 }
