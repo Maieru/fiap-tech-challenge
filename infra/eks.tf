@@ -46,8 +46,8 @@ module "eks" {
       instance_types = ["t3.small"]
 
       min_size     = 1
-      max_size     = 2
-      desired_size = 1
+      max_size     = 3
+      desired_size = 2
 
       iam_role_additional_policies = {
         AmazonEKSWorkerNodePolicy          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
@@ -59,16 +59,27 @@ module "eks" {
 }
 
 resource "helm_release" "metrics_server" {
+  count = var.create_eks_instance ? 1 : 0
+
   name       = "metrics-server"
   repository = "https://kubernetes-sigs.github.io/metrics-server/"
   chart      = "metrics-server"
   namespace  = "kube-system"
+
+  depends_on = [module.eks]
 }
 
 resource "helm_release" "external_secrets" {
+  count = var.create_eks_instance ? 1 : 0
+
   name             = "external-secrets"
   repository       = "https://charts.external-secrets.io"
   chart            = "external-secrets"
   namespace        = "external-secrets"
   create_namespace = true
+
+  depends_on = [
+    module.eks,
+    aws_eks_pod_identity_association.external_secrets
+  ]
 }

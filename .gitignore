@@ -564,6 +564,7 @@ FodyWeavers.xsd
 
 *.tfstate
 *.tfstate.*
+.terraform/
 
 # Crash log files
 crash.log
