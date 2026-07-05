@@ -290,8 +290,8 @@ public sealed class ServicosControllerTests
         var ordem1 = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Falha na ignicao");
         var ordem2 = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Queda de tensao na partida");
 
-        await ConcluirServicoNaOrdemAsync(ordem1.Id, servico.Id, 30);
-        await ConcluirServicoNaOrdemAsync(ordem2.Id, servico.Id, 50);
+        await ConcluirServicoNaOrdemAsync(ordem1, servico.Id, 30);
+        await ConcluirServicoNaOrdemAsync(ordem2, servico.Id, 50);
 
         var response = await _client.GetAsync($"/api/servicos/{servico.Id}/tempo-medio");
         var body = await response.Content.ReadFromJsonAsync<TempoMedioServicoResponse>();
@@ -449,17 +449,18 @@ public sealed class ServicosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
             _ = created.Should().NotBeNull();
             _ = created!.Id.Should().NotBeEmpty();
+            _ = created.CodigoAprovacao.Should().NotBeEmpty();
         });
 
         return created!;
     }
 
-    private async Task ConcluirServicoNaOrdemAsync(Guid ordemServicoId, Guid servicoId, int tempoGastoMinutos)
+    private async Task ConcluirServicoNaOrdemAsync(OrdemServicoResponse ordemServico, Guid servicoId, int tempoGastoMinutos)
     {
-        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServicoId}/iniciar-diagnostico", new { });
+        var iniciarDiagnosticoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { });
         _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var addServicoResponse = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServicoId}/addservico", new
+        var addServicoResponse = await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addservico", new
         {
             ServicoId = servicoId,
             Quantidade = 1
@@ -473,10 +474,10 @@ public sealed class ServicosControllerTests
             _ = servicoDaOrdem!.Id.Should().NotBeEmpty();
         });
 
-        var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServicoId}/solicitar-aprovacao", new { });
+        var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
         _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServicoId}/aprovar-execucao", new { });
+        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { ordemServico.CodigoAprovacao });
         _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var concluirServicoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/servicos/{servicoDaOrdem!.Id}/concluir", new
@@ -545,6 +546,7 @@ public sealed class ServicosControllerTests
     private sealed class OrdemServicoResponse
     {
         public Guid Id { get; set; }
+        public Guid CodigoAprovacao { get; set; }
     }
 
     private sealed class ServicoDaOrdemServicoResponse

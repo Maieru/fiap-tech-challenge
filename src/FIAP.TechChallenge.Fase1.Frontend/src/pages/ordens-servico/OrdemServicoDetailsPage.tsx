@@ -80,7 +80,7 @@ export function OrdemServicoDetailsPage() {
     const actions: Record<StatusOrdemServico, { label: string; run: () => Promise<unknown> } | null> = {
       1: { label: "Iniciar diagnóstico", run: () => ordensServicoService.iniciarDiagnostico(ordem.id) },
       2: { label: "Solicitar aprovação", run: () => ordensServicoService.solicitarAprovacao(ordem.id) },
-      3: { label: "Aprovar execução", run: () => ordensServicoService.aprovarExecucao(ordem.id) },
+      3: { label: "Aprovar execução", run: () => ordensServicoService.aprovarExecucao(ordem.id, ordem.codigoAprovacao) },
       4: { label: "Finalizar OS", run: () => ordensServicoService.finalizar(ordem.id) },
       5: { label: "Marcar como entregue", run: () => ordensServicoService.entregar(ordem.id) },
       6: null,

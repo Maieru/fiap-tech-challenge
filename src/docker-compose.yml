@@ -30,9 +30,9 @@ services:
     build:
       context: ./FIAP.TechChallenge.Fase1.Frontend
       dockerfile: Dockerfile
-      args:
-        API_UPSTREAM: http://localhost:8080/api
     container_name: fiap-techchallenge-frontend
+    environment:
+      API_UPSTREAM: http://localhost:8080/api
     depends_on:
       - fiap.techchallenge.fase1.api
     ports:

@@ -78,8 +78,8 @@ export const ordensServicoService = {
     return data;
   },
 
-  async aprovarExecucao(id: string) {
-    const { data } = await api.put(`/ordensservico/${id}/aprovar-execucao`);
+  async aprovarExecucao(id: string, codigoAprovacao: string) {
+    const { data } = await api.put(`/ordensservico/${id}/aprovar-execucao`, { codigoAprovacao });
     return data;
   },
 

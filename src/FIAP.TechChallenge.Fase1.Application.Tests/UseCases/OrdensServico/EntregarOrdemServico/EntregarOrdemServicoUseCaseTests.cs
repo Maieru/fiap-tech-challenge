@@ -115,7 +115,7 @@ internal sealed class EntregarOrdemServicoUseCaseTests
         {
             var iniciarDiagnosticoResult = ordemServico.IniciarDiagnostico();
             var aguardarAprovacaoResult = ordemServico.AguardarAprovacao();
-            var aprovarOrcamentoResult = ordemServico.AprovarOrcamento();
+            var aprovarOrcamentoResult = ordemServico.AprovarOrcamento(ordemServico.CodigoAprovacao);
             var finalizarResult = ordemServico.Finalizar([]);
 
             Assert.Multiple(() =>

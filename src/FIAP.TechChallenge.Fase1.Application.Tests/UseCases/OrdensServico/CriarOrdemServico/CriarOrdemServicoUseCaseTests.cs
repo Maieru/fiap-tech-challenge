@@ -180,6 +180,7 @@ internal sealed class CriarOrdemServicoUseCaseTests
         Assert.Multiple(() =>
         {
             Assert.That(response.Id, Is.EqualTo(addedOrdemServico!.Id));
+            Assert.That(response.CodigoAprovacao, Is.EqualTo(addedOrdemServico.CodigoAprovacao));
             Assert.That(response.ClienteId, Is.EqualTo(command.ClienteId));
             Assert.That(response.VeiculoId, Is.EqualTo(command.VeiculoId));
             Assert.That(response.DescricaoProblema, Is.EqualTo("Barulho forte na suspensao dianteira."));

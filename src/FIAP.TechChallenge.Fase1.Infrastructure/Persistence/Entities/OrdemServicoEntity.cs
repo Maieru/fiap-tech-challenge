@@ -10,6 +10,9 @@ public sealed class OrdemServicoEntity
     [Key]
     public Guid Id { get; set; }
 
+    [Required]
+    public Guid CodigoAprovacao { get; set; }
+
     public bool Ativo { get; set; } = true;
 
     [Required]

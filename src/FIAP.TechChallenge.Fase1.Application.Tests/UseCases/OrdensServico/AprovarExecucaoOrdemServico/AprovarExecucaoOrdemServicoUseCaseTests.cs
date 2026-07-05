@@ -43,13 +43,38 @@ internal sealed class AprovarExecucaoOrdemServicoUseCaseTests
             .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
 
         var useCase = new AprovarExecucaoOrdemServicoUseCase(ordemServicoRepositoryMock.Object);
-        var result = await useCase.ExecuteAsync(CreateCommand(ordemServico.Id));
+        var result = await useCase.ExecuteAsync(CreateCommand(ordemServico.Id, ordemServico.CodigoAprovacao));
 
         Assert.Multiple(() =>
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Value, Is.Null);
             Assert.That(result.Error.Description, Does.Contain("aguardando"));
+        });
+
+        ordemServicoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<OrdemServico>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task ExecuteAsync_ShouldFail_WhenCodigoAprovacaoDoesNotMatch()
+    {
+        var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var ordemServico = CreateOrdemServico(aguardandoAprovacao: true);
+
+        _ = ordemServicoRepositoryMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+
+        var useCase = new AprovarExecucaoOrdemServicoUseCase(ordemServicoRepositoryMock.Object);
+        var result = await useCase.ExecuteAsync(CreateCommand(ordemServico.Id, Guid.NewGuid()));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.Null);
+            Assert.That(result.Error.Description, Is.EqualTo("O codigo de aprovacao informado e invalido."));
+            Assert.That(ordemServico.Status, Is.EqualTo(StatusOrdemServico.AguardandoAprovacao));
+            Assert.That(ordemServico.DataInicioExecucao, Is.Null);
         });
 
         ordemServicoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<OrdemServico>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -71,7 +96,7 @@ internal sealed class AprovarExecucaoOrdemServicoUseCaseTests
             .Returns(Task.CompletedTask);
 
         var useCase = new AprovarExecucaoOrdemServicoUseCase(ordemServicoRepositoryMock.Object);
-        var result = await useCase.ExecuteAsync(CreateCommand(ordemServico.Id));
+        var result = await useCase.ExecuteAsync(CreateCommand(ordemServico.Id, ordemServico.CodigoAprovacao));
 
         Assert.Multiple(() =>
         {
@@ -93,10 +118,11 @@ internal sealed class AprovarExecucaoOrdemServicoUseCaseTests
         });
     }
 
-    private static AprovarExecucaoOrdemServicoCommand CreateCommand(Guid? ordemServicoId = null) =>
+    private static AprovarExecucaoOrdemServicoCommand CreateCommand(Guid? ordemServicoId = null, Guid? codigoAprovacao = null) =>
         new()
         {
-            OrdemServicoId = ordemServicoId ?? Guid.NewGuid()
+            OrdemServicoId = ordemServicoId ?? Guid.NewGuid(),
+            CodigoAprovacao = codigoAprovacao ?? Guid.NewGuid()
         };
 
     private static OrdemServico CreateOrdemServico(bool aguardandoAprovacao)

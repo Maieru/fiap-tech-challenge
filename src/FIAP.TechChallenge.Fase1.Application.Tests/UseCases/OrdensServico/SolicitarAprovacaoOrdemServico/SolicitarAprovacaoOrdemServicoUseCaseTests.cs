@@ -231,7 +231,12 @@ internal sealed class SolicitarAprovacaoOrdemServicoUseCaseTests
         });
 
         mailServiceMock.Verify(
-            x => x.SendMail(cliente.Email!.Value, It.IsAny<string>(), It.Is<string>(body => body.Contains(ordemServico.Id.ToString(), StringComparison.OrdinalIgnoreCase))),
+            x => x.SendMail(
+                cliente.Email!.Value,
+                It.IsAny<string>(),
+                It.Is<string>(body =>
+                    body.Contains(ordemServico.Id.ToString(), StringComparison.OrdinalIgnoreCase) &&
+                    body.Contains(ordemServico.CodigoAprovacao.ToString(), StringComparison.OrdinalIgnoreCase))),
             Times.Once);
         ordemServicoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<OrdemServico>(), It.IsAny<CancellationToken>()), Times.Once);
 

@@ -11,6 +11,7 @@ public static class OrdemServicoMapper
         return new OrdemServicoEntity
         {
             Id = ordemServico.Id,
+            CodigoAprovacao = ordemServico.CodigoAprovacao,
             ClienteId = ordemServico.ClienteId,
             VeiculoId = ordemServico.VeiculoId,
             DescricaoProblema = ordemServico.DescricaoProblema,
@@ -28,6 +29,7 @@ public static class OrdemServicoMapper
     {
         var snapshot = new OrdemServicoSnapshot(
             entity.Id,
+            entity.CodigoAprovacao,
             entity.ClienteId,
             entity.VeiculoId,
             entity.DescricaoProblema,

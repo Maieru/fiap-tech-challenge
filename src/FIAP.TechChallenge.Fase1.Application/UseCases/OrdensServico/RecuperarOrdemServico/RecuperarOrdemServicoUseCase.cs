@@ -41,6 +41,7 @@ public sealed class RecuperarOrdemServicoUseCase(
         return Result<RecuperarOrdemServicoResponse>.Success(new RecuperarOrdemServicoResponse
         {
             Id = ordemServicoResult.Value.Id,
+            CodigoAprovacao = ordemServicoResult.Value.CodigoAprovacao,
             ClienteId = ordemServicoResult.Value.ClienteId,
             VeiculoId = ordemServicoResult.Value.VeiculoId,
             DescricaoProblema = ordemServicoResult.Value.DescricaoProblema,

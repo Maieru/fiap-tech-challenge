@@ -1,10 +1,11 @@
-﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
 
 namespace FIAP.TechChallenge.Fase1.Domain.Entities;
 
 public sealed record OrdemServicoSnapshot(
     Guid Id,
+    Guid CodigoAprovacao,
     Guid ClienteId,
     Guid VeiculoId,
     string DescricaoProblema,
@@ -19,6 +20,7 @@ public sealed record OrdemServicoSnapshot(
 public sealed class OrdemServico
 {
     public Guid Id { get; private set; }
+    public Guid CodigoAprovacao { get; private set; }
     public Guid ClienteId { get; private set; }
     public Guid VeiculoId { get; private set; }
 
@@ -32,9 +34,10 @@ public sealed class OrdemServico
     public DateTime? DataFinalizacao { get; private set; }
     public DateTime? DataEntrega { get; private set; }
 
-    private OrdemServico(Guid id, Guid clienteId, Guid veiculoId, string descricaoProblema, StatusOrdemServico status, DateTime dataCriacao)
+    private OrdemServico(Guid id, Guid codigoAprovacao, Guid clienteId, Guid veiculoId, string descricaoProblema, StatusOrdemServico status, DateTime dataCriacao)
     {
         Id = id;
+        CodigoAprovacao = codigoAprovacao;
         ClienteId = clienteId;
         VeiculoId = veiculoId;
         DescricaoProblema = descricaoProblema;
@@ -44,7 +47,7 @@ public sealed class OrdemServico
 
     public static Result<OrdemServico> Create(Guid clienteId, Guid veiculoId, string descricaoProblema)
     {
-        return Create(Guid.NewGuid(), clienteId, veiculoId, descricaoProblema, StatusOrdemServico.Recebida, DateTime.UtcNow);
+        return Create(Guid.NewGuid(), Guid.NewGuid(), clienteId, veiculoId, descricaoProblema, StatusOrdemServico.Recebida, DateTime.UtcNow);
     }
 
     public static Result<OrdemServico> Rehydrate(OrdemServicoSnapshot snapshot)
@@ -57,7 +60,7 @@ public sealed class OrdemServico
         if (!validacaoConsistenciaFluxoResult.IsSuccess)
             return Result<OrdemServico>.Failure(validacaoConsistenciaFluxoResult.Error);
 
-        var ordemServicoResult = Create(snapshot.Id, snapshot.ClienteId, snapshot.VeiculoId, snapshot.DescricaoProblema, snapshot.Status, snapshot.DataCriacao);
+        var ordemServicoResult = Create(snapshot.Id, snapshot.CodigoAprovacao, snapshot.ClienteId, snapshot.VeiculoId, snapshot.DescricaoProblema, snapshot.Status, snapshot.DataCriacao);
 
         if (!ordemServicoResult.IsSuccess)
             return Result<OrdemServico>.Failure(ordemServicoResult.Error);
@@ -73,8 +76,11 @@ public sealed class OrdemServico
         return Result<OrdemServico>.Success(ordemServico);
     }
 
-    private static Result<OrdemServico> Create(Guid id, Guid clienteId, Guid veiculoId, string descricaoProblema, StatusOrdemServico status, DateTime dataCriacao)
+    private static Result<OrdemServico> Create(Guid id, Guid codigoAprovacao, Guid clienteId, Guid veiculoId, string descricaoProblema, StatusOrdemServico status, DateTime dataCriacao)
     {
+        if (codigoAprovacao == Guid.Empty)
+            return Result<OrdemServico>.Failure(new Error("O codigo de aprovacao da ordem de servico e invalido."));
+
         if (clienteId == Guid.Empty)
             return Result<OrdemServico>.Failure(new Error("A ordem de serviço deve estar associada a um cliente válido."));
 
@@ -95,7 +101,7 @@ public sealed class OrdemServico
         if (descricaoProblema.Length > 1000)
             return Result<OrdemServico>.Failure(new Error("A descrição do problema deve ter no máximo 1000 caracteres."));
 
-        var ordemServico = new OrdemServico(id, clienteId, veiculoId, descricaoProblema, status, dataCriacao);
+        var ordemServico = new OrdemServico(id, codigoAprovacao, clienteId, veiculoId, descricaoProblema, status, dataCriacao);
 
         return Result<OrdemServico>.Success(ordemServico);
     }
@@ -122,10 +128,13 @@ public sealed class OrdemServico
         return Result<bool>.Success(true);
     }
 
-    public Result<bool> AprovarOrcamento()
+    public Result<bool> AprovarOrcamento(Guid codigoAprovacao)
     {
         if (Status != StatusOrdemServico.AguardandoAprovacao)
             return Result<bool>.Failure(new Error("Somente ordens de serviço aguardando aprovação podem ser aprovadas."));
+
+        if (codigoAprovacao != CodigoAprovacao)
+            return Result<bool>.Failure(new Error("O codigo de aprovacao informado e invalido."));
 
         Status = StatusOrdemServico.EmExecucao;
         DataInicioExecucao = DateTime.UtcNow;

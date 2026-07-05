@@ -25,6 +25,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.Entity<VeiculoEntity>().HasQueryFilter(x => x.Ativo);
 
         modelBuilder.Entity<OrdemServicoEntity>().Property(x => x.Ativo).HasDefaultValue(true);
+        modelBuilder.Entity<OrdemServicoEntity>().Property(x => x.CodigoAprovacao).HasDefaultValueSql("gen_random_uuid()");
+        modelBuilder.Entity<OrdemServicoEntity>().HasIndex(x => x.CodigoAprovacao).IsUnique();
         modelBuilder.Entity<OrdemServicoEntity>().HasQueryFilter(x => x.Ativo);
 
         modelBuilder.Entity<PecaInsumoEntity>().Property(x => x.Ativo).HasDefaultValue(true);

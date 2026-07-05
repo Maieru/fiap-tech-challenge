@@ -27,6 +27,7 @@ internal class OrdemServicoTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
+            Guid.NewGuid(),
             "Problema no ar-condicionado",
             StatusOrdemServico.Recebida,
             default(DateTime),
@@ -66,6 +67,7 @@ internal class OrdemServicoTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
+            Guid.NewGuid(),
             "Problema no ar-condicionado",
             StatusOrdemServico.AguardandoAprovacao,
             DateTime.UtcNow,
@@ -89,6 +91,7 @@ internal class OrdemServicoTests
     public void Rehydrate_ShouldFail_WhenStatusIsEmExecucaoAndDataInicioExecucaoIsNull()
     {
         var snapshot = new OrdemServicoSnapshot(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -118,6 +121,7 @@ internal class OrdemServicoTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
+            Guid.NewGuid(),
             "Problema no ar-condicionado",
             StatusOrdemServico.Finalizada,
             DateTime.UtcNow,
@@ -141,6 +145,7 @@ internal class OrdemServicoTests
     public void Rehydrate_ShouldFail_WhenStatusIsEntregueAndDataEntregaIsNull()
     {
         var snapshot = new OrdemServicoSnapshot(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -198,7 +203,7 @@ internal class OrdemServicoTests
     {
         var ordemServico = CreateOrdemServicoValida();
 
-        var result = ordemServico.AprovarOrcamento();
+        var result = ordemServico.AprovarOrcamento(ordemServico.CodigoAprovacao);
 
         Assert.Multiple(() =>
         {
@@ -274,6 +279,7 @@ internal class OrdemServicoTests
         Assert.Multiple(() =>
         {
             Assert.That(ordemServico.Id, Is.Not.EqualTo(Guid.Empty));
+            Assert.That(ordemServico.CodigoAprovacao, Is.Not.EqualTo(Guid.Empty));
             Assert.That(ordemServico.ClienteId, Is.EqualTo(clienteId));
             Assert.That(ordemServico.VeiculoId, Is.EqualTo(veiculoId));
             Assert.That(ordemServico.DescricaoProblema, Is.EqualTo("Barulho no freio traseiro"));
@@ -292,6 +298,7 @@ internal class OrdemServicoTests
     {
         var snapshot = new OrdemServicoSnapshot(
             Guid.Empty,
+            Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Problema no ar-condicionado",
@@ -317,6 +324,7 @@ internal class OrdemServicoTests
     public void Rehydrate_ShouldFail_WhenStatusIsEmDiagnosticoAndDataInicioDiagnosticoIsNull()
     {
         var snapshot = new OrdemServicoSnapshot(
+            Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -353,6 +361,7 @@ internal class OrdemServicoTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
+            Guid.NewGuid(),
             "Troca de pastilhas de freio",
             StatusOrdemServico.Entregue,
             dataCriacao,
@@ -376,6 +385,7 @@ internal class OrdemServicoTests
         Assert.Multiple(() =>
         {
             Assert.That(ordemServico.Id, Is.EqualTo(snapshot.Id));
+            Assert.That(ordemServico.CodigoAprovacao, Is.EqualTo(snapshot.CodigoAprovacao));
             Assert.That(ordemServico.ClienteId, Is.EqualTo(snapshot.ClienteId));
             Assert.That(ordemServico.VeiculoId, Is.EqualTo(snapshot.VeiculoId));
             Assert.That(ordemServico.DescricaoProblema, Is.EqualTo(snapshot.DescricaoProblema));
@@ -406,13 +416,32 @@ internal class OrdemServicoTests
     }
 
     [Test]
+    public void AprovarOrcamento_ShouldFail_WhenCodigoAprovacaoDoesNotMatch()
+    {
+        var ordemServico = CreateOrdemServicoValida();
+        _ = ordemServico.IniciarDiagnostico();
+        _ = ordemServico.AguardarAprovacao();
+
+        var result = ordemServico.AprovarOrcamento(Guid.NewGuid());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Value, Is.False);
+            Assert.That(result.Error.Description, Is.EqualTo("O codigo de aprovacao informado e invalido."));
+            Assert.That(ordemServico.Status, Is.EqualTo(StatusOrdemServico.AguardandoAprovacao));
+            Assert.That(ordemServico.DataInicioExecucao, Is.Null);
+        });
+    }
+
+    [Test]
     public void FluxoCompleto_ShouldSucceed_WhenTransitionsAreValid()
     {
         var ordemServico = CreateOrdemServicoValida();
 
         var iniciarDiagnosticoResult = ordemServico.IniciarDiagnostico();
         var aguardarAprovacaoResult = ordemServico.AguardarAprovacao();
-        var aprovarOrcamentoResult = ordemServico.AprovarOrcamento();
+        var aprovarOrcamentoResult = ordemServico.AprovarOrcamento(ordemServico.CodigoAprovacao);
         var finalizarResult = ordemServico.Finalizar([]);
         var entregarResult = ordemServico.Entregar();
 
@@ -500,7 +529,7 @@ internal class OrdemServicoTests
         var ordemServico = CreateOrdemServicoValida();
         _ = ordemServico.IniciarDiagnostico();
         _ = ordemServico.AguardarAprovacao();
-        _ = ordemServico.AprovarOrcamento();
+        _ = ordemServico.AprovarOrcamento(ordemServico.CodigoAprovacao);
 
         var servicos = new[] { CreateServicoDaOrdem(ordemServico.Id, concluido: false) };
         var result = ordemServico.Finalizar(servicos);
@@ -536,7 +565,7 @@ internal class OrdemServicoTests
         var ordemServico = CreateOrdemServicoValida();
         _ = ordemServico.IniciarDiagnostico();
         _ = ordemServico.AguardarAprovacao();
-        _ = ordemServico.AprovarOrcamento();
+        _ = ordemServico.AprovarOrcamento(ordemServico.CodigoAprovacao);
 
         var result = ordemServico.ValidarConclusaoServico();
 

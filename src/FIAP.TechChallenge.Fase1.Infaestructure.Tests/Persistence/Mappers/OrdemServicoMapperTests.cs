@@ -22,6 +22,7 @@ internal sealed class OrdemServicoMapperTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
+            Guid.NewGuid(),
             "Ruido metalico no motor",
             StatusOrdemServico.Entregue,
             dataCriacao,
@@ -37,6 +38,7 @@ internal sealed class OrdemServicoMapperTests
         Assert.Multiple(() =>
         {
             Assert.That(entity.Id, Is.EqualTo(snapshot.Id));
+            Assert.That(entity.CodigoAprovacao, Is.EqualTo(snapshot.CodigoAprovacao));
             Assert.That(entity.ClienteId, Is.EqualTo(snapshot.ClienteId));
             Assert.That(entity.VeiculoId, Is.EqualTo(snapshot.VeiculoId));
             Assert.That(entity.DescricaoProblema, Is.EqualTo(snapshot.DescricaoProblema));
@@ -56,6 +58,7 @@ internal sealed class OrdemServicoMapperTests
         var entity = new OrdemServicoEntity
         {
             Id = Guid.NewGuid(),
+            CodigoAprovacao = Guid.NewGuid(),
             ClienteId = Guid.NewGuid(),
             VeiculoId = Guid.NewGuid(),
             DescricaoProblema = "Falha eletrica intermitente",
@@ -71,6 +74,7 @@ internal sealed class OrdemServicoMapperTests
             Assert.That(result.Error, Is.EqualTo(Error.None));
             Assert.That(result.Value, Is.Not.Null);
             Assert.That(result.Value!.Id, Is.EqualTo(entity.Id));
+            Assert.That(result.Value.CodigoAprovacao, Is.EqualTo(entity.CodigoAprovacao));
             Assert.That(result.Value.ClienteId, Is.EqualTo(entity.ClienteId));
             Assert.That(result.Value.VeiculoId, Is.EqualTo(entity.VeiculoId));
             Assert.That(result.Value.DescricaoProblema, Is.EqualTo(entity.DescricaoProblema));
@@ -85,6 +89,7 @@ internal sealed class OrdemServicoMapperTests
         var entity = new OrdemServicoEntity
         {
             Id = Guid.NewGuid(),
+            CodigoAprovacao = Guid.NewGuid(),
             ClienteId = Guid.NewGuid(),
             VeiculoId = Guid.NewGuid(),
             DescricaoProblema = "Troca de embreagem",

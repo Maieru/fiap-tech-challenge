@@ -15,7 +15,7 @@ public sealed class AprovarExecucaoOrdemServicoUseCase(IOrdemServicoRepository o
             return Result<AprovarExecucaoOrdemServicoResponse>.Failure(ordemServicoResult.Error);
 
         var ordemServico = ordemServicoResult.Value;
-        var aprovarOrcamentoResult = ordemServico.AprovarOrcamento();
+        var aprovarOrcamentoResult = ordemServico.AprovarOrcamento(command.CodigoAprovacao);
 
         if (!aprovarOrcamentoResult.IsSuccess)
             return Result<AprovarExecucaoOrdemServicoResponse>.Failure(aprovarOrcamentoResult.Error);

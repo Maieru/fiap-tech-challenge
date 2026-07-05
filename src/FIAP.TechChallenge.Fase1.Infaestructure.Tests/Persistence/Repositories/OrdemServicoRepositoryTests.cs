@@ -353,6 +353,7 @@ internal sealed class OrdemServicoRepositoryTests
         var entity = new OrdemServicoEntity
         {
             Id = id ?? Guid.NewGuid(),
+            CodigoAprovacao = Guid.NewGuid(),
             ClienteId = clienteId ?? Guid.NewGuid(),
             VeiculoId = veiculoId ?? Guid.NewGuid(),
             DescricaoProblema = "Problema no sistema de freio",

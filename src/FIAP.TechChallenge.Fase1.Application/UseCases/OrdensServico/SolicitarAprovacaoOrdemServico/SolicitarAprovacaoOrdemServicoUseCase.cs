@@ -37,7 +37,7 @@ public sealed class SolicitarAprovacaoOrdemServicoUseCase(
             var sendMailResult = await _mailService.SendMail(
                 cliente.Email.Value,
                 "Aprovacao de ordem de servico",
-                $"Sua ordem de servico {ordemServico.Id} esta aguardando aprovacao.");
+                $"Sua ordem de servico {ordemServico.Id} esta aguardando aprovacao. Codigo de aprovacao: {ordemServico.CodigoAprovacao}.");
 
             if (!sendMailResult.IsSuccess || !sendMailResult.Value)
                 return Result<SolicitarAprovacaoOrdemServicoResponse>.Failure(sendMailResult.Error);

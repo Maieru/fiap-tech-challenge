@@ -49,6 +49,7 @@ public sealed class OrdensServicoControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
             _ = created.Should().NotBeNull();
             _ = created!.Id.Should().NotBeEmpty();
+            _ = created.CodigoAprovacao.Should().NotBeEmpty();
             _ = created.ClienteId.Should().Be(cliente.Id);
             _ = created.VeiculoId.Should().Be(veiculo.Id);
             _ = created.DescricaoProblema.Should().Be("Barulho na suspensao dianteira.");
@@ -87,6 +88,7 @@ public sealed class OrdensServicoControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
             _ = created.Should().NotBeNull();
             _ = created!.Id.Should().NotBeEmpty();
+            _ = created.CodigoAprovacao.Should().NotBeEmpty();
             _ = created.ClienteId.Should().NotBeEmpty();
             _ = created.VeiculoId.Should().NotBeEmpty();
             _ = created.DescricaoProblema.Should().Be("Cliente informou falha ao ligar pela manha.");
@@ -425,7 +427,7 @@ public sealed class OrdensServicoControllerTests
 
         var ordemEmExecucao = await CreateOrdemServicoAsync(cliente.Id, veiculo2.Id, "Ordem em execucao");
         await MoveToAguardandoAprovacaoAsync(ordemEmExecucao.Id);
-        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemEmExecucao.Id}/aprovar-execucao", new { });
+        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemEmExecucao.Id}/aprovar-execucao", new { ordemEmExecucao.CodigoAprovacao });
         _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         await Task.Delay(20);
 
@@ -635,7 +637,7 @@ public sealed class OrdensServicoControllerTests
         var getAguardandoAprovacaoResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
         var getAguardandoAprovacaoBody = await getAguardandoAprovacaoResponse.Content.ReadFromJsonAsync<RecuperarOrdemServicoResponse>();
 
-        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { });
+        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { ordemServico.CodigoAprovacao });
         var aprovarExecucaoBody = await aprovarExecucaoResponse.Content.ReadFromJsonAsync<AprovarExecucaoResponse>();
 
         var getEmExecucaoResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
@@ -1049,7 +1051,7 @@ public sealed class OrdensServicoControllerTests
         var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
         _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { });
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { ordemServico.CodigoAprovacao });
         var updated = await response.Content.ReadFromJsonAsync<AprovarExecucaoResponse>();
 
         Assert.Multiple(() =>
@@ -1063,9 +1065,32 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task AprovarExecucao_ShouldReturnBadRequest_WhenCodigoAprovacaoDoesNotMatch()
+    {
+        var cliente = await CreateClientAsync(9030);
+        var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(79), "Honda", "Civic", 2025);
+        var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Falha no sistema de injecao");
+        await MoveToAguardandoAprovacaoAsync(ordemServico.Id);
+
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { CodigoAprovacao = Guid.NewGuid() });
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            _ = error.Should().NotBeNull();
+            _ = error!.Error.Should().Contain("codigo de aprovacao");
+        });
+
+        var ordemResponse = await _client.GetAsync($"/api/ordensservico/{ordemServico.Id}");
+        var ordem = await ordemResponse.Content.ReadFromJsonAsync<RecuperarOrdemServicoResponse>();
+        _ = ordem!.Status.Should().Be(3);
+    }
+
+    [Test]
     public async Task AprovarExecucao_ShouldReturnNotFound_WhenOrdemServicoDoesNotExist()
     {
-        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{Guid.NewGuid()}/aprovar-execucao", new { });
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{Guid.NewGuid()}/aprovar-execucao", new { CodigoAprovacao = Guid.NewGuid() });
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
 
         Assert.Multiple(() =>
@@ -1085,7 +1110,7 @@ public sealed class OrdensServicoControllerTests
         var veiculo = await CreateVehicleAsync(cliente.Id, GenerateValidPlaca(49), "Ford", "Territory", 2024);
         var ordemServico = await CreateOrdemServicoAsync(cliente.Id, veiculo.Id, "Vibracao no volante");
 
-        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { });
+        var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { ordemServico.CodigoAprovacao });
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
 
         Assert.Multiple(() =>
@@ -1190,7 +1215,7 @@ public sealed class OrdensServicoControllerTests
         var addServicoBody = await addServicoResponse.Content.ReadFromJsonAsync<ServicoDaOrdemServicoResponse>();
         _ = addServicoResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
-        _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
+        _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { ordemServico.CodigoAprovacao })).StatusCode.Should().Be(HttpStatusCode.OK);
 
         var response = await _client.PutAsJsonAsync($"/api/ordensservico/servicos/{addServicoBody!.Id}/concluir", new { TempoGastoMinutos = 65 });
         var updated = await response.Content.ReadFromJsonAsync<ConcluirServicoOrdemServicoResponse>();
@@ -1216,7 +1241,7 @@ public sealed class OrdensServicoControllerTests
         _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/iniciar-diagnostico", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
         _ = (await _client.PostAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/addservico", new { ServicoId = servico.Id, Quantidade = 1 })).StatusCode.Should().Be(HttpStatusCode.Created);
         _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
-        _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { })).StatusCode.Should().Be(HttpStatusCode.OK);
+        _ = (await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { ordemServico.CodigoAprovacao })).StatusCode.Should().Be(HttpStatusCode.OK);
 
         var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/finalizar", new { });
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
@@ -1242,7 +1267,7 @@ public sealed class OrdensServicoControllerTests
         var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
         _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { });
+        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { ordemServico.CodigoAprovacao });
         _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var response = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/finalizar", new { });
@@ -1305,7 +1330,7 @@ public sealed class OrdensServicoControllerTests
         var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
         _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { });
+        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { ordemServico.CodigoAprovacao });
         _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var finalizarResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/finalizar", new { });
@@ -1402,7 +1427,7 @@ public sealed class OrdensServicoControllerTests
         });
         var iniciarDiagnosticoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/iniciar-diagnostico", new { });
         var solicitarAprovacaoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/solicitar-aprovacao", new { });
-        var aprovarExecucaoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/aprovar-execucao", new { });
+        var aprovarExecucaoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/aprovar-execucao", new { CodigoAprovacao = Guid.NewGuid() });
         var cancelarResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/cancelar", new { });
         var concluirServicoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/servicos/{servicoDaOrdemServicoId}/concluir", new
         {
@@ -1616,6 +1641,7 @@ public sealed class OrdensServicoControllerTests
     private sealed class OrdemServicoResponse
     {
         public Guid Id { get; set; }
+        public Guid CodigoAprovacao { get; set; }
         public Guid ClienteId { get; set; }
         public Guid VeiculoId { get; set; }
         public string DescricaoProblema { get; set; } = string.Empty;
@@ -1643,6 +1669,7 @@ public sealed class OrdensServicoControllerTests
     private sealed class RecuperarOrdemServicoResponse
     {
         public Guid Id { get; set; }
+        public Guid CodigoAprovacao { get; set; }
         public Guid ClienteId { get; set; }
         public Guid VeiculoId { get; set; }
         public int Status { get; set; }

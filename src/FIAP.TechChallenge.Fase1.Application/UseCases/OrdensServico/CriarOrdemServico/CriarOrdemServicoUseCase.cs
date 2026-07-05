@@ -37,6 +37,7 @@ public sealed class CriarOrdemServicoUseCase(IOrdemServicoRepository ordemServic
         return Result<CriarOrdemServicoResponse>.Success(new CriarOrdemServicoResponse
         {
             Id = ordemServico.Id,
+            CodigoAprovacao = ordemServico.CodigoAprovacao,
             ClienteId = ordemServico.ClienteId,
             VeiculoId = ordemServico.VeiculoId,
             DescricaoProblema = ordemServico.DescricaoProblema,

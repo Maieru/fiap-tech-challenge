@@ -230,7 +230,7 @@ internal sealed class ConcluirServicoOrdemServicoUseCaseTests
         {
             var iniciarDiagnosticoResult = ordemServico.IniciarDiagnostico();
             var aguardarAprovacaoResult = ordemServico.AguardarAprovacao();
-            var aprovarOrcamentoResult = ordemServico.AprovarOrcamento();
+            var aprovarOrcamentoResult = ordemServico.AprovarOrcamento(ordemServico.CodigoAprovacao);
 
             Assert.Multiple(() =>
             {
