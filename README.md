@@ -1,267 +1,191 @@
-# FIAP Tech Challenge Fase 1
+# Sistema de Gestão de Oficina Mecânica
 
-Sistema de gestão para oficina mecânica, desenvolvido com arquitetura em camadas, back-end em .NET, persistência em PostgreSQL e frontend React na mesma solução, incluindo execução conjunta com os demais serviços via Docker Compose.
+Aplicação para administrar o ciclo operacional de uma oficina mecânica. A solução reúne uma API em .NET, um frontend React, persistência em PostgreSQL, ambiente local com Docker Compose e infraestrutura AWS provisionada com Terraform e Kubernetes.
 
-## Visão Geral
+## Funcionalidades
 
-O sistema cobre o ciclo operacional da oficina, contemplando:
-
-- cadastro de clientes e veículos;
-- catálogo de serviços e peças/insumos;
-- abertura, acompanhamento e atualização de ordens de serviço;
 - autenticação de usuários com JWT;
-- consulta do progresso da ordem de serviço via API;
-- controle operacional para execução dos serviços;
-- suporte ao acompanhamento do tempo médio de execução dos serviços.
+- cadastro e gestão de clientes e veículos;
+- catálogo de serviços, peças e insumos, com controle de estoque;
+- criação de ordens de serviço com cliente e veículo existentes ou cadastrados no próprio fluxo;
+- diagnóstico, orçamento, aprovação, execução, finalização, entrega e cancelamento de ordens de serviço;
+- acompanhamento público do andamento da ordem de serviço;
+- registro do tempo gasto e cálculo do tempo médio dos serviços;
+- exclusão lógica para preservação do histórico;
+- interface administrativa responsiva para operação dos principais fluxos.
 
-### Fluxo técnico resumido
+## Arquitetura
 
-1. `Controller` recebe a requisição HTTP.
-2. `UseCase` coordena o caso de uso e aplica as regras de negócio.
-3. `Repository` abstrai o acesso à persistência por meio de interfaces definidas no domínio.
-4. `Infrastructure` implementa persistência, autenticação e serviços técnicos.
-5. Os dados são persistidos no PostgreSQL via EF Core.
-
-### Migrações
-
-O projeto de API aplica automaticamente as migrations pendentes na inicialização, preparando a base PostgreSQL sem necessidade de execução manual de comandos do EF Core.
-
-## Arquitetura da Solução
-
-O projeto foi desenvolvido como um **monólito em camadas**, conforme proposto no enunciado, buscando simplicidade de implantação para o MVP sem abrir mão de separação de responsabilidades.
-
-### Dependências de ambiente
-
-- Docker + Docker Compose, para subir API, frontend e banco localmente;
-- SDK .NET 10, para execução fora do Docker;
-- Node.js, para execução do frontend fora do Docker.
-
-### Dependências entre projetos da solução
-
-- `FIAP.TechChallenge.Fase1.API`
-  - depende de `Application` e `Infrastructure`;
-- `FIAP.TechChallenge.Fase1.Application`
-  - depende de `Domain`;
-- `FIAP.TechChallenge.Fase1.Infrastructure`
-  - depende de `Domain` e implementa persistência, segurança e serviços externos;
-- `FIAP.TechChallenge.Fase1.Domain`
-  - núcleo do domínio, contendo entidades, value objects, enums, interfaces e regras de negócio;
-- projetos `*.Tests`
-  - cobrem API, Application, Domain e Infrastructure.
-
-### Diagrama de dependências
+O backend é um monólito modular organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP:
 
 ```mermaid
 graph LR
-    API["FIAP.TechChallenge.Fase1.API"] --> APP["FIAP.TechChallenge.Fase1.Application"]
-    API --> INFRA["FIAP.TechChallenge.Fase1.Infrastructure"]
-    APP --> DOMAIN["FIAP.TechChallenge.Fase1.Domain"]
-    INFRA --> DOMAIN
-````
+    Frontend["Frontend React"] --> API["API ASP.NET Core"]
+    API --> Application["Application / casos de uso"]
+    API --> Infrastructure["Infrastructure"]
+    Application --> Domain["Domain"]
+    Infrastructure --> Domain
+    Infrastructure --> PostgreSQL[(PostgreSQL)]
+```
 
-## Tecnologias Utilizadas
+- **API:** controllers, autenticação, OpenAPI e composição da aplicação;
+- **Application:** casos de uso e contratos de entrada e saída;
+- **Domain:** entidades, value objects, enums, interfaces e regras de negócio;
+- **Infrastructure:** Entity Framework Core, repositórios, migrations, JWT e serviços externos;
+- **Frontend:** aplicação React com rotas protegidas, consumo da API e telas administrativas.
 
-* .NET 10
-* ASP.NET Core
-* Entity Framework Core
-* PostgreSQL
-* Npgsql
-* JWT Authentication
-* Docker / Docker Compose
-* React
-* Scalar / OpenAPI para documentação da API
+A API aplica automaticamente as migrations pendentes na inicialização, exceto no ambiente de testes.
 
-## Escolha do Banco de Dados
+## Tecnologias
 
-O PostgreSQL foi escolhido por ser um **banco de dados relacional robusto, gratuito e de código aberto**, com fácil uso via Docker, boa integração com aplicações C#/.NET por meio do provider Npgsql e recursos adequados para garantir integridade e consistência dos dados em um sistema transacional de gestão de ordens de serviço, clientes, veículos, peças e estoque.
+- .NET 10, ASP.NET Core e Entity Framework Core;
+- PostgreSQL e Npgsql;
+- JWT e BCrypt;
+- React 19, TypeScript, Vite e Tailwind CSS;
+- Docker, Docker Compose e Nginx;
+- Terraform, AWS e Kubernetes;
+- Scalar e OpenAPI;
+- NUnit, Moq e FluentAssertions.
 
-A escolha por um banco relacional também se mostra adequada pela necessidade de:
+## Execução local com Docker Compose
 
-* relacionamentos bem definidos entre clientes, veículos, ordens, serviços e peças;
-* consistência transacional;
-* integridade referencial;
-* modelagem estruturada para operações administrativas e operacionais.
+### Pré-requisitos
 
-## Segurança e Validações
+- Docker com Docker Compose;
+- portas `5173`, `8080`, `5050` e `5432` disponíveis.
 
-O projeto contempla requisitos de segurança e qualidade previstos no desafio, incluindo:
-
-* autenticação JWT para endpoints administrativos;
-* proteção de endpoints privados com `Authorization: Bearer <token>`;
-* armazenamento de senha de usuário de forma protegida;
-* validação de CPF/CNPJ;
-* validação de placa de veículo;
-* separação de responsabilidades entre camadas;
-* testes automatizados para fluxos críticos.
-
-## Serviços no Docker Compose
-
-O `docker-compose.yml` sobe os seguintes serviços:
-
-* `fiap-techchallenge-api` (API .NET) em `http://localhost:8080`
-* `fiap-techchallenge-frontend` (Frontend React) em `http://localhost:5173`
-* `fiap-techchallenge-db` (PostgreSQL) em `localhost:5432`
-* `fiap-techchallenge-pgadmin` (opcional, administração do banco) em `http://localhost:5050`
-
-### Credenciais padrão no compose
-
-* PostgreSQL: `postgres / postgres`
-* PgAdmin: `admin@admin.com / admin`
-
-## Como Executar com Docker Compose
-
-Na raiz da solução (`src`), execute:
+Na raiz do repositório, execute:
 
 ```bash
-docker compose up --build -d
+docker compose -f src/docker-compose.yml up --build -d
 ```
 
-Após a inicialização, os principais serviços estarão disponíveis em:
+Serviços disponíveis:
 
-```text
-http://localhost:5173
-http://localhost:8080
-```
+| Serviço | Endereço | Credenciais locais |
+| --- | --- | --- |
+| Frontend | `http://localhost:5173` | — |
+| API | `http://localhost:8080` | — |
+| Scalar | `http://localhost:8080/scalar/v1` | — |
+| OpenAPI | `http://localhost:8080/openapi/v1.json` | — |
+| Health check | `http://localhost:8080/api/health` | — |
+| PostgreSQL | `localhost:5432` | `postgres / postgres` |
+| PgAdmin | `http://localhost:5050` | `admin@admin.com / admin` |
 
-## Como Executar no Visual Studio
+As credenciais e chaves presentes no Compose são destinadas apenas ao desenvolvimento local.
 
-Abra a solução `TechChallengeFase1` no Visual Studio e selecione o projeto `docker-compose` como **Startup Project**.
-
-## Documentação da API
-
-Em ambiente de desenvolvimento, a API publica a documentação interativa via Scalar.
-
-* UI do Scalar: `http://localhost:8080/scalar/v1`
-* OpenAPI JSON: `http://localhost:8080/openapi/v1.json`
-
-A documentação permite visualizar e testar os endpoints disponíveis de forma interativa.
-
-## Autenticação
-
-### Regras
-
-* os endpoints de usuário (`/api/usuarios` e `/api/usuarios/login`) são públicos;
-* os demais endpoints exigem autenticação por token JWT;
-* por se tratar de um projeto acadêmico, não é necessário nenhum nível de privilégio para 
-criar usuários. Em um projeto de produção, isso deve ser revisado.
-
-### Como autenticar
-
-1. Crie um usuário em `/api/usuarios`;
-2. Faça login em `/api/usuarios/login`;
-3. Copie o token JWT retornado;
-4. Envie o token no header das requisições protegidas:
-
-```http
-Authorization: Bearer <seu_token>
-```
-
-## Regras de Negócio
-
-### Fluxo da Ordem de Serviço
-
-A entidade `OrdemServico` implementa o seguinte fluxo de status:
-
-1. `Recebida`
-2. `EmDiagnostico`
-3. `AguardandoAprovacao`
-4. `EmExecucao`
-5. `Finalizada`
-6. `Entregue`
-
-### Regras importantes
-
-* serviços e peças/insumos só podem ser adicionados enquanto a OS está em diagnóstico;
-* a execução só pode começar após o avanço correto no fluxo;
-* um serviço só pode ser concluído quando a OS estiver em execução;
-* a OS só pode ser finalizada quando todos os serviços vinculados tiverem sido concluídos;
-* a OS só pode ser entregue quando já estiver finalizada;
-* o progresso da ordem de serviço pode ser consultado via API;
-* os dados de serviços e peças vinculados à OS são preservados por snapshot, evitando impacto de alterações futuras no catálogo administrativo.
-
-## Principais Entidades
-
-### Núcleo
-
-* `Cliente`: dados do cliente, incluindo identificação e contato;
-* `Veiculo`: veículo vinculado ao cliente, contendo placa, marca, modelo e ano;
-* `Usuario`: responsável pela autenticação no sistema.
-
-### Catálogo administrativo
-
-* `Servico`: serviço cadastrável, com descrição e valor unitário;
-* `PecaInsumo`: peça ou insumo do estoque, com código, preço, quantidade e status de ativo.
-
-### Operação da oficina
-
-* `OrdemServico`: representa o processo completo de atendimento da oficina;
-* `ServicoDaOrdemDeServico`: snapshot do serviço aplicado na OS, preservando dados do momento da vinculação e informações operacionais como conclusão e tempo gasto;
-* `PecaOuInsumoDaOrdemDeServico`: snapshot da peça/insumo aplicada na OS, desacoplado de alterações posteriores no catálogo ou no estoque.
-
-### Relações principais
-
-* 1 cliente -> N veículos
-* 1 cliente -> N ordens de serviço
-* 1 veículo -> N ordens de serviço
-* 1 ordem de serviço -> N serviços da ordem
-* 1 ordem de serviço -> N peças/insumos da ordem
-
-## Endpoints Principais
-
-Os grupos de endpoints contemplam os requisitos funcionais do desafio, incluindo:
-
-* autenticação e usuários;
-* CRUD de clientes;
-* CRUD de veículos;
-* CRUD de serviços;
-* CRUD de peças e insumos;
-* criação, listagem, detalhamento e acompanhamento de ordens de serviço;
-* atualização do fluxo operacional da ordem;
-* consulta de progresso da OS.
-
-A lista completa e atualizada pode ser consultada na documentação OpenAPI/Scalar.
-
-## Testes
-
-O projeto possui testes unitários e de integração cobrindo os fluxos críticos do domínio, com foco especial em:
-
-* autenticação;
-* validações de dados sensíveis;
-* catálogo administrativo;
-* ciclo de vida da ordem de serviço;
-* integração entre API, aplicação e persistência.
-
-Para executar os testes localmente:
+Para encerrar os serviços:
 
 ```bash
-dotnet test
+docker compose -f src/docker-compose.yml down
 ```
 
-## Frontend
+## Execução sem Docker
 
-O repositório contém também um frontend React em `FIAP.TechChallenge.Fase1.Frontend`, utilizado como apoio visual e para validação manual dos fluxos.
+### Backend
 
-Para executar o frontend localmente:
+Requer o SDK .NET 10 e uma instância PostgreSQL acessível. Configure `ConnectionStrings:DefaultConnection` e as opções `Jwt` por `appsettings`, variáveis de ambiente ou User Secrets e execute:
 
 ```bash
-cd FIAP.TechChallenge.Fase1.Frontend
+dotnet run --project src/FIAP.TechChallenge.Fase1.API
+```
+
+### Frontend
+
+Requer Node.js 22 ou superior. A partir da raiz do repositório:
+
+```bash
+cd src/FIAP.TechChallenge.Fase1.Frontend
 npm install
 npm run dev
 ```
 
-Se o backend estiver rodando via Docker em `http://localhost:8080`, ajuste o `.env` do frontend para:
+Para apontar o frontend para uma API executada separadamente, crie um arquivo `.env` no diretório do frontend:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api
+```
+
+No Visual Studio, abra `src/TechChallengeFase1.slnx`. Para iniciar todo o ambiente em contêineres, selecione o projeto `docker-compose` como projeto de inicialização.
+
+## Autenticação e documentação da API
+
+Em ambiente de desenvolvimento, a especificação OpenAPI e a interface Scalar ficam disponíveis nos endereços indicados acima.
+
+O fluxo de autenticação é:
+
+1. criar um usuário em `POST /api/usuarios`;
+2. autenticar em `POST /api/usuarios/login`;
+3. enviar o token retornado nas requisições protegidas:
+
+```http
+Authorization: Bearer <token>
+```
+
+Além do cadastro e login, são públicos o health check e `GET /api/ordensservico/acompanhamento/{id}`. Os demais endpoints exigem autenticação.
+
+## Fluxo da ordem de serviço
+
+O fluxo principal de status é:
+
+```text
+Recebida → EmDiagnostico → AguardandoAprovacao → EmExecucao → Finalizada → Entregue
+```
+
+Uma ordem também pode assumir o status `Cancelada`, conforme as regras do domínio.
+
+Regras importantes:
+
+- serviços e peças ou insumos só podem ser adicionados durante o diagnóstico;
+- a execução depende da aprovação do orçamento por código de aprovação;
+- serviços só podem ser concluídos enquanto a ordem está em execução;
+- a ordem só pode ser finalizada após a conclusão de todos os serviços;
+- a entrega só pode ocorrer depois da finalização;
+- os itens vinculados à ordem preservam um snapshot dos dados e valores do momento da inclusão.
+
+## Infraestrutura e Kubernetes
+
+A infraestrutura de produção é declarada em Terraform na pasta `infra` e provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
+
+Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui duas réplicas, probes de saúde, limites de recursos e HPA de 2 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. O frontend também possui duas réplicas e é publicado por um serviço `LoadBalancer`, encaminhando `/api` para o serviço interno do backend.
+
+Os módulos Terraform devem ser aplicados nesta ordem:
+
+```text
+bootstrap → aws-resources → kubernetes-addons → kubernetes-configs
+```
+
+O passo a passo de provisionamento, deploy, validação e destruição está em [`infra/README.md`](infra/README.md). Os workflows em `.github/workflows` automatizam a infraestrutura, o build e publicação das imagens no ECR e o deploy das aplicações no EKS.
+
+## Testes
+
+A solução contém testes de domínio, casos de uso, infraestrutura e API. Para executar toda a suíte:
+
+```bash
+dotnet test src/TechChallengeFase1.slnx
+```
+
+## Estrutura do repositório
+
+```text
+.
+├── .github/workflows/   # CI/CD, infraestrutura e deploy
+├── infra/               # módulos Terraform e documentação operacional
+├── k8s/                 # manifests do backend e frontend
+└── src/                 # solução .NET, frontend e Docker Compose
 ```
 
 ## Observações Finais
 
 Este projeto foi construído com foco em:
 
-* aplicar princípios de DDD na modelagem do domínio;
-* manter separação clara de responsabilidades;
-* experimentar com o conceito de domínio rico;
-* facilitar execução local, avaliação e evolução futura do sistema.
+- aplicar princípios de DDD na modelagem do domínio;
+- manter uma separação clara de responsabilidades entre as camadas;
+- experimentar, na prática, o conceito de domínio rico;
+- proteger as regras de negócio dos detalhes de infraestrutura e apresentação;
+- oferecer uma experiência completa, da interface administrativa à persistência dos dados;
+- facilitar a execução local, os testes, a avaliação e a evolução futura do sistema;
+- aplicar infraestrutura como código e automatizar o provisionamento e o deploy;
+- explorar a execução em nuvem com AWS e a orquestração de aplicações com Kubernetes.
 
-Este é meu primeiro projeto onde tento aplicar os conceitos acima de forma tão forte. Com certeza a organização dos projetos e a separação de responsabilidades não está perfeita e pode ser melhorada.
+Este é meu primeiro projeto em que aplico esses conceitos de forma tão abrangente, cobrindo não apenas a modelagem e a implementação da aplicação, mas também frontend, conteinerização, infraestrutura e entrega contínua.
