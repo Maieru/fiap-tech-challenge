@@ -155,7 +155,7 @@ Os módulos Terraform devem ser aplicados nesta ordem:
 bootstrap → aws-resources → kubernetes-addons → kubernetes-configs
 ```
 
-O passo a passo de provisionamento, deploy, validação e destruição está em [`infra/README.md`](infra/README.md). Os workflows em `.github/workflows` automatizam a infraestrutura, o build e publicação das imagens no ECR e o deploy das aplicações no EKS.
+O passo a passo de provisionamento, deploy, validação e destruição está em [`infra/README.md`](infra/README.md). A organização dos manifests, o deploy manual e os comandos de diagnóstico estão em [`k8s/README.md`](k8s/README.md). Os workflows em `.github/workflows` automatizam a infraestrutura, o build e publicação das imagens no ECR e o deploy das aplicações no EKS.
 
 ## Testes
 
