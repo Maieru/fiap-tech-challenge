@@ -7,9 +7,15 @@ module "eks" {
   name               = "fiap-eks-cluster"
   kubernetes_version = "1.36"
 
-  endpoint_public_access                   = true
-  endpoint_private_access                  = true
-  enable_cluster_creator_admin_permissions = true
+  endpoint_public_access  = true
+  endpoint_private_access = true
+
+  enable_cluster_creator_admin_permissions = false
+
+  kms_key_administrators = [
+    "arn:aws:iam::575638747623:user/cli-user",
+    data.terraform_remote_state.bootstrap.outputs.github_actions_infra_role_arn
+  ]
 
   access_entries = {
     github_actions_infra = {
