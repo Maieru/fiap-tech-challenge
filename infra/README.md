@@ -157,6 +157,14 @@ Cadastre no repositório GitHub:
 
 Crie também o environment `production`, utilizado pelas pipelines de infraestrutura e deploy.
 
+Nas execuções automatizadas, o workflow `Apply Infrastructure` processa todos os estados na ordem obrigatória:
+
+```text
+bootstrap → aws-resources → kubernetes-addons → kubernetes-configs
+```
+
+Cada estágio gera seu próprio plano, aguarda a aprovação configurada no environment `production`, aplica o plano e somente então libera o estágio seguinte. O primeiro `bootstrap` continua sendo manual, pois o bucket do state e a IAM Role usada pelo próprio GitHub Actions ainda não existem nesse momento.
+
 ### 9. Publicar e implantar as aplicações
 
 Depois que os repositórios ECR existirem, execute no GitHub Actions, nesta ordem:

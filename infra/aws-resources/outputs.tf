@@ -8,5 +8,5 @@ output "eks" {
 
 output "backend_secret_arn" {
   description = "ARN do secret utilizado pelo backend"
-  value = aws_secretsmanager_secret.secret-manager-backend[0].arn
+  value       = aws_secretsmanager_secret.secret-manager-backend[0].arn
 }
