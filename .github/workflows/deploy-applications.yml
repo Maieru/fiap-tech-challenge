@@ -2,6 +2,10 @@ name: Deploy Applications
 
 on:
   workflow_dispatch:
+  workflow_call:
+    secrets:
+      INFRA_ACTION_ROLE:
+        required: true
 
 env:
   AWS_REGION: 'us-east-1'

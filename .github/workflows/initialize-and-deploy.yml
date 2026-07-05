@@ -1,0 +1,38 @@
+name: Initialize Infrastructure And Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: initialize-and-deploy-production
+  cancel-in-progress: false
+
+jobs:
+  infrastructure:
+    name: Initialize Infrastructure
+    uses: ./.github/workflows/apply-infra.yml
+    secrets: inherit
+
+  backend-image:
+    name: Build And Push Backend
+    needs: infrastructure
+    uses: ./.github/workflows/build-backend-image.yml
+    secrets: inherit
+
+  frontend-image:
+    name: Build And Push Frontend
+    needs: infrastructure
+    uses: ./.github/workflows/build-frontend-image.yaml
+    secrets: inherit
+
+  deploy-applications:
+    name: Deploy Applications
+    needs:
+      - backend-image
+      - frontend-image
+    uses: ./.github/workflows/deploy-applications.yml
+    secrets: inherit

@@ -2,6 +2,16 @@ name: Apply Infrastructure
 
 on:
   workflow_dispatch:
+  workflow_call:
+    secrets:
+      INFRA_ACTION_ROLE:
+        required: true
+      db_username:
+        required: true
+      db_password:
+        required: true
+      jwt_signing_key:
+        required: true
 
 permissions:
   id-token: write
