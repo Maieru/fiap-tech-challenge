@@ -598,6 +598,6 @@ override.tf.json
 terraform.rc
 /infra/.terraform/providers/registry.terraform.io/hashicorp/aws/6.51.0/windows_386/terraform-provider-aws_v6.51.0_x5.exe
 /infra/.terraform/providers/registry.terraform.io/hashicorp/aws/6.51.0/windows_386/LICENSE.txt
-/infra/.terraform.lock.hcl
 /infra/.terraform/modules/modules.json
 /infra/.terraform/providers/registry.terraform.io/hashicorp
+.terraform.lock.hcl

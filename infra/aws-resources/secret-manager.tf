@@ -1,7 +1,8 @@
 resource "aws_secretsmanager_secret" "secret-manager-backend" {
   count = var.create_rds_instance && var.create_eks_instance ? 1 : 0
 
-  name = "fiap-secret-manager-backend"
+  name                    = "fiap-secret-manager-backend"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "backend" {

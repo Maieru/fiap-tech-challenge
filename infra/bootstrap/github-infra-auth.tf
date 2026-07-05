@@ -195,8 +195,3 @@ resource "aws_iam_role_policy_attachment" "github_actions_infra_attach" {
   role       = aws_iam_role.github_actions_infra.name
   policy_arn = aws_iam_policy.github_actions_infra_policy.arn
 }
-
-output "github_actions_infra_role_arn" {
-  value       = aws_iam_role.github_actions_infra.arn
-  description = "ARN da IAM Role usada pelo GitHub Actions para Terraform infra"
-}

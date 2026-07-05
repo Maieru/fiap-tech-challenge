@@ -1,6 +1,12 @@
-resource "aws_iam_role" "external_secrets" {
-  count = var.create_eks_instance ? 1 : 0
+resource "helm_release" "external_secrets" {
+  name             = "external-secrets"
+  repository       = "https://charts.external-secrets.io"
+  chart            = "external-secrets"
+  namespace        = "external-secrets"
+  create_namespace = true
+}
 
+resource "aws_iam_role" "external_secrets" {
   name = "fiap-role-external-secrets"
 
   assume_role_policy = jsonencode({
@@ -21,10 +27,8 @@ resource "aws_iam_role" "external_secrets" {
 }
 
 resource "aws_iam_role_policy" "external_secrets" {
-  count = var.create_eks_instance ? 1 : 0
-
   name = "fiap-policy-external-secrets"
-  role = aws_iam_role.external_secrets[0].id
+  role = aws_iam_role.external_secrets.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -35,22 +39,17 @@ resource "aws_iam_role_policy" "external_secrets" {
           "secretsmanager:DescribeSecret",
           "secretsmanager:GetSecretValue"
         ]
-        Resource = "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:fiap-secret-manager-backend-*"
+        Resource = data.terraform_remote_state.aws_resources.outputs.backend_secret_arn
       }
     ]
   })
 }
 
 resource "aws_eks_pod_identity_association" "external_secrets" {
-  count = var.create_eks_instance ? 1 : 0
-
-  cluster_name    = module.eks[0].cluster_name
+  cluster_name    = data.terraform_remote_state.aws_resources.outputs.eks.name
   namespace       = "external-secrets"
   service_account = "external-secrets"
-  role_arn        = aws_iam_role.external_secrets[0].arn
+  role_arn        = aws_iam_role.external_secrets.arn
 
-  depends_on = [
-    module.eks,
-    aws_iam_role_policy.external_secrets
-  ]
+  depends_on = [aws_iam_role_policy.external_secrets]
 }

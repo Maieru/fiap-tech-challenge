@@ -6,6 +6,7 @@ resource "aws_ecr_repository" "ecr-backend-repository" {
     filter      = "*latest"
     filter_type = "WILDCARD"
   }
+  force_delete = true
 }
 
 resource "aws_ecr_repository" "ecr-frontend-repository" {
@@ -16,4 +17,5 @@ resource "aws_ecr_repository" "ecr-frontend-repository" {
     filter      = "*latest"
     filter_type = "WILDCARD"
   }
+  force_delete = true
 }

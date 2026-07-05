@@ -3,21 +3,6 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
-variable "github_owner" {
-  type    = string
-  default = "Maieru"
-}
-
-variable "github_repository" {
-  type    = string
-  default = "fiap-tech-challenge"
-}
-
-variable "github_branch" {
-  type    = string
-  default = "main"
-}
-
 variable "db_username" {
   type      = string
   sensitive = true

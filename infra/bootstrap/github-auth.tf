@@ -6,11 +6,6 @@ resource "aws_iam_openid_connect_provider" "oicd-github-actions" {
   ]
 }
 
-output "github_actions_role_arn" {
-  value       = aws_iam_role.github_actions.arn
-  description = "ARN da IAM Role usada pelo GitHub Actions"
-}
-
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "github_actions" {

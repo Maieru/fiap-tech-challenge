@@ -13,7 +13,7 @@ module "eks" {
 
   access_entries = {
     github_actions_infra = {
-      principal_arn = aws_iam_role.github_actions_infra.arn
+      principal_arn = data.terraform_remote_state.bootstrap.outputs.github_actions_infra_role_arn
 
       policy_associations = {
         cluster_admin = {
@@ -56,30 +56,4 @@ module "eks" {
       }
     }
   }
-}
-
-resource "helm_release" "metrics_server" {
-  count = var.create_eks_instance ? 1 : 0
-
-  name       = "metrics-server"
-  repository = "https://kubernetes-sigs.github.io/metrics-server/"
-  chart      = "metrics-server"
-  namespace  = "kube-system"
-
-  depends_on = [module.eks]
-}
-
-resource "helm_release" "external_secrets" {
-  count = var.create_eks_instance ? 1 : 0
-
-  name             = "external-secrets"
-  repository       = "https://charts.external-secrets.io"
-  chart            = "external-secrets"
-  namespace        = "external-secrets"
-  create_namespace = true
-
-  depends_on = [
-    module.eks,
-    aws_eks_pod_identity_association.external_secrets
-  ]
 }
