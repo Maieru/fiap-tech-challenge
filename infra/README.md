@@ -227,6 +227,16 @@ kubectl get service fiap-frontend-service -n fiap-frontend
 
 ## Destruição
 
+O workflow `Destroy Expensive AWS Infrastructure` é executado diariamente à meia-noite no horário de São Paulo, sem aprovação manual, e também pode ser iniciado manualmente. Ele preserva o bootstrap, a VPC e os repositórios ECR, executando os estados Terraform nesta ordem:
+
+```text
+kubernetes-configs (destroy) → kubernetes-addons (destroy) → aws-resources (apply)
+```
+
+No último estágio, o workflow aplica `create_eks_instance=false` e `create_rds_instance=false`, removendo o EKS e o RDS do estado desejado. A exclusão do RDS é permanente porque a instância está configurada com `skip_final_snapshot = true`.
+
+Antes da destruição, o workflow verifica se o EKS existe. Quando ele já estiver ausente, os estágios Kubernetes são ignorados e o `apply` de `aws-resources` ainda é executado com os dois controles desabilitados, permitindo execuções diárias idempotentes.
+
 Se for necessário remover todo o ambiente, destrua os módulos na ordem inversa para respeitar as dependências:
 
 ```text

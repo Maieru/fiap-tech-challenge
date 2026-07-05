@@ -164,7 +164,7 @@ export function LoginPage() {
                 value={novaSenha}
                 onChange={(event) => setNovaSenha(event.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 disabled={isRegistering}
               />
             </div>
@@ -178,7 +178,7 @@ export function LoginPage() {
                 value={confirmarSenha}
                 onChange={(event) => setConfirmarSenha(event.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 disabled={isRegistering}
               />
             </div>

@@ -1,4 +1,4 @@
-name: Initialize Infrastructure And Deploy
+name: 1.Initialize Infrastructure And Deploy
 
 on:
   workflow_dispatch:
