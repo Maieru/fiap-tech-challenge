@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FIAP.TechChallenge.Fase1.API.Tests;
 
-public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
+public sealed class CustomWebApplicationFactory(bool configureDatabase = true) : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = $"TestsDb_{Guid.NewGuid()}";
 
@@ -20,10 +20,13 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
             _ = services.RemoveAll<DbContextOptions<AppDbContext>>();
             _ = services.RemoveAll<AppDbContext>();
 
-            _ = services.AddDbContext<AppDbContext>(options =>
+            if (configureDatabase)
             {
-                _ = options.UseInMemoryDatabase(_databaseName);
-            });
+                _ = services.AddDbContext<AppDbContext>(options =>
+                {
+                    _ = options.UseInMemoryDatabase(_databaseName);
+                });
+            }
         });
 
         _ = builder.ConfigureLogging(logging =>

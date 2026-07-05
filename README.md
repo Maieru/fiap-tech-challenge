@@ -68,7 +68,8 @@ Serviços disponíveis:
 | API | `http://localhost:8080` | — |
 | Scalar | `http://localhost:8080/scalar/v1` | — |
 | OpenAPI | `http://localhost:8080/openapi/v1.json` | — |
-| Health check | `http://localhost:8080/api/health` | — |
+| Liveness | `http://localhost:8080/api/health/live` | — |
+| Readiness | `http://localhost:8080/api/health/ready` | — |
 | PostgreSQL | `localhost:5432` | `postgres / postgres` |
 | PgAdmin | `http://localhost:5050` | `admin@admin.com / admin` |
 
@@ -122,7 +123,7 @@ O fluxo de autenticação é:
 Authorization: Bearer <token>
 ```
 
-Além do cadastro e login, são públicos o health check e `GET /api/ordensservico/acompanhamento/{id}`. Os demais endpoints exigem autenticação.
+Além do cadastro e login, são públicos os health checks e `GET /api/ordensservico/acompanhamento/{id}`. Os demais endpoints exigem autenticação.
 
 ## Fluxo da ordem de serviço
 

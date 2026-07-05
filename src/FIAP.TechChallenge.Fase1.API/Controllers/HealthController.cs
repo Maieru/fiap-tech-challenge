@@ -1,4 +1,4 @@
-﻿using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
+using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,43 +7,52 @@ namespace FIAP.TechChallenge.Fase1.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [AllowAnonymous]
-public sealed class HealthController(IServiceProvider serviceProvider) : ControllerBase
+public sealed class HealthController(IServiceProvider serviceProvider, IConfiguration configuration, ILogger<HealthController> logger) : ControllerBase
 {
-    private static readonly Guid StaticInstanceId = Guid.NewGuid();
-
-    private static readonly string[] RequiredEnvironmentVariables =
+    private static readonly Guid _staticInstanceId = Guid.NewGuid();
+    private static readonly ConfigurationVariable[] _requiredConfigurationVariables =
     [
-        "ASPNETCORE_ENVIRONMENT",
-        "ASPNETCORE_URLS",
-        "ConnectionStrings__DefaultConnection",
-        "Jwt__SigningKey",
-        "Jwt__Issuer",
-        "Jwt__Audience",
-        "Jwt__AccessTokenMinutes"
+        new("ASPNETCORE_ENVIRONMENT", "ASPNETCORE_ENVIRONMENT"),
+        new("ASPNETCORE_URLS", "ASPNETCORE_URLS"),
+        new("ConnectionStrings__DefaultConnection", "ConnectionStrings:DefaultConnection"),
+        new("Jwt__SigningKey", "Jwt:SigningKey"),
+        new("Jwt__Issuer", "Jwt:Issuer"),
+        new("Jwt__Audience", "Jwt:Audience"),
+        new("Jwt__AccessTokenMinutes", "Jwt:AccessTokenMinutes")
     ];
 
-    [HttpGet]
+    [HttpGet("live")]
     [ProducesResponseType(typeof(HealthResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Get(CancellationToken cancellationToken)
+    public IActionResult GetLiveness()
+    {
+        var response = new HealthResponse(HealthStatus.Healthy, _staticInstanceId, [], []);
+        return Ok(response);
+    }
+
+    [HttpGet]
+    [HttpGet("ready")]
+    [ProducesResponseType(typeof(HealthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(HealthResponse), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> GetReadiness(CancellationToken cancellationToken)
     {
         var database = await CheckDatabaseAsync(cancellationToken);
-        var missingEnvironmentVariables = RequiredEnvironmentVariables
+        var isHealthy = database.Status == HealthStatus.Healthy;
+        var missingEnvironmentVariables = _requiredConfigurationVariables
             .Select(variable => new EnvironmentVariableStatus(
-                variable,
-                !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(variable))))
+                variable.EnvironmentVariable,
+                !string.IsNullOrWhiteSpace(configuration[variable.ConfigurationKey])))
             .Where(variable => !variable.Exists)
             .ToArray();
 
-        var isHealthy = database.Status == HealthStatus.Healthy
-            && missingEnvironmentVariables.Length == 0;
-
         var response = new HealthResponse(
             isHealthy ? HealthStatus.Healthy : HealthStatus.Unhealthy,
-            StaticInstanceId,
+            _staticInstanceId,
             [database],
             missingEnvironmentVariables);
 
-        return Ok(response);
+        return isHealthy
+            ? Ok(response)
+            : StatusCode(StatusCodes.Status503ServiceUnavailable, response);
     }
 
     private async Task<DependencyStatus> CheckDatabaseAsync(CancellationToken cancellationToken)
@@ -51,7 +60,7 @@ public sealed class HealthController(IServiceProvider serviceProvider) : Control
         var dbContext = serviceProvider.GetService<AppDbContext>();
 
         if (dbContext is null)
-            return new DependencyStatus("database", HealthStatus.Unhealthy, "AppDbContext is not configured.");
+            return new DependencyStatus("database", HealthStatus.Unhealthy, "Database is not configured.");
 
         try
         {
@@ -61,9 +70,14 @@ public sealed class HealthController(IServiceProvider serviceProvider) : Control
                 canConnect ? HealthStatus.Healthy : HealthStatus.Unhealthy,
                 canConnect ? null : "Database connection is unavailable.");
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception exception)
         {
-            return new DependencyStatus("database", HealthStatus.Unhealthy, exception.Message);
+            logger.LogWarning(exception, "Database readiness check failed.");
+            return new DependencyStatus("database", HealthStatus.Unhealthy, "Database connection check failed.");
         }
     }
 
@@ -73,10 +87,15 @@ public sealed class HealthController(IServiceProvider serviceProvider) : Control
         public const string Unhealthy = "Unhealthy";
     }
 
-    public sealed record HealthResponse(string Status, Guid InstanceId, IReadOnlyCollection<DependencyStatus> Dependencies, IReadOnlyCollection<EnvironmentVariableStatus> EnvironmentVariables);
+    public sealed record HealthResponse(
+        string Status,
+        Guid InstanceId,
+        IReadOnlyCollection<DependencyStatus> Dependencies,
+        IReadOnlyCollection<EnvironmentVariableStatus> EnvironmentVariables);
 
     public sealed record DependencyStatus(string Name, string Status, string? Error);
 
     public sealed record EnvironmentVariableStatus(string Name, bool Exists);
-}
 
+    private sealed record ConfigurationVariable(string EnvironmentVariable, string ConfigurationKey);
+}

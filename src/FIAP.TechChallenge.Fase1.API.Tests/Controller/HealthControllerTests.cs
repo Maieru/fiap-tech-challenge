@@ -33,21 +33,59 @@ public sealed class HealthControllerTests
     }
 
     [Test]
-    public async Task Get_ShouldReturnInstanceDependenciesAndMissingEnvironmentVariables()
+    public async Task GetLiveness_ShouldReturnHealthyWithoutCheckingDependencies()
     {
-        var response = await _client.GetAsync("/api/health");
+        var response = await _client.GetAsync("/api/health/live");
         var health = await response.Content.ReadFromJsonAsync<HealthResponse>();
 
         Assert.Multiple(() =>
         {
             _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
             _ = health.Should().NotBeNull();
-            _ = health!.InstanceId.Should().NotBeEmpty();
+            _ = health!.Status.Should().Be("Healthy");
+            _ = health.InstanceId.Should().NotBeEmpty();
+            _ = health.Dependencies.Should().BeEmpty();
+            _ = health.EnvironmentVariables.Should().BeEmpty();
+        });
+    }
+
+    [TestCase("/api/health")]
+    [TestCase("/api/health/ready")]
+    public async Task GetReadiness_ShouldReturnHealthyWhenDatabaseIsAvailable(string endpoint)
+    {
+        var response = await _client.GetAsync(endpoint);
+        var health = await response.Content.ReadFromJsonAsync<HealthResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
+            _ = health.Should().NotBeNull();
+            _ = health!.Status.Should().Be("Healthy");
+            _ = health.InstanceId.Should().NotBeEmpty();
             _ = health.Dependencies.Should().ContainSingle(dependency =>
                 dependency.Name == "database" && dependency.Status == "Healthy");
             _ = health.EnvironmentVariables.Should().NotContain(variable =>
                 variable.Name == "Jwt__SigningKey");
             _ = health.EnvironmentVariables.Should().OnlyContain(variable => !variable.Exists);
+        });
+    }
+
+    [Test]
+    public async Task GetReadiness_ShouldReturnServiceUnavailableWhenDatabaseIsNotConfigured()
+    {
+        await using var factory = new CustomWebApplicationFactory(configureDatabase: false);
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/health/ready");
+        var health = await response.Content.ReadFromJsonAsync<HealthResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+            _ = health.Should().NotBeNull();
+            _ = health!.Status.Should().Be("Unhealthy");
+            _ = health.Dependencies.Should().ContainSingle(dependency =>
+                dependency.Name == "database" && dependency.Status == "Unhealthy");
         });
     }
 

@@ -57,7 +57,8 @@ O backend é executado no namespace `fiap-backend` e possui:
 - `ConfigMap` com configurações do ASP.NET Core e do JWT;
 - `ExternalSecret` que cria o Secret `fiap-backend-secret`;
 - `Service` do tipo `ClusterIP`, disponível internamente na porta `8080`;
-- readiness e liveness probes no endpoint `/api/health`;
+- startup e liveness probes no endpoint `/api/health/live`;
+- readiness probe no endpoint `/api/health/ready`;
 - requests de `100m` de CPU e `128Mi` de memória;
 - limits de `500m` de CPU e `512Mi` de memória;
 - `HorizontalPodAutoscaler` entre 2 e 10 réplicas, com alvo de 70% de utilização de CPU.
@@ -169,7 +170,7 @@ kubectl port-forward service/fiap-frontend-service 8081:30150 -n fiap-frontend
 kubectl port-forward service/fiap-backend-service 8080:8080 -n fiap-backend
 ```
 
-Com os comandos executados separadamente, o frontend fica disponível em `http://localhost:8081` e o health check do backend em `http://localhost:8080/api/health`.
+Com os comandos executados separadamente, o frontend fica disponível em `http://localhost:8081`, a liveness do backend em `http://localhost:8080/api/health/live` e a readiness em `http://localhost:8080/api/health/ready`.
 
 ## Deploy pelo GitHub Actions
 
