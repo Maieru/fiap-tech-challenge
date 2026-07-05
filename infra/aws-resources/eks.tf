@@ -29,6 +29,19 @@ module "eks" {
           }
         }
       }
+    },
+    cli_user = {
+      principal_arn = "arn:aws:iam::575638747623:user/cli-user"
+
+      policy_associations = {
+        cluster_admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
     }
   }
 
