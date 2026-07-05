@@ -87,7 +87,7 @@ jobs:
           TF_VAR_jwt_signing_key: ${{ secrets.jwt_signing_key }}
           TF_VAR_create_eks_instance: ${{ inputs.create_eks_instance }}
           TF_VAR_create_rds_instance: ${{ inputs.create_rds_instance }}
-        run: terraform plan -input=false -no-color -out=tfplan
+        run: terraform plan -input=false -out=tfplan
 
       - name: Terraform Destroy Plan
         if: inputs.operation == 'destroy'
@@ -95,7 +95,7 @@ jobs:
           TF_VAR_db_username: ${{ secrets.db_username }}
           TF_VAR_db_password: ${{ secrets.db_password }}
           TF_VAR_jwt_signing_key: ${{ secrets.jwt_signing_key }}
-        run: terraform plan -destroy -input=false -no-color -out=tfplan
+        run: terraform plan -destroy -input=false -out=tfplan
 
       - name: Salvar plano como artifact
         uses: actions/upload-artifact@v4
