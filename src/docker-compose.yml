@@ -111,6 +111,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin
     volumes:
       - ./ObservabilityConfig/grafana/provisioning:/etc/grafana/provisioning
+      - ./ObservabilityConfig/grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
     networks:
