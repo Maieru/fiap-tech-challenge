@@ -148,6 +148,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(AprovarExecucaoOrdemServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [AllowAnonymous]
     public async Task<IActionResult> PutAprovarExecucao(Guid id, IAprovarExecucaoOrdemServicoUseCase useCase, AprovarExecucaoOrdemServicoCommand command, CancellationToken cancellationToken)
     {
         var aprovarCommand = new AprovarExecucaoOrdemServicoCommand

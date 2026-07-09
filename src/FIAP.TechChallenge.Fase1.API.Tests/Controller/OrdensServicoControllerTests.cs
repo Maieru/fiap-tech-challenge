@@ -1427,7 +1427,6 @@ public sealed class OrdensServicoControllerTests
         });
         var iniciarDiagnosticoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/iniciar-diagnostico", new { });
         var solicitarAprovacaoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/solicitar-aprovacao", new { });
-        var aprovarExecucaoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/aprovar-execucao", new { CodigoAprovacao = Guid.NewGuid() });
         var cancelarResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/cancelar", new { });
         var concluirServicoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/servicos/{servicoDaOrdemServicoId}/concluir", new
         {
@@ -1448,7 +1447,6 @@ public sealed class OrdensServicoControllerTests
             _ = addPecaInsumoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-            _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = cancelarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = concluirServicoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = finalizarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
