@@ -1,5 +1,6 @@
-﻿using FIAP.TechChallenge.Fase1.Application;
+using FIAP.TechChallenge.Fase1.Application;
 using FIAP.TechChallenge.Fase1.Infrastructure;
+using FIAP.TechChallenge.Fase1.Infrastructure.Observability;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
 using Scalar.AspNetCore;
 
@@ -22,6 +23,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Logging.ConfigureOpenTelemetry();
 
 var app = builder.Build();
 

@@ -23,6 +23,10 @@ services:
       Jwt__Issuer: fiap-techchallenge
       Jwt__Audience: fiap-techchallenge-client
       Jwt__AccessTokenMinutes: 60
+
+      OTEL_SERVICE_NAME: fiap-tech-challenge-backend
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     networks:
       - fiap-techchallenge-network
 
@@ -55,7 +59,35 @@ services:
     networks:
       - fiap-techchallenge-network
 
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: fiap-otel-collector
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml
+    ports:
+      - 1888:1888 
+      - 8888:8888 
+      - 8889:8889 
+      - 13133:13133 
+      - 4317:4317 
+      - 4318:4318 
+      - 55679:55679
+    networks:
+      - fiap-techchallenge-network
 
+  jaeger:
+    image: jaegertracing/jaeger:2.0.0
+    container_name: fiap-jaeger
+    command:
+       - "--set=receivers.otlp.protocols.grpc.endpoint=0.0.0.0:4317"
+       - "--set=receivers.otlp.protocols.http.endpoint=0.0.0.0:4318"
+    ports:
+      - "16686:16686"
+    environment:
+      - JAEGER_V2_MODE=all-in-one
+    networks:
+      - fiap-techchallenge-network
+      
   # Esse daqui é opcional mas ajuda muito a vida.
   pgadmin:
     image: dpage/pgadmin4:latest

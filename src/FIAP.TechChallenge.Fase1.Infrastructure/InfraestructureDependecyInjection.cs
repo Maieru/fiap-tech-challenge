@@ -1,5 +1,6 @@
-﻿using FIAP.TechChallenge.Fase1.Domain.Interfaces;
+using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using FIAP.TechChallenge.Fase1.Infrastructure.Notification.Mail;
+using FIAP.TechChallenge.Fase1.Infrastructure.Observability;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence;
 using FIAP.TechChallenge.Fase1.Infrastructure.Persistence.Repositories;
 using FIAP.TechChallenge.Fase1.Infrastructure.Security;
@@ -22,6 +23,8 @@ public static class InfraestructureDependecyInjection
 
         if (!string.IsNullOrWhiteSpace(connectionString))
             _ = services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+
+        _ = services.ConfigureOpenTelemetry();
 
         _ = services.AddScoped<IClienteRepository, ClienteRepository>();
         _ = services.AddScoped<IVeiculoRepository, VeiculoRepository>();
