@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -9,7 +10,14 @@ namespace FIAP.TechChallenge.Fase1.Infrastructure.Observability;
 
 public static class OpenTelemetryConfiguration
 {
-    public static IServiceCollection ConfigureOpenTelemetry(this IServiceCollection services)
+    public static IHostApplicationBuilder AddOpenTelemetry(this IHostApplicationBuilder builder)
+    {
+        _ = builder.Services.ConfigureServices();
+        _ = builder.Logging.ConfigureLogging();
+        return builder;
+    }
+
+    private static IServiceCollection ConfigureServices(this IServiceCollection services)
     {
         _ = services.AddOpenTelemetry()
             .ConfigureResource(resource => ResourceBuilder.CreateDefault())
@@ -27,7 +35,7 @@ public static class OpenTelemetryConfiguration
         return services;
     }
 
-    public static ILoggingBuilder ConfigureOpenTelemetry(this ILoggingBuilder logging)
+    private static ILoggingBuilder ConfigureLogging(this ILoggingBuilder logging)
     {
         _ = logging.AddOpenTelemetry(options =>
         {

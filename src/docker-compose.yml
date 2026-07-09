@@ -100,7 +100,21 @@ services:
       - "--config.file=/etc/prometheus/prometheus.yml"
     networks:
       - fiap-techchallenge-network
-
+      
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fiap-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./ObservabilityConfig/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - fiap-techchallenge-network
       
   # Esse daqui é opcional mas ajuda muito a vida.
   pgadmin:
