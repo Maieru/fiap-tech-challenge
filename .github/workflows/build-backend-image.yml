@@ -63,11 +63,27 @@ jobs:
       - name: Verificar identidade AWS
         run: aws sts get-caller-identity
 
+      - name: Verificar se a imagem ja existe no ECR
+        id: check-image
+        run: |
+          if aws ecr describe-images \
+            --repository-name ${{ env.ECR_REPOSITORY }} \
+            --image-ids imageTag=${{ env.IMAGE_TAG }} \
+            --region ${{ env.AWS_REGION }} > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Imagem ${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} ja existe no ECR."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Imagem ${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} nao encontrada no ECR."
+          fi
+
       - name: Login no Amazon ECR
         id: login-ecr
+        if: steps.check-image.outputs.exists != 'true'
         uses: aws-actions/amazon-ecr-login@v2
         
       - name: Build da imagem Docker
+        if: steps.check-image.outputs.exists != 'true'
         run: |
           docker build \
             -f ${{ env.DOCKERFILE_PATH }} \
@@ -76,6 +92,7 @@ jobs:
             ${{ env.DOCKER_BUILD_CONTEXT }}
 
       - name: Push da imagem Docker para o ECR
+        if: steps.check-image.outputs.exists != 'true'
         run: |
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
