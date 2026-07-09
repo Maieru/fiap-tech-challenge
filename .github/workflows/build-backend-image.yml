@@ -1,7 +1,7 @@
 name: Build, Test And Push Backend
 
 env:
-  DOTNET_VERSION: '8.0.x'
+  DOTNET_VERSION: '10.0.x'
   SOLUTION_FILE: './src/TechChallengeFase1.slnx'
 
   DOCKERFILE_PATH: './src/FIAP.TechChallenge.Fase1.API/Dockerfile'
