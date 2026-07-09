@@ -24,10 +24,14 @@ public static class OpenTelemetryConfiguration
             .WithTracing(tracing =>
                 tracing.AddAspNetCoreInstrumentation()
                     .AddEntityFrameworkCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
                     .AddOtlpExporter()
             )
             .WithMetrics(metrics =>
                 metrics.AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddRuntimeInstrumentation()
+                    .AddProcessInstrumentation()
                     .AddPrometheusExporter()
                     .AddOtlpExporter()
             );
