@@ -27,6 +27,8 @@ services:
       OTEL_SERVICE_NAME: fiap-tech-challenge-backend
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+
+      LogLevel__Default: Information
     networks:
       - fiap-techchallenge-network
 
@@ -36,7 +38,7 @@ services:
       dockerfile: Dockerfile
     container_name: fiap-techchallenge-frontend
     environment:
-      API_UPSTREAM: http://localhost:8080/api
+      API_UPSTREAM: http://fiap.techchallenge.fase1.api:8080/api
     depends_on:
       - fiap.techchallenge.fase1.api
     ports:
@@ -114,6 +116,15 @@ services:
       - ./ObservabilityConfig/grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
+      - loki
+    networks:
+      - fiap-techchallenge-network
+
+  loki:
+    image: grafana/loki:latest
+    container_name: fiap-loki
+    ports:
+      - "3100:3100"
     networks:
       - fiap-techchallenge-network
       
