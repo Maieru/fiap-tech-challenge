@@ -5,3 +5,4 @@ metadata:
   namespace: fiap-frontend
 data:
   API_UPSTREAM: "http://fiap-backend-service.fiap-backend.svc:8080"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.fiap-observability.svc:4318"

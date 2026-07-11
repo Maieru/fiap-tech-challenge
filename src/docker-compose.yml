@@ -11,6 +11,7 @@ services:
     container_name: fiap-techchallenge-api
     depends_on:
       - db
+      - otel-collector
     ports:
       - "8080:8080"
     environment:
@@ -39,8 +40,11 @@ services:
     container_name: fiap-techchallenge-frontend
     environment:
       API_UPSTREAM: http://fiap.techchallenge.fase1.api:8080/api
+      OTEL_SERVICE_NAME: fiap-tech-challenge-frontend
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       - fiap.techchallenge.fase1.api
+      - otel-collector
     ports:
       - "5173:80"
     networks:

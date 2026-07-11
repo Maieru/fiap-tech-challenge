@@ -94,6 +94,21 @@ npm run dev
 
 Aplicação disponível em: `http://localhost:5173`
 
+## OpenTelemetry
+
+O frontend gera traces para carregamento da pagina, requisicoes HTTP (`fetch` e Axios/XHR) e erros nao tratados. Em desenvolvimento, o Vite encaminha `/otlp` para o Collector em `http://localhost:4318`; no Docker e no Kubernetes, esse encaminhamento e feito pelo Nginx.
+
+Configuracoes opcionais de build:
+
+```env
+VITE_OTEL_SERVICE_NAME=fiap-tech-challenge-frontend
+VITE_OTEL_EXPORTER_URL=/otlp/v1/traces
+VITE_OTEL_LOGS_EXPORTER_URL=/otlp/v1/logs
+VITE_APP_VERSION=1.0.0
+```
+
+Para visualizar os traces, suba o ambiente de observabilidade e acesse o Jaeger em `http://localhost:16686`, selecionando o servico `fiap-tech-challenge-frontend`.
+
 ## Build de produção
 
 ```bash
