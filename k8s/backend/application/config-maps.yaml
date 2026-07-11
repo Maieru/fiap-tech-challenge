@@ -9,3 +9,6 @@ data:
   Jwt__Issuer: "fiap-techchallenge"
   Jwt__Audience: "fiap-techchallenge-client"
   Jwt__AccessTokenMinutes: "60"
+  OTEL_SERVICE_NAME: "fiap-tech-challenge-backend"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.fiap-observability.svc.cluster.local:4317"
+  OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"

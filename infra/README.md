@@ -9,7 +9,7 @@ Esta pasta provisiona a infraestrutura do projeto na AWS com Terraform. Os estad
 | `bootstrap` | Cria o bucket S3 do state, o provedor OIDC do GitHub e as IAM Roles usadas pelas pipelines. |
 | `aws-resources` | Cria VPC, EKS, RDS PostgreSQL, repositórios ECR e o segredo do backend no Secrets Manager. |
 | `kubernetes-addons` | Instala External Secrets e Metrics Server no EKS. |
-| `kubernetes-configs` | Cria os namespaces e o SecretStore definidos em `../k8s/*/infra`. |
+| `kubernetes-configs` | Cria os namespaces e o SecretStore definidos em `../k8s/*/infra`. Também cria namespaces, SecretStore e a stack definida em `../k8s/observability`. |
 
 A ordem obrigatória é:
 
@@ -119,7 +119,7 @@ kubectl rollout status deployment/external-secrets -n external-secrets --timeout
 kubectl get deployment metrics-server -n kube-system
 ```
 
-### 7. Criar namespaces e SecretStore
+### 7. Criar namespaces, SecretStore e observabilidade
 
 ```powershell
 terraform -chdir=infra/kubernetes-configs init
@@ -132,8 +132,23 @@ terraform -chdir=infra/kubernetes-configs apply .terraform/tfplan
 Confira os recursos criados:
 
 ```powershell
-kubectl get namespaces fiap-backend fiap-frontend
+kubectl get namespaces fiap-backend fiap-frontend fiap-observability
 kubectl get secretstore -n fiap-backend
+kubectl get pods,services -n fiap-observability
+```
+
+O mesmo `terraform apply` instala OpenTelemetry Collector, Jaeger, Prometheus,
+Loki e Grafana. Os ConfigMaps são gerados diretamente dos arquivos em
+`src/ObservabilityConfig`. Para o Prometheus, o Terraform troca apenas o
+hostname do Docker Compose pelo DNS interno do Service do backend. Alterações
+nesses arquivos provocam o rollout dos componentes por meio de um checksum.
+
+As interfaces permanecem internas. Para acessá-las localmente:
+
+```powershell
+kubectl port-forward service/grafana 3000:3000 -n fiap-observability
+kubectl port-forward service/jaeger 16686:16686 -n fiap-observability
+kubectl port-forward service/prometheus 9090:9090 -n fiap-observability
 ```
 
 ### 8. Configurar o GitHub Actions

@@ -1,6 +1,6 @@
 # Kubernetes
 
-Esta pasta contém os manifests Kubernetes do backend e do frontend. Os recursos foram preparados para execução no Amazon EKS e dependem da infraestrutura provisionada pelos módulos Terraform da pasta [`infra`](../infra/README.md).
+Esta pasta contém os manifests Kubernetes do backend, frontend e observabilidade. Os recursos foram preparados para execução no Amazon EKS e dependem da infraestrutura provisionada pelos módulos Terraform da pasta [`infra`](../infra/README.md).
 
 ## Arquitetura do deploy
 
@@ -11,6 +11,12 @@ graph LR
     Frontend -->|"/api"| BackendService["Service ClusterIP<br/>porta 8080"]
     BackendService --> Backend["API .NET<br/>2 a 10 réplicas"]
     Backend --> RDS[(Amazon RDS PostgreSQL)]
+    Backend -->|"OTLP"| Collector[OpenTelemetry Collector]
+    Collector --> Jaeger
+    Collector --> Loki
+    Prometheus -->|"/metrics"| BackendService
+    Grafana --> Prometheus
+    Grafana --> Loki
     Secrets["AWS Secrets Manager"] --> ExternalSecrets["External Secrets Operator"]
     ExternalSecrets --> BackendSecret["Kubernetes Secret"]
     BackendSecret --> Backend
@@ -45,6 +51,12 @@ Os diretórios possuem responsabilidades diferentes:
 
 - `infra`: namespaces e `SecretStore` gerenciados pelo módulo Terraform `kubernetes-configs`;
 - `application`: configurações, segredos externos, deployments, serviços e escalabilidade aplicados pelo workflow ou pelo `kubectl`.
+
+Em `observability`, os manifests de `application` são aplicados pelo módulo
+Terraform `infra/kubernetes-configs`. Seus ConfigMaps são gerados diretamente
+de `src/ObservabilityConfig`, compartilhando a configuração com o Docker
+Compose. Os Services são internos (`ClusterIP`) e os dados são efêmeros para
+manter a instalação simples.
 
 ## Recursos implantados
 
