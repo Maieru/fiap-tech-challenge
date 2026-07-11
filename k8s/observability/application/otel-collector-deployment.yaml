@@ -12,6 +12,8 @@ spec:
     metadata:
       labels:
         app: otel-collector
+      annotations:
+        fiap.tech-challenge/observability-config-checksum: "${observability_config_checksum}"
     spec:
       containers:
         - name: otel-collector

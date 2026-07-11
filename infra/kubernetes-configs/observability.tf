@@ -5,7 +5,9 @@ locals {
   observability_manifest_files = fileset(local.observability_manifest_root, "*.yaml")
   observability_manifests = {
     for manifest_file in local.observability_manifest_files :
-    manifest_file => yamldecode(file("${local.observability_manifest_root}/${manifest_file}"))
+    manifest_file => yamldecode(templatefile("${local.observability_manifest_root}/${manifest_file}", {
+      observability_config_checksum = local.observability_config_checksum
+    }))
   }
 
   grafana_dashboard_files = fileset("${local.observability_config_root}/grafana/dashboards", "*.json")
@@ -97,17 +99,7 @@ resource "kubernetes_config_map_v1" "grafana_dashboards" {
 resource "kubernetes_manifest" "observability_application" {
   for_each = local.observability_manifests
 
-  manifest = each.value.kind == "Deployment" ? merge(each.value, {
-    spec = merge(each.value.spec, {
-      template = merge(each.value.spec.template, {
-        metadata = merge(each.value.spec.template.metadata, {
-          annotations = merge(try(each.value.spec.template.metadata.annotations, {}), {
-            "fiap.tech-challenge/observability-config-checksum" = local.observability_config_checksum
-          })
-        })
-      })
-    })
-  }) : each.value
+  manifest = each.value
 
   depends_on = [
     kubernetes_namespace_v1.from_yaml,
