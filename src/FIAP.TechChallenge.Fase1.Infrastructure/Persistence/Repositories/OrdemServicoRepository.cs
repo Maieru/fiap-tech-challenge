@@ -1,4 +1,4 @@
-﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
@@ -107,7 +107,11 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
     public async Task UpdateAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default)
     {
         var ordemServicoEntity = OrdemServicoMapper.ToEntity(ordemServico);
-        _ = context.OrdensServico.Update(ordemServicoEntity);
+        var trackedEntity = context.OrdensServico.Local.FirstOrDefault(x => x.Id == ordemServico.Id);
+        if (trackedEntity is null)
+            _ = context.OrdensServico.Update(ordemServicoEntity);
+        else
+            context.Entry(trackedEntity).CurrentValues.SetValues(ordemServicoEntity);
         _ = await context.SaveChangesAsync(cancellationToken);
     }
 

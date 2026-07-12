@@ -114,6 +114,39 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
+    public async Task CreateCompleta_ShouldCreateAllDataInDiagnosisStatus()
+    {
+        var servico = await CreateServicoAsync("Diagnostico eletronico", 180m);
+        var peca = await CreatePecaInsumoAsync("Filtro", $"FLT-{Guid.NewGuid():N}", "Filtro de oleo", 45m, 10);
+        var request = new
+        {
+            Cliente = new { Nome = "Cliente fluxo completo", Cpf = GenerateValidCpf(9191), Telefone = "11989191910", Email = "fluxo.completo@email.com" },
+            Veiculo = new { Placa = GenerateValidPlaca(91), Marca = "Honda", Modelo = "Civic", Ano = 2024 },
+            DescricaoProblema = "Luz de injecao acesa.",
+            Servicos = new[] { new { ServicoId = servico.Id, Quantidade = 1 } },
+            PecasInsumos = new[] { new { PecaInsumoId = peca.Id, Quantidade = 2 } }
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/ordensservico/completa", request);
+        var created = await response.Content.ReadFromJsonAsync<CriarOrdemServicoCompletaResponse>();
+
+        Assert.Multiple(() =>
+        {
+            _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
+            _ = created.Should().NotBeNull();
+            _ = created!.Status.Should().Be(2);
+            _ = created.DataInicioDiagnostico.Should().BeAfter(DateTime.UtcNow.AddMinutes(-5));
+            _ = created.Servicos.Should().ContainSingle(x => x.ServicoId == servico.Id && x.Quantidade == 1);
+            _ = created.PecasInsumos.Should().ContainSingle(x => x.PecaInsumoId == peca.Id && x.Quantidade == 2);
+        });
+
+        var recuperarResponse = await _client.GetFromJsonAsync<RecuperarOrdemServicoResponse>($"/api/ordensservico/{created!.Id}");
+        _ = recuperarResponse!.Status.Should().Be(2);
+        _ = recuperarResponse.Servicos.Should().ContainSingle();
+        _ = recuperarResponse.PecasInsumos.Should().ContainSingle();
+    }
+
+    [Test]
     public async Task Create_ShouldReturnNotFound_WhenClienteDoesNotExist()
     {
         var request = new
@@ -1636,7 +1669,7 @@ public sealed class OrdensServicoControllerTests
         public Guid Id { get; set; }
     }
 
-    private sealed class OrdemServicoResponse
+    private class OrdemServicoResponse
     {
         public Guid Id { get; set; }
         public Guid CodigoAprovacao { get; set; }
@@ -1750,6 +1783,13 @@ public sealed class OrdensServicoControllerTests
         public decimal PrecoUnitario { get; set; }
         public int Quantidade { get; set; }
         public decimal ValorTotal { get; set; }
+    }
+
+    private sealed class CriarOrdemServicoCompletaResponse : OrdemServicoResponse
+    {
+        public DateTime DataInicioDiagnostico { get; set; }
+        public IReadOnlyCollection<ServicoDaOrdemServicoResponse> Servicos { get; set; } = [];
+        public IReadOnlyCollection<PecaInsumoDaOrdemServicoResponse> PecasInsumos { get; set; } = [];
     }
 
     private sealed class IniciarDiagnosticoResponse
