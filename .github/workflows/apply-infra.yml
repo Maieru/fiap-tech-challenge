@@ -1,7 +1,6 @@
 name: Apply Infrastructure
 
 on:
-  workflow_dispatch:
   workflow_call:
     secrets:
       INFRA_ACTION_ROLE:

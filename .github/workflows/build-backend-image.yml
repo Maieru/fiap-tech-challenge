@@ -12,7 +12,6 @@ env:
   IMAGE_TAG: ${{ github.sha }}
 
 on:
-  workflow_dispatch:
   workflow_call:
     secrets:
       ACTION_ROLE_ARN:

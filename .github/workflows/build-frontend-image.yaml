@@ -9,7 +9,6 @@ env:
   DOCKER_BUILD_CONTEXT: './src/FIAP.TechChallenge.Fase1.Frontend' 
 
 on:
-  workflow_dispatch:
   workflow_call:
     secrets:
       ACTION_ROLE_ARN:
