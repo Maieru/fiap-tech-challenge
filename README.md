@@ -16,6 +16,8 @@ Aplicação para administrar o ciclo operacional de uma oficina mecânica. A sol
 
 ## Arquitetura
 
+Uma visão visual completa da infraestrutura AWS, da organização dos pods no EKS e das camadas da aplicação está disponível em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
+
 O backend é um monólito modular organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP:
 
 ```mermaid
