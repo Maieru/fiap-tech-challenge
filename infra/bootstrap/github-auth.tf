@@ -9,7 +9,8 @@ resource "aws_iam_openid_connect_provider" "oicd-github-actions" {
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "github_actions" {
-  name = "fiap-role-github-actions"
+  for_each = local.github_repositories
+  name     = each.value.role_name
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -29,7 +30,7 @@ resource "aws_iam_role" "github_actions" {
           }
 
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_owner}/${var.github_repository}:ref:refs/heads/${var.github_branch}"
+            "token.actions.githubusercontent.com:sub" = "repo:${var.github_owner}/${each.value.repository}:ref:refs/heads/${var.github_branch}"
           }
         }
       }
@@ -76,6 +77,8 @@ resource "aws_iam_policy" "github_actions_deploy_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "github_actions_attach" {
-  role       = aws_iam_role.github_actions.name
+  for_each = aws_iam_role.github_actions
+
+  role       = each.value.name
   policy_arn = aws_iam_policy.github_actions_deploy_policy.arn
 }
