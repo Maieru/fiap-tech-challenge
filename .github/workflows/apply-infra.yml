@@ -38,7 +38,7 @@ jobs:
 
   database-resources:
     name: Database Resources
-    needs: bootstrap
+    needs: aws-resources
     uses: ./.github/workflows/terraform-stage.yml
     with:
       stage: database
@@ -46,7 +46,7 @@ jobs:
 
   kubernetes-addons:
     name: Kubernetes Add-ons
-    needs: aws-resources
+    needs: database-resources
     uses: ./.github/workflows/terraform-stage.yml
     with:
       stage: kubernetes-addons
