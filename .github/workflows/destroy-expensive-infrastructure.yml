@@ -60,8 +60,8 @@ jobs:
       require_approval: false
     secrets: inherit
 
-  disable_expensive_aws_resources:
-    name: Disable EKS and RDS
+  disable_eks:
+    name: Disable EKS
     needs:
       - check_eks
       - destroy_kubernetes_addons
@@ -71,6 +71,14 @@ jobs:
       stage: aws-resources
       operation: apply
       create_eks_instance: false
-      create_rds_instance: false
+      require_approval: false
+    secrets: inherit
+
+  destroy_database:
+    name: Destroy Database
+    uses: ./.github/workflows/terraform-stage.yml
+    with:
+      stage: database
+      operation: destroy
       require_approval: false
     secrets: inherit
