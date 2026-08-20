@@ -4,7 +4,7 @@ metadata:
   name: fiap-backend-deployment
   namespace: fiap-backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: fiap-backend
