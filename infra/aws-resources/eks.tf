@@ -1,6 +1,6 @@
 locals {
   github_infra_role_arn = data.terraform_remote_state.bootstrap.outputs.github_actions_infra_role_arn["k8s_infra"]
-  github_app_role_arn   = data.terraform_remote_state.bootstrap.outputs.github_actions_role_arn["app"]
+  github_app_role_arn   = data.terraform_remote_state.bootstrap.outputs.github_actions_role_arns["app"]
 }
 
 module "eks" {
