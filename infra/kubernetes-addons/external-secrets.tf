@@ -39,7 +39,10 @@ resource "aws_iam_role_policy" "external_secrets" {
           "secretsmanager:DescribeSecret",
           "secretsmanager:GetSecretValue"
         ]
-        Resource = data.terraform_remote_state.aws_resources.outputs.backend_secret_arn
+        Resource = [
+          data.terraform_remote_state.aws_resources.outputs.backend_secret_arn,
+          data.terraform_remote_state.database.outputs.database_credentials_secret_arn
+        ]
       }
     ]
   })

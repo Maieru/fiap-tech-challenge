@@ -4,7 +4,7 @@ metadata:
   name: fiap-frontend-deployment
   namespace: fiap-frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: fiap-frontend
