@@ -1,5 +1,6 @@
 resource "aws_iam_role" "github_actions_infra" {
-  name        = "fiap-role-github-actions-infra"
+  for_each    = local.github_repositories
+  name        = "${each.value.role_name}-infra"
   description = "Permissoes para pipeline CI/CD do projeto FIAP - Infra"
 
   assume_role_policy = jsonencode({
@@ -21,8 +22,8 @@ resource "aws_iam_role" "github_actions_infra" {
 
           StringLike = {
             "token.actions.githubusercontent.com:sub" = [
-              "repo:${var.github_owner}/${var.github_repository}:ref:refs/heads/${var.github_branch}",
-              "repo:${var.github_owner}/${var.github_repository}:environment:production"
+              "repo:${var.github_owner}/${each.value.repository}:ref:refs/heads/${var.github_branch}",
+              "repo:${var.github_owner}/${each.value.repository}:environment:production"
             ]
           }
         }
@@ -192,6 +193,8 @@ resource "aws_iam_policy" "github_actions_infra_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "github_actions_infra_attach" {
-  role       = aws_iam_role.github_actions_infra.name
+  for_each = aws_iam_role.github_actions_infra
+
+  role       = each.value.name
   policy_arn = aws_iam_policy.github_actions_infra_policy.arn
 }

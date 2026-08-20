@@ -8,11 +8,6 @@ variable "github_owner" {
   default = "Maieru"
 }
 
-variable "github_repository" {
-  type    = string
-  default = "fiap-tech-challenge"
-}
-
 variable "github_branch" {
   type    = string
   default = "main"
