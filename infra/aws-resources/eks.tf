@@ -1,3 +1,8 @@
+locals {
+  github_infra_role_arn = data.terraform_remote_state.bootstrap.outputs.github_actions_infra_role_arn["k8s_infra"]
+  github_app_role_arn   = data.terraform_remote_state.bootstrap.outputs.github_actions_role_arns["app"]
+}
+
 module "eks" {
   count = var.create_eks_instance ? 1 : 0
 
@@ -14,18 +19,32 @@ module "eks" {
 
   kms_key_administrators = [
     "arn:aws:iam::575638747623:user/cli-user",
-    data.terraform_remote_state.bootstrap.outputs.github_actions_infra_role_arn
+    local.github_infra_role_arn
   ]
 
   access_entries = {
     github_actions_infra = {
-      principal_arn = data.terraform_remote_state.bootstrap.outputs.github_actions_infra_role_arn
+      principal_arn = data.terraform_remote_state.bootstrap.outputs.github_actions_infra_role_arn["k8s_infra"]
 
       policy_associations = {
         cluster_admin = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
           access_scope = {
             type = "cluster"
+          }
+        }
+      }
+    },
+    github_actions_app = {
+      principal_arn = local.github_app_role_arn
+
+      policy_associations = {
+        namespace_admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+
+          access_scope = {
+            type       = "namespace"
+            namespaces = ["fiap-backend", "fiap-frontend"]
           }
         }
       }

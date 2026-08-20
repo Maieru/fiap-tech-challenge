@@ -193,8 +193,8 @@ resource "aws_iam_policy" "github_actions_infra_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "github_actions_infra_attach" {
-  for_each   = aws_iam_role.github_actions_infra
+  for_each = aws_iam_role.github_actions_infra
 
-  role       = "${each.value.name}-infra"
+  role       = each.value.name
   policy_arn = aws_iam_policy.github_actions_infra_policy.arn
 }

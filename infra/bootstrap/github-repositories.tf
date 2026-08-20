@@ -11,13 +11,13 @@ locals {
     }
 
     k8s_infra = {
-      repository = "fiap-tech-challenge-k8s-infra"
-      role_name  = "fiap-role-github-actions-k8s-infra"
+      repository = "fiap-tech-challenge-infra"
+      role_name  = "fiap-role-github-actions-infra"
     }
 
     database_infra = {
-      repository = "fiap-tech-challenge-database-infra"
-      role_name  = "fiap-role-github-actions-database-infra"
+      repository = "fiap-tech-challenge-database"
+      role_name  = "fiap-role-github-actions-database"
     }
   }
 }
