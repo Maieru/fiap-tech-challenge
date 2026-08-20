@@ -10,7 +10,7 @@ resource "aws_security_group" "rds_postgresql" {
 
 resource "aws_vpc_security_group_ingress_rule" "rds_postgresql_from_eks" {
   security_group_id            = aws_security_group.rds_postgresql.id
-  referenced_security_group_id = data.terraform_remote_state.aws-resources.outputs.eks.security_group
+  referenced_security_group_id = data.terraform_remote_state.aws-resources.outputs.eks.node_security_group
   from_port                    = 5432
   to_port                      = 5432
   ip_protocol                  = "tcp"
