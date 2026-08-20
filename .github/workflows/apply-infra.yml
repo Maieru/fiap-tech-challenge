@@ -36,6 +36,14 @@ jobs:
       stage: aws-resources
     secrets: inherit
 
+  database-resources:
+    name: Database Resources
+    needs: bootstrap
+    uses: ./.github/workflows/terraform-stage.yml
+    with:
+      stage: database
+    secrets: inherit
+
   kubernetes-addons:
     name: Kubernetes Add-ons
     needs: aws-resources

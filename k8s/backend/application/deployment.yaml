@@ -25,7 +25,9 @@ spec:
             - configMapRef:
                 name: fiap-backend-config
             - secretRef:
-                name: fiap-backend-secret
+                name: fiap-secret-manager-database-credentials
+            - secretRef:
+                name: fiap-secret-manager-jwt-signing-key
           readinessProbe:
             httpGet:
               path: /api/health/ready
