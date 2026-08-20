@@ -19,12 +19,13 @@ module "eks" {
 
   kms_key_administrators = [
     "arn:aws:iam::575638747623:user/cli-user",
-    local.github_infra_role_arn
+    local.github_infra_role_arn,
+    local.github_app_role_arn
   ]
 
   access_entries = {
     github_actions_infra = {
-      principal_arn = data.terraform_remote_state.bootstrap.outputs.github_actions_infra_role_arn["k8s_infra"]
+      principal_arn = local.github_infra_role_arn
 
       policy_associations = {
         cluster_admin = {
