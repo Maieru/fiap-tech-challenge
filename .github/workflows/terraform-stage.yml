@@ -139,6 +139,13 @@ jobs:
         with:
           name: terraform-plan-${{ inputs.stage }}
           path: ${{ env.TF_WORKING_DIR }}
+      
+      - name: Diagnosticar acesso ao EKS
+        run: |
+          aws sts get-caller-identity
+          aws eks list-access-entries \
+            --cluster-name fiap-eks-cluster \
+            --region us-east-1
 
       - name: Terraform Apply
         run: terraform apply -input=false -no-color -auto-approve tfplan
