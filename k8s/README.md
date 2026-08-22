@@ -1,15 +1,15 @@
 # Kubernetes
 
-Esta pasta contém os manifests Kubernetes do backend, frontend e observabilidade. Os recursos foram preparados para execução no Amazon EKS e dependem da infraestrutura provisionada no repositório [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra).
+Esta pasta contém apenas os manifests Kubernetes das aplicações backend e frontend. Namespaces, `SecretStore`, add-ons e observabilidade pertencem ao repositório [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra).
 
 ## Arquitetura do deploy
 
 ```mermaid
 graph LR
     Internet --> LB["Service LoadBalancer<br/>porta 30150"]
-    LB --> Frontend["Frontend / Nginx<br/>2 réplicas"]
+    LB --> Frontend["Frontend / Nginx<br/>1 réplica"]
     Frontend -->|"/api"| BackendService["Service ClusterIP<br/>porta 8080"]
-    BackendService --> Backend["API .NET<br/>2 a 10 réplicas"]
+    BackendService --> Backend["API .NET<br/>1 a 10 réplicas"]
     Backend --> RDS[(Amazon RDS PostgreSQL)]
     Backend -->|"OTLP"| Collector[OpenTelemetry Collector]
     Collector --> Jaeger
@@ -29,34 +29,20 @@ O frontend é o único componente exposto publicamente. As chamadas para `/api` 
 ```text
 k8s/
 ├── backend/
-│   ├── infra/
-│   │   ├── namespace.yaml
-│   │   └── secret-store.yml
-│   └── application/
-│       ├── config-maps.yaml
-│       ├── deployment.yaml
-│       ├── hpa.yaml
-│       ├── secrets.yaml
-│       └── services.yaml
+│   ├── config-maps.yaml
+│   ├── deployment.yaml
+│   ├── hpa.yaml
+│   ├── secrets.yaml
+│   └── services.yaml
 └── frontend/
-    ├── infra/
-    │   └── namespace.yaml
-    └── application/
-        ├── config-maps.yaml
-        ├── deployment.yaml
-        └── services.yaml
+    ├── config-maps.yaml
+    ├── deployment.yaml
+    └── services.yaml
 ```
 
-Os diretórios possuem responsabilidades diferentes:
+Os diretórios `backend` e `frontend` contêm somente os recursos que acompanham o ciclo de entrega da aplicação: configurações, segredos externos, deployments, serviços e escalabilidade.
 
-- `infra`: namespaces e `SecretStore` gerenciados pelo módulo Terraform `kubernetes-configs`;
-- `application`: configurações, segredos externos, deployments, serviços e escalabilidade aplicados pelo workflow ou pelo `kubectl`.
-
-Em `observability`, os manifests de `application` são aplicados pelo módulo
-Terraform `infra/kubernetes-configs` do repositório de infraestrutura. Seus ConfigMaps são gerados diretamente
-de `src/ObservabilityConfig`, compartilhando a configuração com o Docker
-Compose. Os Services são internos (`ClusterIP`) e os dados são efêmeros para
-manter a instalação simples.
+A stack de observabilidade em produção é aplicada pelo módulo `infra/kubernetes-configs` do repositório de infraestrutura. `src/ObservabilityConfig` permanece neste repositório porque também é utilizado pelo ambiente local com Docker Compose.
 
 ## Recursos implantados
 
@@ -64,24 +50,24 @@ manter a instalação simples.
 
 O backend é executado no namespace `fiap-backend` e possui:
 
-- `Deployment` com duas réplicas iniciais;
+- `Deployment` com uma réplica inicial;
 - imagem hospedada no Amazon ECR com `imagePullPolicy: Always`;
 - `ConfigMap` com configurações do ASP.NET Core e do JWT;
-- `ExternalSecret` que cria o Secret `fiap-backend-secret`;
+- dois recursos `ExternalSecret`, que sincronizam as credenciais do banco e a chave JWT;
 - `Service` do tipo `ClusterIP`, disponível internamente na porta `8080`;
 - startup e liveness probes no endpoint `/api/health/live`;
 - readiness probe no endpoint `/api/health/ready`;
 - requests de `100m` de CPU e `128Mi` de memória;
 - limits de `500m` de CPU e `512Mi` de memória;
-- `HorizontalPodAutoscaler` entre 2 e 10 réplicas, com alvo de 70% de utilização de CPU.
+- `HorizontalPodAutoscaler` entre 1 e 10 réplicas, com alvo de 70% de utilização de CPU.
 
-O `ExternalSecret` lê o segredo `fiap-secret-manager-backend` do AWS Secrets Manager. Esse segredo é criado pelo Terraform e contém a connection string do PostgreSQL e a chave de assinatura JWT. Os valores sensíveis não ficam armazenados nos manifests.
+Os recursos `ExternalSecret` leem `fiap-secret-manager-database-credentials` e `fiap-secret-manager-jwt-signing-key` do AWS Secrets Manager. Os segredos são criados pelos repositórios Terraform correspondentes, e os valores sensíveis não ficam armazenados nos manifests.
 
 ### Frontend
 
 O frontend é executado no namespace `fiap-frontend` e possui:
 
-- `Deployment` com duas réplicas;
+- `Deployment` com uma réplica;
 - imagem hospedada no Amazon ECR com `imagePullPolicy: Always`;
 - `ConfigMap` com o endereço interno do backend;
 - requests de `100m` de CPU e `128Mi` de memória;
@@ -104,7 +90,7 @@ Antes de aplicar os manifests da aplicação, é necessário ter:
 Essas dependências são provisionadas pelos módulos Terraform nesta ordem:
 
 ```text
-bootstrap → aws-resources → kubernetes-addons → kubernetes-configs
+bootstrap → aws-resources → database → kubernetes-addons → kubernetes-configs
 ```
 
 Consulte o [`README` de infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra) para o procedimento completo de provisionamento.
@@ -134,8 +120,8 @@ kubectl get secretstore aws-secrets-store -n fiap-backend
 ### 3. Aplicar os manifests
 
 ```bash
-kubectl apply -f k8s/backend/application
-kubectl apply -f k8s/frontend/application
+kubectl apply -f k8s/backend
+kubectl apply -f k8s/frontend
 ```
 
 ### 4. Aguardar o rollout
@@ -192,7 +178,7 @@ O workflow `.github/workflows/deploy-applications.yml` realiza o deploy no EKS. 
 2. atualiza o `kubeconfig` do cluster;
 3. verifica as permissões no Kubernetes;
 4. reinicia e aguarda o External Secrets Operator;
-5. aplica os manifests de `backend/application` e `frontend/application`;
+5. aplica os manifests de `k8s/backend` e `k8s/frontend`;
 6. reinicia os deployments para buscar as imagens marcadas como `latest`;
 7. aguarda a conclusão dos rollouts.
 
@@ -239,8 +225,8 @@ Se o backend não iniciar, verifique primeiro o `ExternalSecret`, o Secret gerad
 Para remover apenas as cargas da aplicação, preservando o cluster e os recursos gerenciados pelo Terraform:
 
 ```bash
-kubectl delete -f k8s/frontend/application
-kubectl delete -f k8s/backend/application
+kubectl delete -f k8s/frontend
+kubectl delete -f k8s/backend
 ```
 
 Namespaces, add-ons, identidades AWS e demais recursos de infraestrutura devem ser removidos por meio dos respectivos módulos Terraform, conforme o procedimento descrito no [`README` de infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra).

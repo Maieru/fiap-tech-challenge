@@ -161,7 +161,7 @@ Regras importantes:
 
 A infraestrutura de produção é declarada em Terraform nos repositórios [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) e [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db). Ela provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
 
-Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui duas réplicas, probes de saúde, limites de recursos e HPA de 2 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. O frontend também possui duas réplicas e é publicado por um serviço `LoadBalancer`, encaminhando `/api` para o serviço interno do backend.
+Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui uma réplica inicial, probes de saúde, limites de recursos e HPA de 1 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. O frontend possui uma réplica e é publicado por um serviço `LoadBalancer`, encaminhando `/api` para o serviço interno do backend. Namespaces, `SecretStore`, add-ons e observabilidade são mantidos exclusivamente no repositório de infraestrutura.
 
 Os módulos Terraform devem ser aplicados nesta ordem:
 
