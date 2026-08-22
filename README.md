@@ -2,6 +2,17 @@
 
 Aplicação para administrar o ciclo operacional de uma oficina mecânica. A solução reúne uma API em .NET, um frontend React, persistência em PostgreSQL, ambiente local com Docker Compose e infraestrutura AWS provisionada com Terraform e Kubernetes.
 
+## Ecossistema de repositórios
+
+O projeto está distribuído por responsabilidade entre os seguintes repositórios:
+
+| Repositório | Responsabilidade |
+| --- | --- |
+| [`fiap-fase1-tech-challenge`](https://github.com/Maieru/fiap-fase1-tech-challenge) | Aplicação principal: API .NET, frontend React, testes, Docker Compose, manifests das aplicações e orquestração dos workflows. |
+| [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) | Infraestrutura compartilhada: backend do Terraform, VPC, EKS, ECR, add-ons, configurações Kubernetes e observabilidade. |
+| [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db) | Infraestrutura do PostgreSQL no Amazon RDS e credenciais do banco no AWS Secrets Manager. |
+| [`fiap-tech-challenge-serverless`](https://github.com/Maieru/fiap-tech-challenge-serverless) | Repositório destinado aos componentes serverless do projeto. |
+
 ## Funcionalidades
 
 - autenticação de usuários com JWT;
@@ -148,17 +159,27 @@ Regras importantes:
 
 ## Infraestrutura e Kubernetes
 
-A infraestrutura de produção é declarada em Terraform na pasta `infra` e provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
+A infraestrutura de produção é declarada em Terraform nos repositórios [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) e [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db). Ela provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
 
 Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui duas réplicas, probes de saúde, limites de recursos e HPA de 2 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. O frontend também possui duas réplicas e é publicado por um serviço `LoadBalancer`, encaminhando `/api` para o serviço interno do backend.
 
 Os módulos Terraform devem ser aplicados nesta ordem:
 
 ```text
-bootstrap → aws-resources → kubernetes-addons → kubernetes-configs
+bootstrap → aws-resources → database → kubernetes-addons → kubernetes-configs
 ```
 
-O passo a passo de provisionamento, deploy, validação e destruição está em [`infra/README.md`](infra/README.md). A organização dos manifests, o deploy manual e os comandos de diagnóstico estão em [`k8s/README.md`](k8s/README.md). Os workflows em `.github/workflows` automatizam a infraestrutura, o build e publicação das imagens no ECR e o deploy das aplicações no EKS.
+Os estágios `bootstrap`, `aws-resources`, `kubernetes-addons` e `kubernetes-configs` pertencem ao repositório de infraestrutura; `database` pertence ao repositório de banco. Cada repositório contém sua própria action reutilizável `terraform-stage` e seus workflows de criação e destruição. Este repositório apenas orquestra as chamadas remotas na ordem correta, além de construir as imagens e implantar as aplicações.
+
+O fluxo completo executa:
+
+```text
+Infra/Core → Database → Infra/Kubernetes → Build das imagens → Deploy
+```
+
+O passo a passo operacional está no [`guia de infraestrutura`](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra) e no [`guia do banco`](https://github.com/Maieru/fiap-tech-challenge-db#readme). A organização dos manifests, o deploy manual e os comandos de diagnóstico estão em [`k8s/README.md`](k8s/README.md).
+
+Para a orquestração, configure os secrets `INFRA_ACTION_ROLE`, `DATABASE_ACTION_ROLE`, `ACTION_ROLE_ARN`, `jwt_signing_key`, `db_username` e `db_password`. Se os repositórios forem privados, configure também `REPOSITORIES_TOKEN` com acesso de leitura aos repositórios chamados.
 
 ## Testes
 
@@ -173,7 +194,7 @@ dotnet test src/TechChallengeFase1.slnx
 ```text
 .
 ├── .github/workflows/   # CI/CD, infraestrutura e deploy
-├── infra/               # módulos Terraform e documentação operacional
+├── docs/                # documentação de arquitetura
 ├── k8s/                 # manifests do backend e frontend
 └── src/                 # solução .NET, frontend e Docker Compose
 ```

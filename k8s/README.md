@@ -1,6 +1,6 @@
 # Kubernetes
 
-Esta pasta contém os manifests Kubernetes do backend, frontend e observabilidade. Os recursos foram preparados para execução no Amazon EKS e dependem da infraestrutura provisionada pelos módulos Terraform da pasta [`infra`](../infra/README.md).
+Esta pasta contém os manifests Kubernetes do backend, frontend e observabilidade. Os recursos foram preparados para execução no Amazon EKS e dependem da infraestrutura provisionada no repositório [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra).
 
 ## Arquitetura do deploy
 
@@ -53,7 +53,7 @@ Os diretórios possuem responsabilidades diferentes:
 - `application`: configurações, segredos externos, deployments, serviços e escalabilidade aplicados pelo workflow ou pelo `kubectl`.
 
 Em `observability`, os manifests de `application` são aplicados pelo módulo
-Terraform `infra/kubernetes-configs`. Seus ConfigMaps são gerados diretamente
+Terraform `infra/kubernetes-configs` do repositório de infraestrutura. Seus ConfigMaps são gerados diretamente
 de `src/ObservabilityConfig`, compartilhando a configuração com o Docker
 Compose. Os Services são internos (`ClusterIP`) e os dados são efêmeros para
 manter a instalação simples.
@@ -107,7 +107,7 @@ Essas dependências são provisionadas pelos módulos Terraform nesta ordem:
 bootstrap → aws-resources → kubernetes-addons → kubernetes-configs
 ```
 
-Consulte [`infra/README.md`](../infra/README.md) para o procedimento completo de provisionamento.
+Consulte o [`README` de infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra) para o procedimento completo de provisionamento.
 
 ## Deploy manual
 
@@ -243,4 +243,4 @@ kubectl delete -f k8s/frontend/application
 kubectl delete -f k8s/backend/application
 ```
 
-Namespaces, add-ons, identidades AWS e demais recursos de infraestrutura devem ser removidos por meio dos respectivos módulos Terraform, conforme o procedimento descrito em [`infra/README.md`](../infra/README.md).
+Namespaces, add-ons, identidades AWS e demais recursos de infraestrutura devem ser removidos por meio dos respectivos módulos Terraform, conforme o procedimento descrito no [`README` de infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra).
