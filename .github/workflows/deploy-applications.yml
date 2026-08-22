@@ -18,8 +18,6 @@ jobs:
   deploy:
     name: Deploy no EKS
     runs-on: ubuntu-latest
-    environment:
-      name: production
 
     steps:
       - name: Checkout do código
