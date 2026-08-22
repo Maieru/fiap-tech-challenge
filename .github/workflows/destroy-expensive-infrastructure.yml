@@ -9,10 +9,18 @@ on:
 permissions:
   id-token: write
   contents: read
-  
+
 jobs:
+  destroy-kubernetes-infrastructure:
+    name: Destroy Kubernetes Infrastructure
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/destroy-kubernetes-infrastructure.yml@main
+    secrets:
+      INFRA_ACTION_ROLE: ${{ secrets.INFRA_ACTION_ROLE }}
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+
   destroy-database:
     name: Destroy Database
+    needs: destroy-kubernetes-infrastructure
     uses: Maieru/fiap-tech-challenge-db/.github/workflows/destroy-database.yml@main
     secrets:
       DATABASE_ACTION_ROLE: ${{ secrets.DATABASE_ACTION_ROLE }}
@@ -22,10 +30,9 @@ jobs:
 
   destroy-infrastructure:
     name: Destroy Expensive Infrastructure
-    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/destroy-expensive-infrastructure.yml@main
     needs: destroy-database
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/destroy-expensive-infrastructure.yml@main
     secrets:
       INFRA_ACTION_ROLE: ${{ secrets.INFRA_ACTION_ROLE }}
       jwt_signing_key: ${{ secrets.jwt_signing_key }}
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
-
