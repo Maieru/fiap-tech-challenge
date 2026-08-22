@@ -12,20 +12,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  infrastructure:
-    name: Initialize Infrastructure
-    uses: ./.github/workflows/apply-infra.yml
-    secrets: inherit
+  core-infrastructure:
+    name: Apply Core Infrastructure
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/apply-core-infrastructure.yml@main
+    secrets:
+      INFRA_ACTION_ROLE: ${{ secrets.INFRA_ACTION_ROLE }}
+      jwt_signing_key: ${{ secrets.jwt_signing_key }}
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+
+  database:
+    name: Apply Database
+    needs: core-infrastructure
+    uses: Maieru/fiap-tech-challenge-db/.github/workflows/apply-database.yml@main
+    secrets:
+      DATABASE_ACTION_ROLE: ${{ secrets.DATABASE_ACTION_ROLE }}
+      db_username: ${{ secrets.db_username }}
+      db_password: ${{ secrets.db_password }}
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+
+  kubernetes-infrastructure:
+    name: Apply Kubernetes Infrastructure
+    needs: database
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/apply-kubernetes-infrastructure.yml@main
+    secrets:
+      INFRA_ACTION_ROLE: ${{ secrets.INFRA_ACTION_ROLE }}
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
 
   backend-image:
     name: Build And Push Backend
-    needs: infrastructure
+    needs: kubernetes-infrastructure
     uses: ./.github/workflows/build-backend-image.yml
     secrets: inherit
 
   frontend-image:
     name: Build And Push Frontend
-    needs: infrastructure
+    needs: kubernetes-infrastructure
     uses: ./.github/workflows/build-frontend-image.yaml
     secrets: inherit
 

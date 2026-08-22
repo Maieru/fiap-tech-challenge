@@ -44,8 +44,8 @@ jobs:
 
       - name: Aplicar manifests
         run: |
-          kubectl apply -f k8s/backend/application
-          kubectl apply -f k8s/frontend/application
+          kubectl apply -f k8s/backend
+          kubectl apply -f k8s/frontend
 
       - name: Reiniciar aplicações
         run: |

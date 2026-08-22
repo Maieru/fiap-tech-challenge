@@ -48,7 +48,7 @@ flowchart TB
         subgraph FrontNS["Namespace: fiap-frontend"]
             direction LR
             FrontService["Service<br/>LoadBalancer"] --> FrontDeploy[Deployment]
-            FrontDeploy --> FrontPods["2 pods<br/>React + Nginx"]
+            FrontDeploy --> FrontPods["1 pod<br/>React + Nginx"]
         end
 
         subgraph Internal["Cargas internas"]
@@ -57,7 +57,7 @@ flowchart TB
             subgraph BackNS["Namespace: fiap-backend"]
                 direction TB
                 BackService[Service interno] --> BackDeploy[Deployment]
-                HPA[HPA] -->|2 a 10 réplicas| BackDeploy
+                HPA[HPA] -->|1 a 10 réplicas| BackDeploy
                 BackDeploy --> BackPods["Pods Backend<br/>API .NET"]
             end
 
@@ -76,7 +76,7 @@ flowchart TB
     BackPods --> RDS[(Amazon RDS<br/>PostgreSQL)]
 ```
 
-Os pods podem ser distribuídos entre os nós do node group gerenciado pelo EKS. O frontend mantém duas réplicas; o backend começa com duas e pode escalar até dez conforme o uso de CPU.
+Os pods podem ser distribuídos entre os nós do node group gerenciado pelo EKS. O frontend mantém uma réplica; o backend começa com uma e pode escalar até dez conforme o uso de CPU.
 
 ## Camadas da aplicação
 
