@@ -11,20 +11,21 @@ permissions:
   contents: read
   
 jobs:
-  destroy-infrastructure:
-    name: Destroy Expensive Infrastructure
-    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/destroy-expensive-infrastructure.yml@main
-    secrets:
-      INFRA_ACTION_ROLE: ${{ secrets.INFRA_ACTION_ROLE }}
-      jwt_signing_key: ${{ secrets.jwt_signing_key }}
-      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
-
   destroy-database:
     name: Destroy Database
-    needs: destroy-infrastructure
     uses: Maieru/fiap-tech-challenge-db/.github/workflows/destroy-database.yml@main
     secrets:
       DATABASE_ACTION_ROLE: ${{ secrets.DATABASE_ACTION_ROLE }}
       db_username: ${{ secrets.db_username }}
       db_password: ${{ secrets.db_password }}
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+
+  destroy-infrastructure:
+    name: Destroy Expensive Infrastructure
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/destroy-expensive-infrastructure.yml@main
+    needs: destroy-database
+    secrets:
+      INFRA_ACTION_ROLE: ${{ secrets.INFRA_ACTION_ROLE }}
+      jwt_signing_key: ${{ secrets.jwt_signing_key }}
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+
