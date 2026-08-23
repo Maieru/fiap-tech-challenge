@@ -57,3 +57,11 @@ jobs:
       - frontend-image
     uses: ./.github/workflows/deploy-applications.yml
     secrets: inherit
+
+  edge-infrastructure:
+    name: Apply Edge Infrastructure
+    needs: deploy-applications
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/apply-edge-infrastructure.yml@main
+    secrets:
+      INFRA_ACTION_ROLE: ${{ secrets.INFRA_ACTION_ROLE }}
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
