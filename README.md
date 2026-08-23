@@ -56,7 +56,7 @@ A API aplica automaticamente as migrations pendentes na inicialização, exceto 
 - JWT e BCrypt;
 - React 19, TypeScript, Vite e Tailwind CSS;
 - Docker, Docker Compose e Nginx;
-- Terraform, AWS e Kubernetes;
+- Terraform, AWS, API Gateway, Application Load Balancer e Kubernetes;
 - Scalar e OpenAPI;
 - NUnit, Moq e FluentAssertions.
 
@@ -161,20 +161,21 @@ Regras importantes:
 
 A infraestrutura de produção é declarada em Terraform nos repositórios [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) e [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db). Ela provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
 
-Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui uma réplica inicial, probes de saúde, limites de recursos e HPA de 1 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. O frontend possui uma réplica e é publicado por um serviço `LoadBalancer`, encaminhando `/api` para o serviço interno do backend. Namespaces, `SecretStore`, add-ons e observabilidade são mantidos exclusivamente no repositório de infraestrutura.
+Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui uma réplica inicial, probes de saúde, limites de recursos e HPA de 1 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. Os dois serviços são `ClusterIP` e participam do mesmo `IngressGroup`: o AWS Load Balancer Controller cria um ALB interno que encaminha `/api/*` ao backend e as demais rotas ao frontend. Um API Gateway HTTP API é a entrada pública e acessa esse ALB por um VPC Link.
 
 Os módulos Terraform devem ser aplicados nesta ordem:
 
 ```text
 bootstrap → aws-resources → database → kubernetes-addons → kubernetes-configs
+→ deploy das aplicações e Ingresses → api-gateway
 ```
 
-Os estágios `bootstrap`, `aws-resources`, `kubernetes-addons` e `kubernetes-configs` pertencem ao repositório de infraestrutura; `database` pertence ao repositório de banco. Cada repositório contém sua própria action reutilizável `terraform-stage` e seus workflows de criação e destruição. Este repositório apenas orquestra as chamadas remotas na ordem correta, além de construir as imagens e implantar as aplicações.
+Os estágios `bootstrap`, `aws-resources`, `kubernetes-addons`, `kubernetes-configs` e `api-gateway` pertencem ao repositório de infraestrutura; `database` pertence ao repositório de banco. Cada repositório contém sua própria action reutilizável `terraform-stage` e seus workflows de criação e destruição. Este repositório orquestra as chamadas remotas, constrói as imagens, implanta as aplicações, aguarda a criação do ALB e então aplica o API Gateway.
 
 O fluxo completo executa:
 
 ```text
-Infra/Core → Database → Infra/Kubernetes → Build das imagens → Deploy
+Infra/Core → Database → Infra/Kubernetes → Build → Deploy/ALB → API Gateway
 ```
 
 O passo a passo operacional está no [`guia de infraestrutura`](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra) e no [`guia do banco`](https://github.com/Maieru/fiap-tech-challenge-db#readme). A organização dos manifests, o deploy manual e os comandos de diagnóstico estão em [`k8s/README.md`](k8s/README.md).

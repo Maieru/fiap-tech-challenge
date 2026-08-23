@@ -6,20 +6,19 @@ Este documento apresenta uma visão simplificada da infraestrutura AWS, da organ
 
 ```mermaid
 flowchart LR
-    User([Usuário]) --> LB["AWS Load Balancer"]
+    User([Usuário]) --> Gateway["Amazon API Gateway<br/>HTTP API"]
 
     subgraph AWS["AWS - us-east-1"]
         ECR[(Amazon ECR<br/>Frontend e Backend)]
         Secrets[AWS Secrets Manager]
+        Logs[CloudWatch Logs<br/>retenção de 7 dias]
 
         subgraph VPC["VPC"]
-            subgraph Public["Sub-redes públicas"]
-                LB
-                subgraph EKS["Amazon EKS"]
-                    FrontService["Kubernetes Service<br/>type: LoadBalancer"]
-                    Workloads[Pods da aplicação]
-                    FrontService --> Workloads
-                end
+            Link["VPC Link"] --> ALB["ALB interno"]
+
+            subgraph EKS["Amazon EKS"]
+                FrontService["Frontend Service<br/>ClusterIP"] --> FrontPods["Pods React + Nginx"]
+                BackService["Backend Service<br/>ClusterIP"] --> BackPods["Pods ASP.NET Core"]
             end
 
             subgraph Database["Sub-redes de banco"]
@@ -28,26 +27,32 @@ flowchart LR
         end
     end
 
-    LB --> FrontService
-    ECR -->|Imagens| Workloads
-    Secrets -->|Configurações sensíveis| Workloads
-    Workloads -->|Dados| RDS
+    Gateway --> Logs
+    Gateway --> Link
+    ALB -->|"/*"| FrontService
+    ALB -->|"/api/*"| BackService
+    ECR -->|Imagens| FrontPods
+    ECR -->|Imagens| BackPods
+    Secrets -->|Configurações sensíveis| BackPods
+    BackPods -->|Dados| RDS
 ```
 
-O AWS Load Balancer fica fora do EKS e encaminha o tráfego para o `Service` Kubernetes do frontend. O backend e os componentes de observabilidade permanecem acessíveis apenas dentro do cluster.
+O API Gateway é o único endpoint público. Seu VPC Link acessa o listener HTTP do ALB interno, que usa regras por caminho e target groups independentes para frontend e backend. Os services Kubernetes e os componentes de observabilidade permanecem privados.
 
 ## Organização dos pods no EKS
 
 ```mermaid
 flowchart TB
-    Internet([Internet]) --> LoadBalancer["AWS Load Balancer<br/>fora do EKS"]
+    Internet([Internet]) --> Gateway["API Gateway"]
+    Gateway --> Link["VPC Link"]
+    Link --> ALB["ALB interno"]
 
     subgraph EKS["Amazon EKS"]
         direction TB
 
         subgraph FrontNS["Namespace: fiap-frontend"]
             direction LR
-            FrontService["Service<br/>LoadBalancer"] --> FrontDeploy[Deployment]
+            FrontService["Service<br/>ClusterIP"] --> FrontDeploy[Deployment]
             FrontDeploy --> FrontPods["1 pod<br/>React + Nginx"]
         end
 
@@ -56,7 +61,7 @@ flowchart TB
 
             subgraph BackNS["Namespace: fiap-backend"]
                 direction TB
-                BackService[Service interno] --> BackDeploy[Deployment]
+                BackService["Service<br/>ClusterIP"] --> BackDeploy[Deployment]
                 HPA[HPA] -->|1 a 10 réplicas| BackDeploy
                 BackDeploy --> BackPods["Pods Backend<br/>API .NET"]
             end
@@ -68,15 +73,15 @@ flowchart TB
             end
         end
 
-        FrontPods -->|/api| BackService
         BackPods -->|Telemetria| Telemetry
     end
 
-    LoadBalancer --> FrontService
+    ALB -->|"/*"| FrontService
+    ALB -->|"/api/*"| BackService
     BackPods --> RDS[(Amazon RDS<br/>PostgreSQL)]
 ```
 
-Os pods podem ser distribuídos entre os nós do node group gerenciado pelo EKS. O frontend mantém uma réplica; o backend começa com uma e pode escalar até dez conforme o uso de CPU.
+O AWS Load Balancer Controller registra diretamente os IPs dos pods nos target groups do ALB. O frontend mantém uma réplica; o backend começa com uma e pode escalar até dez conforme o uso de CPU.
 
 ## Camadas da aplicação
 

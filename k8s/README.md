@@ -6,9 +6,12 @@ Esta pasta contém apenas os manifests Kubernetes das aplicações backend e fro
 
 ```mermaid
 graph LR
-    Internet --> LB["Service LoadBalancer<br/>porta 30150"]
-    LB --> Frontend["Frontend / Nginx<br/>1 réplica"]
-    Frontend -->|"/api"| BackendService["Service ClusterIP<br/>porta 8080"]
+    Internet --> Gateway["API Gateway"]
+    Gateway --> Link["VPC Link"]
+    Link --> ALB["ALB interno"]
+    ALB -->|"/*"| FrontendService["Frontend Service<br/>ClusterIP porta 80"]
+    FrontendService --> Frontend["Frontend / Nginx<br/>1 réplica"]
+    ALB -->|"/api/*"| BackendService["Backend Service<br/>ClusterIP porta 8080"]
     BackendService --> Backend["API .NET<br/>1 a 10 réplicas"]
     Backend --> RDS[(Amazon RDS PostgreSQL)]
     Backend -->|"OTLP"| Collector[OpenTelemetry Collector]
@@ -22,7 +25,7 @@ graph LR
     BackendSecret --> Backend
 ```
 
-O frontend é o único componente exposto publicamente. As chamadas para `/api` são encaminhadas pelo Nginx para o serviço interno do backend, usando o endereço `fiap-backend-service.fiap-backend.svc:8080`.
+O API Gateway é o único componente exposto publicamente. O AWS Load Balancer Controller combina os Ingresses dos dois namespaces em um ALB interno: `/api/*` segue para o backend e as demais rotas seguem para o frontend.
 
 ## Estrutura
 
@@ -32,11 +35,13 @@ k8s/
 │   ├── config-maps.yaml
 │   ├── deployment.yaml
 │   ├── hpa.yaml
+│   ├── ingress.yaml
 │   ├── secrets.yaml
 │   └── services.yaml
 └── frontend/
     ├── config-maps.yaml
     ├── deployment.yaml
+    ├── ingress.yaml
     └── services.yaml
 ```
 
@@ -55,6 +60,7 @@ O backend é executado no namespace `fiap-backend` e possui:
 - `ConfigMap` com configurações do ASP.NET Core e do JWT;
 - dois recursos `ExternalSecret`, que sincronizam as credenciais do banco e a chave JWT;
 - `Service` do tipo `ClusterIP`, disponível internamente na porta `8080`;
+- `Ingress` com a rota `/api`, target type `ip` e health check em `/api/health/ready`;
 - startup e liveness probes no endpoint `/api/health/live`;
 - readiness probe no endpoint `/api/health/ready`;
 - requests de `100m` de CPU e `128Mi` de memória;
@@ -72,7 +78,8 @@ O frontend é executado no namespace `fiap-frontend` e possui:
 - `ConfigMap` com o endereço interno do backend;
 - requests de `100m` de CPU e `128Mi` de memória;
 - limits de `500m` de CPU e `512Mi` de memória;
-- `Service` do tipo `LoadBalancer`, publicado na porta `30150` e encaminhado à porta `80` do Nginx.
+- `Service` do tipo `ClusterIP` na porta `80`;
+- `Ingress` com a rota `/`, compartilhando o ALB interno com o backend.
 
 ## Pré-requisitos
 
@@ -82,7 +89,7 @@ Antes de aplicar os manifests da aplicação, é necessário ter:
 - `kubectl` instalado;
 - cluster EKS `fiap-eks-cluster` criado;
 - imagens do backend e do frontend publicadas nos respectivos repositórios ECR;
-- External Secrets Operator e Metrics Server instalados;
+- External Secrets Operator, Metrics Server e AWS Load Balancer Controller instalados;
 - namespaces `fiap-backend` e `fiap-frontend` criados;
 - `SecretStore` `aws-secrets-store` disponível no namespace do backend;
 - segredo `fiap-secret-manager-backend` disponível no AWS Secrets Manager.
@@ -91,6 +98,7 @@ Essas dependências são provisionadas pelos módulos Terraform nesta ordem:
 
 ```text
 bootstrap → aws-resources → database → kubernetes-addons → kubernetes-configs
+→ deploy das aplicações e Ingresses → api-gateway
 ```
 
 Consulte o [`README` de infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra) para o procedimento completo de provisionamento.
@@ -138,6 +146,8 @@ Confira os principais recursos:
 ```bash
 kubectl get pods,services -n fiap-backend
 kubectl get pods,services -n fiap-frontend
+kubectl get ingress -n fiap-backend
+kubectl get ingress -n fiap-frontend
 kubectl get hpa -n fiap-backend
 kubectl get externalsecret -n fiap-backend
 ```
@@ -149,22 +159,23 @@ kubectl describe externalsecret fiap-backend-secret -n fiap-backend
 kubectl get secret fiap-backend-secret -n fiap-backend
 ```
 
-Para consultar o endereço público do frontend:
+Os dois Ingresses devem apresentar o mesmo hostname interno:
 
 ```bash
-kubectl get service fiap-frontend-service -n fiap-frontend
+kubectl get ingress fiap-backend-ingress -n fiap-backend
+kubectl get ingress fiap-frontend-ingress -n fiap-frontend
 ```
 
-Depois que o campo `EXTERNAL-IP` receber um endereço ou hostname, acesse:
+Depois de aplicar o estado `infra/api-gateway`, consulte o endpoint público no repositório de infraestrutura:
 
-```text
-http://<EXTERNAL-IP-OU-HOSTNAME>:30150
+```bash
+terraform -chdir=infra/api-gateway output -raw api_endpoint
 ```
 
 Também é possível validar os serviços por port-forward:
 
 ```bash
-kubectl port-forward service/fiap-frontend-service 8081:30150 -n fiap-frontend
+kubectl port-forward service/fiap-frontend-service 8081:80 -n fiap-frontend
 kubectl port-forward service/fiap-backend-service 8080:8080 -n fiap-backend
 ```
 
@@ -180,9 +191,9 @@ O workflow `.github/workflows/deploy-applications.yml` realiza o deploy no EKS. 
 4. reinicia e aguarda o External Secrets Operator;
 5. aplica os manifests de `k8s/backend` e `k8s/frontend`;
 6. reinicia os deployments para buscar as imagens marcadas como `latest`;
-7. aguarda a conclusão dos rollouts.
+7. aguarda a conclusão dos rollouts e a criação do ALB interno.
 
-O workflow `.github/workflows/initialize-and-deploy.yml` coordena o processo completo: aplica a infraestrutura, publica as duas imagens no ECR e executa o deploy das aplicações.
+O workflow `.github/workflows/initialize-and-deploy.yml` coordena o processo completo: aplica a infraestrutura, publica as imagens, implanta as aplicações, aguarda o ALB e aplica o API Gateway.
 
 ## Configurações que exigem atenção
 
@@ -190,6 +201,7 @@ O workflow `.github/workflows/initialize-and-deploy.yml` coordena o processo com
 - os manifests usam a tag `latest`, enquanto as pipelines também publicam uma tag imutável com o SHA do commit;
 - o backend está configurado com `ASPNETCORE_ENVIRONMENT=Development`; revise esse valor antes de utilizar os manifests em um ambiente de produção;
 - o HPA depende do Metrics Server para obter as métricas de CPU;
+- o ALB depende do AWS Load Balancer Controller, da Pod Identity e das sub-redes privadas marcadas para load balancers internos;
 - o External Secrets depende da associação de identidade do pod e das permissões IAM criadas pelo Terraform;
 - a criação do Secret pode levar alguns instantes após a aplicação do `ExternalSecret`.
 
@@ -209,6 +221,7 @@ kubectl get events -n fiap-frontend --sort-by=.metadata.creationTimestamp
 kubectl logs deployment/fiap-backend-deployment -n fiap-backend --tail=200
 kubectl logs deployment/fiap-frontend-deployment -n fiap-frontend --tail=200
 kubectl logs deployment/external-secrets -n external-secrets --tail=200
+kubectl logs deployment/aws-load-balancer-controller -n kube-system --tail=200
 ```
 
 ### Métricas e escalabilidade
@@ -218,13 +231,14 @@ kubectl top pods -n fiap-backend
 kubectl describe hpa fiap-backend-hpa -n fiap-backend
 ```
 
-Se o backend não iniciar, verifique primeiro o `ExternalSecret`, o Secret gerado e a conectividade com o RDS. Se o frontend responder, mas as chamadas para `/api` falharem, valide o serviço do backend e o valor de `API_UPSTREAM` no ConfigMap do frontend.
+Se o backend não iniciar, verifique primeiro o `ExternalSecret`, o Secret gerado e a conectividade com o RDS. Se o API Gateway responder com erro de integração, valide o VPC Link, os eventos dos Ingresses, a saúde dos target groups e os logs do AWS Load Balancer Controller.
 
 ## Remoção das aplicações
 
-Para remover apenas as cargas da aplicação, preservando o cluster e os recursos gerenciados pelo Terraform:
+Destrua primeiro o estado `infra/api-gateway`, a partir do repositório de infraestrutura, e então remova as cargas da aplicação, preservando o cluster:
 
 ```bash
+terraform -chdir=infra/api-gateway destroy
 kubectl delete -f k8s/frontend
 kubectl delete -f k8s/backend
 ```

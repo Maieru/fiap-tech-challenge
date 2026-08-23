@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fiap-frontend-ingress
+  namespace: fiap-frontend
+  annotations:
+    alb.ingress.kubernetes.io/group.name: fiap-edge
+    alb.ingress.kubernetes.io/group.order: "20"
+    alb.ingress.kubernetes.io/load-balancer-name: fiap-internal-edge
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/security-groups: fiap-internal-alb-sg
+    alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/tags: Project=fiap-tech-challenge
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fiap-frontend-service
+                port:
+                  name: http
