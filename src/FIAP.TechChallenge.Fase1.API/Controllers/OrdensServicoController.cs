@@ -176,6 +176,7 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(typeof(CancelarOrdemServicoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [AllowAnonymous]
     public async Task<IActionResult> PutCancelar(Guid id, ICancelarOrdemServicoUseCase useCase, CancellationToken cancellationToken)
     {
         var command = new CancelarOrdemServicoCommand { OrdemServicoId = id };
