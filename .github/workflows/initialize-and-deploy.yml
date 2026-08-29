@@ -65,3 +65,11 @@ jobs:
     secrets:
       INFRA_ACTION_ROLE: ${{ secrets.INFRA_ACTION_ROLE }}
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+
+  deploy-authorizer:
+    name: Deploy Ordem Servico Authorizer
+    needs: edge-infrastructure
+    uses: Maieru/fiap-tech-challenge-serverless/.github/workflows/deploy-authorizer.yml@main
+    secrets:
+      AUTH_ACTION_ROLE: ${{ secrets.AUTH_ACTION_ROLE }}
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}

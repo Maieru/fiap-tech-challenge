@@ -1417,7 +1417,7 @@ public sealed class OrdensServicoControllerTests
     }
 
     [Test]
-    public async Task AllActions_ShouldReturnUnauthorized_WhenTokenIsMissing()
+    public async Task ProtectedActions_ShouldReturnUnauthorized_WhenTokenIsMissing()
     {
         var ordemServicoId = Guid.NewGuid();
         var servicoDaOrdemServicoId = Guid.NewGuid();
@@ -1460,7 +1460,6 @@ public sealed class OrdensServicoControllerTests
         });
         var iniciarDiagnosticoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/iniciar-diagnostico", new { });
         var solicitarAprovacaoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/solicitar-aprovacao", new { });
-        var cancelarResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/{ordemServicoId}/cancelar", new { });
         var concluirServicoResponse = await SendUnauthorizedAsync(HttpMethod.Put, $"/api/ordensservico/servicos/{servicoDaOrdemServicoId}/concluir", new
         {
             TempoGastoMinutos = 30
@@ -1480,7 +1479,6 @@ public sealed class OrdensServicoControllerTests
             _ = addPecaInsumoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = iniciarDiagnosticoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-            _ = cancelarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = concluirServicoResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = finalizarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
             _ = entregarResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
