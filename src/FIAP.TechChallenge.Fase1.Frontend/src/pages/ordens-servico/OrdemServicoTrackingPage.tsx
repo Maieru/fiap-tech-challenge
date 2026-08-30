@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ClipboardList, RefreshCw } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,17 +21,24 @@ const statusSteps: Array<{ status: StatusOrdemServico; label: string }> = [
 
 export function OrdemServicoTrackingPage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const accessToken = searchParams.get("token") ?? "";
   const [ordem, setOrdem] = useState<AcompanhamentoOrdemServico | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   async function loadData() {
-    if (!id) return;
+    if (!id || !accessToken) {
+      setOrdem(null);
+      setError("O link de acompanhamento é inválido ou está incompleto.");
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
     try {
-      const response = await ordensServicoService.getAcompanhamentoById(id);
+      const response = await ordensServicoService.getAcompanhamentoById(id, accessToken);
       setOrdem(response);
     } catch (requestError) {
       setOrdem(null);
@@ -43,7 +50,7 @@ export function OrdemServicoTrackingPage() {
 
   useEffect(() => {
     void loadData();
-  }, [id]);
+  }, [id, accessToken]);
 
   const currentStepIndex = useMemo(() => {
     if (!ordem) return -1;

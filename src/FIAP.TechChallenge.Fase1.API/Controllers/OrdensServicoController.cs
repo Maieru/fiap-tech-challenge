@@ -160,12 +160,12 @@ public sealed class OrdensServicoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [AllowAnonymous]
-    public async Task<IActionResult> PutAprovarExecucao(Guid id, IAprovarExecucaoOrdemServicoUseCase useCase, AprovarExecucaoOrdemServicoCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> PutAprovarExecucao(Guid id, [FromQuery] string token, IAprovarExecucaoOrdemServicoUseCase useCase, CancellationToken cancellationToken)
     {
         var aprovarCommand = new AprovarExecucaoOrdemServicoCommand
         {
             OrdemServicoId = id,
-            CodigoAprovacao = command.CodigoAprovacao
+            Token = token
         };
 
         var result = await useCase.ExecuteAsync(aprovarCommand, cancellationToken);

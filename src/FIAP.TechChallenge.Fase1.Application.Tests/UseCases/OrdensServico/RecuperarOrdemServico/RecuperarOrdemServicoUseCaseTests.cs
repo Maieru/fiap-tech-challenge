@@ -3,6 +3,7 @@ using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Enums;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
+using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
 using Moq;
 
 namespace FIAP.TechChallenge.Fase1.Application.Tests.UseCases.OrdensServico.RecuperarOrdemServico;
@@ -14,11 +15,13 @@ internal sealed class RecuperarOrdemServicoUseCaseTests
     public async Task ExecuteAsync_ShouldFail_WhenOrdemServicoIdIsEmpty()
     {
         var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var clienteRepositoryMock = new Mock<IClienteRepository>();
         var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
         var pecaInsumoDaOrdemRepositoryMock = new Mock<IPecaOuInsumoDaOrdemDeServicoRepository>();
 
         var useCase = new RecuperarOrdemServicoUseCase(
             ordemServicoRepositoryMock.Object,
+            clienteRepositoryMock.Object,
             servicoDaOrdemRepositoryMock.Object,
             pecaInsumoDaOrdemRepositoryMock.Object);
 
@@ -38,6 +41,7 @@ internal sealed class RecuperarOrdemServicoUseCaseTests
     public async Task ExecuteAsync_ShouldFail_WhenOrdemServicoDoesNotExist()
     {
         var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var clienteRepositoryMock = new Mock<IClienteRepository>();
         var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
         var pecaInsumoDaOrdemRepositoryMock = new Mock<IPecaOuInsumoDaOrdemDeServicoRepository>();
 
@@ -47,6 +51,7 @@ internal sealed class RecuperarOrdemServicoUseCaseTests
 
         var useCase = new RecuperarOrdemServicoUseCase(
             ordemServicoRepositoryMock.Object,
+            clienteRepositoryMock.Object,
             servicoDaOrdemRepositoryMock.Object,
             pecaInsumoDaOrdemRepositoryMock.Object);
 
@@ -67,16 +72,22 @@ internal sealed class RecuperarOrdemServicoUseCaseTests
     public async Task ExecuteAsync_ShouldSucceed_WhenOrdemServicoExists()
     {
         var ordemServicoRepositoryMock = new Mock<IOrdemServicoRepository>();
+        var clienteRepositoryMock = new Mock<IClienteRepository>();
         var servicoDaOrdemRepositoryMock = new Mock<IServicoDaOrdemDeServicoRepository>();
         var pecaInsumoDaOrdemRepositoryMock = new Mock<IPecaOuInsumoDaOrdemDeServicoRepository>();
 
         var ordemServico = CreateOrdemServico(StatusOrdemServico.EmDiagnostico);
+        var cliente = CreateCliente(ordemServico.ClienteId);
         var servicoDaOrdem = CreateServicoDaOrdem(ordemServico.Id, "Alinhamento", 180m, 2);
         var pecaInsumoDaOrdem = CreatePecaInsumoDaOrdem(ordemServico.Id, "Filtro de ar", "FLT-001", 49m, 3);
 
         _ = ordemServicoRepositoryMock
             .Setup(x => x.GetByIdAsync(ordemServico.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<OrdemServico>.Success(ordemServico));
+
+        _ = clienteRepositoryMock
+            .Setup(x => x.GetByIdAsync(ordemServico.ClienteId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<Cliente>.Success(cliente));
 
         _ = servicoDaOrdemRepositoryMock
             .Setup(x => x.GetByOrdemServicoIdAsync(ordemServico.Id, It.IsAny<CancellationToken>()))
@@ -88,6 +99,7 @@ internal sealed class RecuperarOrdemServicoUseCaseTests
 
         var useCase = new RecuperarOrdemServicoUseCase(
             ordemServicoRepositoryMock.Object,
+            clienteRepositoryMock.Object,
             servicoDaOrdemRepositoryMock.Object,
             pecaInsumoDaOrdemRepositoryMock.Object);
 
@@ -98,6 +110,7 @@ internal sealed class RecuperarOrdemServicoUseCaseTests
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Value, Is.Not.Null);
             Assert.That(result.Value!.Id, Is.EqualTo(ordemServico.Id));
+            Assert.That(result.Value.Token, Is.EqualTo(CpfAccessToken.Create(cliente.Cpf!, ordemServico.CodigoAprovacao)));
             Assert.That(result.Value.ClienteId, Is.EqualTo(ordemServico.ClienteId));
             Assert.That(result.Value.VeiculoId, Is.EqualTo(ordemServico.VeiculoId));
             Assert.That(result.Value.Status, Is.EqualTo(StatusOrdemServico.EmDiagnostico));
@@ -107,6 +120,14 @@ internal sealed class RecuperarOrdemServicoUseCaseTests
             Assert.That(result.Value.ValorTotalPecasInsumos, Is.EqualTo(147m));
             Assert.That(result.Value.ValorTotalOrdemServico, Is.EqualTo(507m));
         });
+    }
+
+    private static Cliente CreateCliente(Guid id)
+    {
+        var cpf = Cpf.Create("52998224725").Value!;
+        var telefone = Telefone.Create("11987654321").Value!;
+
+        return Cliente.Rehydrate(id, "Cliente Teste", cpf, null, telefone, null).Value!;
     }
 
     private static OrdemServico CreateOrdemServico(StatusOrdemServico status)

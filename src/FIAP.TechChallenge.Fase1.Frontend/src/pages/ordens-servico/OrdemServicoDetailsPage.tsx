@@ -80,7 +80,13 @@ export function OrdemServicoDetailsPage() {
     const actions: Record<StatusOrdemServico, { label: string; run: () => Promise<unknown> } | null> = {
       1: { label: "Iniciar diagnóstico", run: () => ordensServicoService.iniciarDiagnostico(ordem.id) },
       2: { label: "Solicitar aprovação", run: () => ordensServicoService.solicitarAprovacao(ordem.id) },
-      3: { label: "Aprovar execução", run: () => ordensServicoService.aprovarExecucao(ordem.id, ordem.codigoAprovacao) },
+      3: {
+        label: "Aprovar execução",
+        run: async () => {
+          if (!ordem.token) throw new Error("A ordem precisa pertencer a um cliente com CPF.");
+          return ordensServicoService.aprovarExecucao(ordem.id, ordem.token);
+        },
+      },
       4: { label: "Finalizar OS", run: () => ordensServicoService.finalizar(ordem.id) },
       5: { label: "Marcar como entregue", run: () => ordensServicoService.entregar(ordem.id) },
       6: null,
@@ -134,7 +140,8 @@ export function OrdemServicoDetailsPage() {
 
     setUpdatingStatus(true);
     try {
-      await ordensServicoService.cancelar(ordem.id);
+      if (!ordem.token) throw new Error("A ordem precisa pertencer a um cliente com CPF.");
+      await ordensServicoService.cancelar(ordem.id, ordem.token);
       toast.success("Ordem de servico cancelada e estoque devolvido.");
       await loadData();
     } catch (error) {

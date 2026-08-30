@@ -63,7 +63,7 @@ public sealed class CriarOrdemServicoCompletaUseCase(
         return Result<CriarOrdemServicoCompletaResponse>.Success(new CriarOrdemServicoCompletaResponse
         {
             Id = ordemResult.Value.Id,
-            CodigoAprovacao = ordemResult.Value.CodigoAprovacao,
+            Token = ordemResult.Value.Token,
             ClienteId = ordemResult.Value.ClienteId,
             VeiculoId = ordemResult.Value.VeiculoId,
             DescricaoProblema = ordemResult.Value.DescricaoProblema,

@@ -128,10 +128,17 @@ export function OrdensServicoListPage() {
   );
 
   async function handleGenerateTrackingLink(ordem: OrdemServico) {
-    const url = `${window.location.origin}/acompanhar-ordem/${ordem.id}`;
-
     try {
-      await navigator.clipboard.writeText(url);
+      const detalhes = await ordensServicoService.getById(ordem.id);
+      if (!detalhes.token) {
+        toast.error("A ordem precisa pertencer a um cliente com CPF.");
+        return;
+      }
+
+      const url = new URL(`/acompanhar-ordem/${ordem.id}`, window.location.origin);
+      url.searchParams.set("token", detalhes.token);
+
+      await navigator.clipboard.writeText(url.toString());
       toast.success("Link de acompanhamento copiado.");
     } catch {
       toast.error("Nao foi possivel copiar o link de acompanhamento.");
