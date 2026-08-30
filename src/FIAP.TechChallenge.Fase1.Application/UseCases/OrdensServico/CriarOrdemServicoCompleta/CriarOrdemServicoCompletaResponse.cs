@@ -7,7 +7,7 @@ namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdem
 public sealed class CriarOrdemServicoCompletaResponse
 {
     public Guid Id { get; init; }
-    public Guid CodigoAprovacao { get; init; }
+    public string? Token { get; init; }
     public Guid ClienteId { get; init; }
     public Guid VeiculoId { get; init; }
     public string DescricaoProblema { get; init; } = string.Empty;

@@ -151,7 +151,7 @@ Uma ordem também pode assumir o status `Cancelada`, conforme as regras do domí
 Regras importantes:
 
 - serviços e peças ou insumos só podem ser adicionados durante o diagnóstico;
-- a execução depende da aprovação do orçamento por código de aprovação;
+- a execução depende de um token gerado a partir do CPF do cliente e do código de aprovação mantido apenas no backend;
 - serviços só podem ser concluídos enquanto a ordem está em execução;
 - a ordem só pode ser finalizada após a conclusão de todos os serviços;
 - a entrega só pode ocorrer depois da finalização;

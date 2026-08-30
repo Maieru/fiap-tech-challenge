@@ -1,11 +1,13 @@
-﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
+using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.AprovarExecucaoOrdemServico;
 
-public sealed class AprovarExecucaoOrdemServicoUseCase(IOrdemServicoRepository ordemServicoRepository) : IAprovarExecucaoOrdemServicoUseCase
+public sealed class AprovarExecucaoOrdemServicoUseCase(IOrdemServicoRepository ordemServicoRepository, IClienteRepository clienteRepository) : IAprovarExecucaoOrdemServicoUseCase
 {
     private readonly IOrdemServicoRepository _ordemServicoRepository = ordemServicoRepository;
+    private readonly IClienteRepository _clienteRepository = clienteRepository;
 
     public async Task<Result<AprovarExecucaoOrdemServicoResponse>> ExecuteAsync(AprovarExecucaoOrdemServicoCommand command, CancellationToken cancellationToken = default)
     {
@@ -15,7 +17,15 @@ public sealed class AprovarExecucaoOrdemServicoUseCase(IOrdemServicoRepository o
             return Result<AprovarExecucaoOrdemServicoResponse>.Failure(ordemServicoResult.Error);
 
         var ordemServico = ordemServicoResult.Value;
-        var aprovarOrcamentoResult = ordemServico.AprovarOrcamento(command.CodigoAprovacao);
+        var clienteResult = await _clienteRepository.GetByIdAsync(ordemServico.ClienteId, cancellationToken);
+
+        if (!clienteResult.IsSuccess || clienteResult.Value?.Cpf is null ||
+            !CpfAccessToken.Matches(clienteResult.Value.Cpf, ordemServico.CodigoAprovacao, command.Token))
+        {
+            return Result<AprovarExecucaoOrdemServicoResponse>.Failure(new Error("O token de acesso informado e invalido."));
+        }
+
+        var aprovarOrcamentoResult = ordemServico.AprovarOrcamento(ordemServico.CodigoAprovacao);
 
         if (!aprovarOrcamentoResult.IsSuccess)
             return Result<AprovarExecucaoOrdemServicoResponse>.Failure(aprovarOrcamentoResult.Error);

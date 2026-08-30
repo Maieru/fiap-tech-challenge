@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -449,7 +449,7 @@ public sealed class ServicosControllerTests
             _ = response.StatusCode.Should().Be(HttpStatusCode.Created);
             _ = created.Should().NotBeNull();
             _ = created!.Id.Should().NotBeEmpty();
-            _ = created.CodigoAprovacao.Should().NotBeEmpty();
+            _ = created.Token.Should().HaveLength(64);
         });
 
         return created!;
@@ -477,7 +477,7 @@ public sealed class ServicosControllerTests
         var solicitarAprovacaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/solicitar-aprovacao", new { });
         _ = solicitarAprovacaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var aprovarExecucaoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao", new { ordemServico.CodigoAprovacao });
+        var aprovarExecucaoResponse = await _client.PutAsync($"/api/ordensservico/{ordemServico.Id}/aprovar-execucao?token={ordemServico.Token}", null);
         _ = aprovarExecucaoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var concluirServicoResponse = await _client.PutAsJsonAsync($"/api/ordensservico/servicos/{servicoDaOrdem!.Id}/concluir", new
@@ -546,7 +546,7 @@ public sealed class ServicosControllerTests
     private sealed class OrdemServicoResponse
     {
         public Guid Id { get; set; }
-        public Guid CodigoAprovacao { get; set; }
+        public string Token { get; set; } = string.Empty;
     }
 
     private sealed class ServicoDaOrdemServicoResponse

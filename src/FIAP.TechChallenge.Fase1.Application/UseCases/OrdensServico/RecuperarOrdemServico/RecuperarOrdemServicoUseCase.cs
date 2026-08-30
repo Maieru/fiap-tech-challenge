@@ -1,15 +1,18 @@
 ﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
+using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.RecuperarOrdemServico;
 
 public sealed class RecuperarOrdemServicoUseCase(
     IOrdemServicoRepository ordemServicoRepository,
+    IClienteRepository clienteRepository,
     IServicoDaOrdemDeServicoRepository servicoDaOrdemDeServicoRepository,
     IPecaOuInsumoDaOrdemDeServicoRepository pecaOuInsumoDaOrdemDeServicoRepository) : IRecuperarOrdemServicoUseCase
 {
     private readonly IOrdemServicoRepository _ordemServicoRepository = ordemServicoRepository;
+    private readonly IClienteRepository _clienteRepository = clienteRepository;
     private readonly IServicoDaOrdemDeServicoRepository _servicoDaOrdemDeServicoRepository = servicoDaOrdemDeServicoRepository;
     private readonly IPecaOuInsumoDaOrdemDeServicoRepository _pecaOuInsumoDaOrdemDeServicoRepository = pecaOuInsumoDaOrdemDeServicoRepository;
 
@@ -22,6 +25,11 @@ public sealed class RecuperarOrdemServicoUseCase(
 
         if (!ordemServicoResult.IsSuccess || ordemServicoResult.Value is null)
             return Result<RecuperarOrdemServicoResponse>.Failure(ordemServicoResult.Error);
+
+        var clienteResult = await _clienteRepository.GetByIdAsync(ordemServicoResult.Value.ClienteId, cancellationToken);
+
+        if (!clienteResult.IsSuccess || clienteResult.Value is null)
+            return Result<RecuperarOrdemServicoResponse>.Failure(clienteResult.Error);
 
         var servicosDaOrdemResult = await _servicoDaOrdemDeServicoRepository.GetByOrdemServicoIdAsync(command.OrdemServicoId, cancellationToken);
         var pecasInsumosDaOrdemResult = await _pecaOuInsumoDaOrdemDeServicoRepository.GetByOrdemServicoIdAsync(command.OrdemServicoId, cancellationToken);
@@ -41,7 +49,9 @@ public sealed class RecuperarOrdemServicoUseCase(
         return Result<RecuperarOrdemServicoResponse>.Success(new RecuperarOrdemServicoResponse
         {
             Id = ordemServicoResult.Value.Id,
-            CodigoAprovacao = ordemServicoResult.Value.CodigoAprovacao,
+            Token = clienteResult.Value.Cpf is null
+                ? null
+                : CpfAccessToken.Create(clienteResult.Value.Cpf, ordemServicoResult.Value.CodigoAprovacao),
             ClienteId = ordemServicoResult.Value.ClienteId,
             VeiculoId = ordemServicoResult.Value.VeiculoId,
             DescricaoProblema = ordemServicoResult.Value.DescricaoProblema,

@@ -159,17 +159,15 @@ export default function () {
 
     const ordemAtualizada = getRequest(`/ordensservico/${ids.ordemServicoId}`, authHeaders);
     ensure(ordemAtualizada, [200], 'consulta ordem aguardando aprovacao');
-    ids.codigoAprovacao = get(ordemAtualizada.json(), 'codigoAprovacao');
+    ids.accessToken = get(ordemAtualizada.json(), 'token');
 
-    if (!ids.codigoAprovacao) {
-      fail(`Ordem nao retornou codigo de aprovacao. Body: ${ordemAtualizada.body}`);
+    if (!ids.accessToken) {
+      fail(`Ordem nao retornou token de acesso. Body: ${ordemAtualizada.body}`);
     }
   });
 
   group('07 - Aprovacao e execucao', () => {
-    ensure(put(`/ordensservico/${ids.ordemServicoId}/aprovar-execucao`, {
-      codigoAprovacao: ids.codigoAprovacao,
-    }), [200], 'execucao aprovada pelo cliente');
+    ensure(put(`/ordensservico/${ids.ordemServicoId}/aprovar-execucao?token=${ids.accessToken}`, null), [200], 'execucao aprovada pelo cliente');
 
     ensure(put(`/ordensservico/servicos/${ids.servicoDaOrdemServicoId}/concluir`, {
       tempoGastoMinutos: 45,

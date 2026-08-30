@@ -1,6 +1,7 @@
 ﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
+using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.CriarOrdemServico;
 
@@ -37,7 +38,9 @@ public sealed class CriarOrdemServicoUseCase(IOrdemServicoRepository ordemServic
         return Result<CriarOrdemServicoResponse>.Success(new CriarOrdemServicoResponse
         {
             Id = ordemServico.Id,
-            CodigoAprovacao = ordemServico.CodigoAprovacao,
+            Token = clienteResult.Value.Cpf is null
+                ? null
+                : CpfAccessToken.Create(clienteResult.Value.Cpf, ordemServico.CodigoAprovacao),
             ClienteId = ordemServico.ClienteId,
             VeiculoId = ordemServico.VeiculoId,
             DescricaoProblema = ordemServico.DescricaoProblema,

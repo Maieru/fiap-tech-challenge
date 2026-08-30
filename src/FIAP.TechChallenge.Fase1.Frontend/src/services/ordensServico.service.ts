@@ -43,8 +43,10 @@ export const ordensServicoService = {
     return data;
   },
 
-  async getAcompanhamentoById(id: string) {
-    const { data } = await api.get<AcompanhamentoOrdemServico>(`/ordensservico/acompanhamento/${id}`);
+  async getAcompanhamentoById(id: string, accessToken: string) {
+    const { data } = await api.get<AcompanhamentoOrdemServico>(`/ordensservico/acompanhamento/${id}`, {
+      params: { token: accessToken },
+    });
     return data;
   },
 
@@ -78,13 +80,13 @@ export const ordensServicoService = {
     return data;
   },
 
-  async aprovarExecucao(id: string, codigoAprovacao: string) {
-    const { data } = await api.put(`/ordensservico/${id}/aprovar-execucao`, { codigoAprovacao });
+  async aprovarExecucao(id: string, accessToken: string) {
+    const { data } = await api.put(`/ordensservico/${id}/aprovar-execucao`, undefined, { params: { token: accessToken } });
     return data;
   },
 
-  async cancelar(id: string) {
-    const { data } = await api.put(`/ordensservico/${id}/cancelar`);
+  async cancelar(id: string, accessToken: string) {
+    const { data } = await api.put(`/ordensservico/${id}/cancelar`, undefined, { params: { token: accessToken } });
     return data;
   },
 

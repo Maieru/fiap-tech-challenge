@@ -43,7 +43,7 @@ export interface OrdemServicoPecaItem {
 }
 
 export interface OrdemServicoDetalhes extends OrdemServico {
-  codigoAprovacao: string;
+  token?: string | null;
   servicos: OrdemServicoServicoItem[];
   pecasInsumos: OrdemServicoPecaItem[];
   valorTotalServicos: number;
@@ -51,7 +51,7 @@ export interface OrdemServicoDetalhes extends OrdemServico {
   valorTotalOrdemServico: number;
 }
 
-export type AcompanhamentoOrdemServico = Omit<OrdemServicoDetalhes, "codigoAprovacao"> & {
+export type AcompanhamentoOrdemServico = Omit<OrdemServicoDetalhes, "token"> & {
   clienteNome: string;
   veiculoMarca: string;
   veiculoModelo: string;
