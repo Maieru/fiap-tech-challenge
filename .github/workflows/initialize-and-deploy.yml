@@ -35,6 +35,7 @@ jobs:
     needs: database
     uses: Maieru/fiap-tech-challenge-infra/.github/workflows/apply-kubernetes-infrastructure.yml@main
     secrets:
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
       INFRA_ACTION_ROLE: ${{ secrets.INFRA_ACTION_ROLE }}
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
 
