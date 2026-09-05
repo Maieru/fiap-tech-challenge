@@ -12,3 +12,4 @@ data:
   OTEL_SERVICE_NAME: "fiap-tech-challenge-backend"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.fiap-observability.svc.cluster.local:4317"
   OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+  OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "delta"

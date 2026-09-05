@@ -220,3 +220,7 @@ Este projeto foi construído com foco em:
 - explorar a execução em nuvem com AWS e a orquestração de aplicações com Kubernetes.
 
 Este é meu primeiro projeto em que aplico esses conceitos de forma tão abrangente, cobrindo não apenas a modelagem e a implementação da aplicação, mas também frontend, conteinerização, infraestrutura e entrega contínua.
+
+## Observabilidade
+
+A telemetria é enviada ao New Relic via OpenTelemetry Collector. Antes de iniciar o Docker Compose, configure a chave em `src/.env` conforme o [guia de observabilidade](docs/OBSERVABILIDADE.md).

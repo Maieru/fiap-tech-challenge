@@ -32,7 +32,6 @@ public static class OpenTelemetryConfiguration
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
                     .AddProcessInstrumentation()
-                    .AddPrometheusExporter()
                     .AddOtlpExporter()
             );
 
