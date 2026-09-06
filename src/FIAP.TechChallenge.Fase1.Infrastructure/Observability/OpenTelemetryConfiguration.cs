@@ -1,3 +1,4 @@
+using FIAP.TechChallenge.Fase1.Domain.Observability;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -28,11 +29,11 @@ public static class OpenTelemetryConfiguration
                     .AddOtlpExporter()
             )
             .WithMetrics(metrics =>
-                metrics.AddAspNetCoreInstrumentation()
+                metrics.AddMeter(MetricasNegocio.MeterName)
+                    .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
                     .AddProcessInstrumentation()
-                    .AddPrometheusExporter()
                     .AddOtlpExporter()
             );
 

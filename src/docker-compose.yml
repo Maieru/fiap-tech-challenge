@@ -28,6 +28,7 @@ services:
       OTEL_SERVICE_NAME: fiap-tech-challenge-backend
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: delta
 
       LogLevel__Default: Information
     networks:
@@ -68,70 +69,17 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector:latest
     container_name: fiap-otel-collector
+    environment:
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:?Defina NEW_RELIC_LICENSE_KEY no arquivo .env}
+      NEW_RELIC_OTLP_ENDPOINT: ${NEW_RELIC_OTLP_ENDPOINT:-https://otlp.nr-data.net}
     volumes:
-      - ./ObservabilityConfig/otel-collector-config.yaml:/etc/otelcol/config.yaml
+      - ./ObservabilityConfig/otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
     ports:
-      - 1888:1888 
-      - 8888:8888 
-      - 8889:8889 
-      - 13133:13133 
-      - 4317:4317 
-      - 4318:4318 
-      - 55679:55679
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
     networks:
       - fiap-techchallenge-network
 
-  jaeger:
-    image: jaegertracing/jaeger:2.0.0
-    container_name: fiap-jaeger
-    command:
-       - "--set=receivers.otlp.protocols.grpc.endpoint=0.0.0.0:4317"
-       - "--set=receivers.otlp.protocols.http.endpoint=0.0.0.0:4318"
-    ports:
-      - "16686:16686"
-    environment:
-      - JAEGER_V2_MODE=all-in-one
-    networks:
-      - fiap-techchallenge-network
-      
-  prometheus:
-    image: prom/prometheus
-    container_name: fiap-prometheus
-    volumes:
-      - "./ObservabilityConfig/prometheus.yml:/etc/prometheus/prometheus.yml"
-    ports:
-      - 9090:9090
-    command:
-      - "--enable-feature=otlp-write-receiver"
-      - "--config.file=/etc/prometheus/prometheus.yml"
-    networks:
-      - fiap-techchallenge-network
-      
-  grafana:
-    image: grafana/grafana:latest
-    container_name: fiap-grafana
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-    volumes:
-      - ./ObservabilityConfig/grafana/provisioning:/etc/grafana/provisioning
-      - ./ObservabilityConfig/grafana/dashboards:/var/lib/grafana/dashboards
-    depends_on:
-      - prometheus
-      - loki
-    networks:
-      - fiap-techchallenge-network
-
-  loki:
-    image: grafana/loki:latest
-    container_name: fiap-loki
-    ports:
-      - "3100:3100"
-    networks:
-      - fiap-techchallenge-network
-      
   # Esse daqui é opcional mas ajuda muito a vida.
   pgadmin:
     image: dpage/pgadmin4:latest

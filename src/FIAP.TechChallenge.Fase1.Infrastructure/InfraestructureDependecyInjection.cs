@@ -33,7 +33,8 @@ public static class InfraestructureDependecyInjection
         _ = services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         _ = services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 
-        _ = services.AddScoped<IMailService, MailService>();
+        _ = services.AddScoped<MailService>();
+        _ = services.AddScoped<IMailService>(provider => new MeteredMailService(provider.GetRequiredService<MailService>()));
 
         return services;
     }

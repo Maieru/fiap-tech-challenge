@@ -15,11 +15,7 @@ graph LR
     BackendService --> Backend["API .NET<br/>1 a 10 réplicas"]
     Backend --> RDS[(Amazon RDS PostgreSQL)]
     Backend -->|"OTLP"| Collector[OpenTelemetry Collector]
-    Collector --> Jaeger
-    Collector --> Loki
-    Prometheus -->|"/metrics"| BackendService
-    Grafana --> Prometheus
-    Grafana --> Loki
+    Collector -->|"OTLP/HTTPS: traces, metrics, logs"| NewRelic[New Relic]
     Secrets["AWS Secrets Manager"] --> ExternalSecrets["External Secrets Operator"]
     ExternalSecrets --> BackendSecret["Kubernetes Secret"]
     BackendSecret --> Backend
@@ -244,3 +240,5 @@ kubectl delete -f k8s/backend
 ```
 
 Namespaces, add-ons, identidades AWS e demais recursos de infraestrutura devem ser removidos por meio dos respectivos módulos Terraform, conforme o procedimento descrito no [`README` de infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra).
+
+Consulte o [guia do New Relic](../docs/OBSERVABILIDADE.md) para configurar a chave de ingestão e validar os dados.

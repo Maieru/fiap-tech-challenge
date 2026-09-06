@@ -186,7 +186,7 @@ Kubernetes Configs → Kubernetes Add-ons → Database → EKS
 
 O passo a passo operacional está no [`guia de infraestrutura`](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra) e no [`guia do banco`](https://github.com/Maieru/fiap-tech-challenge-db#readme). A organização dos manifests, o deploy manual e os comandos de diagnóstico estão em [`k8s/README.md`](k8s/README.md).
 
-Para a orquestração, configure os secrets `INFRA_ACTION_ROLE`, `DATABASE_ACTION_ROLE`, `ACTION_ROLE_ARN`, `jwt_signing_key`, `db_username` e `db_password`. Se os repositórios forem privados, configure também `REPOSITORIES_TOKEN` com acesso de leitura aos repositórios chamados.
+Para a orquestração, configure os secrets `INFRA_ACTION_ROLE`, `DATABASE_ACTION_ROLE`, `ACTION_ROLE_ARN`, `jwt_signing_key`, `db_username`, `db_password` e `NEW_RELIC_LICENSE_KEY`. Se os repositórios forem privados, configure também `REPOSITORIES_TOKEN` com acesso de leitura aos repositórios chamados.
 
 ## Testes
 
@@ -220,3 +220,11 @@ Este projeto foi construído com foco em:
 - explorar a execução em nuvem com AWS e a orquestração de aplicações com Kubernetes.
 
 Este é meu primeiro projeto em que aplico esses conceitos de forma tão abrangente, cobrindo não apenas a modelagem e a implementação da aplicação, mas também frontend, conteinerização, infraestrutura e entrega contínua.
+
+## Observabilidade
+
+A telemetria é enviada ao New Relic via OpenTelemetry Collector. Antes de iniciar o Docker Compose, configure a chave em `src/.env` conforme o [guia de observabilidade](docs/OBSERVABILIDADE.md).
+
+## Métricas de negócio
+
+Consulte [as métricas OpenTelemetry e consultas dos dashboards New Relic](docs/metricas-negocio-new-relic.md).

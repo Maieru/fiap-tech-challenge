@@ -601,3 +601,7 @@ terraform.rc
 /infra/.terraform/modules/modules.json
 /infra/.terraform/providers/registry.terraform.io/hashicorp
 .terraform.lock.hcl
+# Credenciais locais do New Relic
+.env
+.env.*
+!.env.example

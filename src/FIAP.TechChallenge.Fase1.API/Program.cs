@@ -52,7 +52,6 @@ app.UseCors(CorsPolicyName);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapPrometheusScrapingEndpoint("/metrics");
 
 await app.RunAsync();
 

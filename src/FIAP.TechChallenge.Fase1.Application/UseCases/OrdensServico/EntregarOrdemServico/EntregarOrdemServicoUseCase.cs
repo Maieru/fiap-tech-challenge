@@ -1,4 +1,6 @@
-﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+using FIAP.TechChallenge.Fase1.Domain.Enums;
+using FIAP.TechChallenge.Fase1.Domain.Observability;
+using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.EntregarOrdemServico;
@@ -21,6 +23,7 @@ public sealed class EntregarOrdemServicoUseCase(IOrdemServicoRepository ordemSer
             return Result<EntregarOrdemServicoResponse>.Failure(entregarResult.Error);
 
         await _ordemServicoRepository.UpdateAsync(ordemServico, cancellationToken);
+        MetricasNegocio.RegistrarEtapaConcluida(StatusOrdemServico.Finalizada, ordemServico.DataFinalizacao!.Value, ordemServico.DataEntrega!.Value);
 
         return Result<EntregarOrdemServicoResponse>.Success(new EntregarOrdemServicoResponse
         {

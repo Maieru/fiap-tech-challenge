@@ -68,8 +68,8 @@ flowchart TB
 
             subgraph ObsNS["Namespace: fiap-observability"]
                 direction TB
-                Telemetry[OpenTelemetry] --> Monitoring["Prometheus<br/>Loki + Jaeger"]
-                Monitoring --> Grafana[Grafana]
+                Telemetry[OpenTelemetry] --> Collector[OpenTelemetry Collector]
+                Collector -->|"OTLP/HTTPS"| NewRelic[New Relic]
             end
         end
 

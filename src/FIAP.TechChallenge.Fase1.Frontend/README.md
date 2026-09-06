@@ -107,7 +107,7 @@ VITE_OTEL_LOGS_EXPORTER_URL=/otlp/v1/logs
 VITE_APP_VERSION=1.0.0
 ```
 
-Para visualizar os traces, suba o ambiente de observabilidade e acesse o Jaeger em `http://localhost:16686`, selecionando o servico `fiap-tech-challenge-frontend`.
+Para visualizar traces e logs, configure o New Relic seguindo o [guia de observabilidade](../../docs/OBSERVABILIDADE.md) e procure o serviço `fiap-tech-challenge-frontend`.
 
 ## Build de produção
 
