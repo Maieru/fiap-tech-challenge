@@ -133,9 +133,10 @@ export default function () {
     }, authHeaders);
     ensure(ordem, [201], 'ordem de servico criada');
     ids.ordemServicoId = requiredId(ordem, 'ordem de servico');
+    ids.accessToken = requiredAccessToken(ordem);
 
     ensure(getRequest(`/ordensservico/${ids.ordemServicoId}`, authHeaders), [200], 'consulta ordem criada');
-    ensure(getRequest(`/ordensservico/acompanhamento/${ids.ordemServicoId}`), [200], 'acompanhamento publico');
+    ensure(getRequest(`/ordensservico/acompanhamento/${ids.ordemServicoId}?token=${encodeURIComponent(ids.accessToken)}`), [200], 'acompanhamento publico');
   });
 
   group('06 - Diagnostico e orcamento', () => {
@@ -159,15 +160,11 @@ export default function () {
 
     const ordemAtualizada = getRequest(`/ordensservico/${ids.ordemServicoId}`, authHeaders);
     ensure(ordemAtualizada, [200], 'consulta ordem aguardando aprovacao');
-    ids.accessToken = get(ordemAtualizada.json(), 'token');
-
-    if (!ids.accessToken) {
-      fail(`Ordem nao retornou token de acesso. Body: ${ordemAtualizada.body}`);
-    }
+    ids.accessToken = requiredAccessToken(ordemAtualizada);
   });
 
   group('07 - Aprovacao e execucao', () => {
-    ensure(put(`/ordensservico/${ids.ordemServicoId}/aprovar-execucao?token=${ids.accessToken}`, null), [200], 'execucao aprovada pelo cliente');
+    ensure(put(`/ordensservico/${ids.ordemServicoId}/aprovar-execucao?token=${encodeURIComponent(ids.accessToken)}`, null), [200], 'execucao aprovada pelo cliente');
 
     ensure(put(`/ordensservico/servicos/${ids.servicoDaOrdemServicoId}/concluir`, {
       tempoGastoMinutos: 45,
@@ -249,6 +246,14 @@ function ensure(response, expectedStatuses, label) {
   if (!ok) {
     fail(`${label} falhou. Status: ${response.status}. Body: ${response.body}`);
   }
+}
+
+function requiredAccessToken(response) {
+  const token = get(response.json(), 'token');
+  if (typeof token !== 'string' || !token.trim()) {
+    fail('Ordem nao retornou token de acesso valido. Confira o CPF do cliente e o contrato da API.');
+  }
+  return token;
 }
 
 function requiredId(response, entityName) {
