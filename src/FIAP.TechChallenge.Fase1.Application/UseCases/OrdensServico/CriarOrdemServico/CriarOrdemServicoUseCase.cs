@@ -1,4 +1,5 @@
-﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+using FIAP.TechChallenge.Fase1.Domain.Observability;
+using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Entities;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 using FIAP.TechChallenge.Fase1.Domain.ValueObjects;
@@ -34,6 +35,7 @@ public sealed class CriarOrdemServicoUseCase(IOrdemServicoRepository ordemServic
         var ordemServico = ordemServicoResult.Value;
 
         await _ordemServicoRepository.AddAsync(ordemServico, cancellationToken);
+        MetricasNegocio.RegistrarOrdemCriada();
 
         return Result<CriarOrdemServicoResponse>.Success(new CriarOrdemServicoResponse
         {

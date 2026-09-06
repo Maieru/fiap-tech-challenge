@@ -224,3 +224,7 @@ Este é meu primeiro projeto em que aplico esses conceitos de forma tão abrange
 ## Observabilidade
 
 A telemetria é enviada ao New Relic via OpenTelemetry Collector. Antes de iniciar o Docker Compose, configure a chave em `src/.env` conforme o [guia de observabilidade](docs/OBSERVABILIDADE.md).
+
+## Métricas de negócio
+
+Consulte [as métricas OpenTelemetry e consultas dos dashboards New Relic](docs/metricas-negocio-new-relic.md).

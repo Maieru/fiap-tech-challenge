@@ -1,4 +1,6 @@
-﻿using FIAP.TechChallenge.Fase1.Domain.Abstractions;
+using FIAP.TechChallenge.Fase1.Domain.Enums;
+using FIAP.TechChallenge.Fase1.Domain.Observability;
+using FIAP.TechChallenge.Fase1.Domain.Abstractions;
 using FIAP.TechChallenge.Fase1.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.Fase1.Application.UseCases.OrdensServico.SolicitarAprovacaoOrdemServico;
@@ -44,6 +46,7 @@ public sealed class SolicitarAprovacaoOrdemServicoUseCase(
         }
 
         await _ordemServicoRepository.UpdateAsync(ordemServico, cancellationToken);
+        MetricasNegocio.RegistrarEtapaConcluida(StatusOrdemServico.EmDiagnostico, ordemServico.DataInicioDiagnostico!.Value, ordemServico.DataEnvioAprovacao!.Value);
 
         return Result<SolicitarAprovacaoOrdemServicoResponse>.Success(new SolicitarAprovacaoOrdemServicoResponse
         {
