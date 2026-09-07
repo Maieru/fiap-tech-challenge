@@ -16,7 +16,7 @@ flowchart TB
         Secrets["AWS Secrets Manager"]
         State["S3<br/>estados Terraform"]
         subgraph VPC["VPC"]
-            Lambda["Lambda Authorizer<br/>sub-redes privadas; sem emissão JWT"]
+            Lambda["Lambda Authorizer<br/>valida requisições de clientes"]
             Link["VPC Link"]
             ALB["ALB interno"]
             subgraph EKS["Amazon EKS"]
@@ -55,7 +55,7 @@ flowchart TB
     ECR --> API
 ```
 
-O authorizer executa em sub-redes privadas e autoriza as rotas declaradas de acompanhamento, aprovação e cancelamento. Ele retorna `isAuthorized`; o JWT administrativo é emitido pela API. O fluxo CPF → JWT exigido pela Fase 3 ainda não está implementado.
+O authorizer executa em sub-redes privadas e valida as requisições de acompanhamento, aprovação e cancelamento dos clientes. Consulta ordem e cliente ativos, confere o token de acesso e retorna `isAuthorized` ao API Gateway. Esse é o funcionamento alinhado para a Lambda; o JWT administrativo é emitido pela API.
 
 ## Entrada e isolamento
 

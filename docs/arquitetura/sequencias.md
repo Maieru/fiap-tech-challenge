@@ -1,6 +1,6 @@
 # Sequências dos fluxos principais
 
-Os três primeiros diagramas descrevem a implementação atual. O último representa o requisito ainda não implementado da Fase 3.
+Os diagramas descrevem a implementação atual: autenticação administrativa na API, validação das requisições dos clientes pela Lambda e abertura de ordens.
 
 ## Autenticação administrativa atual
 
@@ -28,9 +28,11 @@ sequenceDiagram
     end
 ```
 
-Este fluxo autentica `Usuarios`, não clientes por CPF. Ele não usa Lambda para emitir JWT.
+Este fluxo autentica os usuários administrativos por login e senha, com JWT emitido pela API.
 
 ## Acesso atual do cliente à ordem na AWS
+
+Conforme o alinhamento do projeto, a Lambda atua como authorizer do API Gateway: valida o acesso do cliente à ordem e devolve a decisão de autorização. A emissão de JWT permanece no fluxo administrativo da API.
 
 ```mermaid
 sequenceDiagram
@@ -42,25 +44,40 @@ sequenceDiagram
     Cliente->>Gateway: Rota protegida da ordem com id e token na query
     Gateway->>Lambda: Evento v2 com id e token (sem cache)
     Lambda->>Lambda: Valida formato do token e id
-    Lambda->>Banco: Consulta ordem e cliente ativos
-    Banco-->>Lambda: CPF e código de aprovação, se encontrados
-    Lambda->>Lambda: Compara SHA-256 do CPF normalizado + código
-    alt Token válido
-        Lambda-->>Gateway: isAuthorized = true
-        Gateway->>API: Encaminha a requisição
-        opt Aprovar execução
-            API->>Banco: Carrega ordem e cliente
-            API->>API: Valida novamente o token
-        end
-        API-->>Gateway: Resultado do caso de uso
-        Gateway-->>Cliente: Resposta HTTP
-    else Token inválido ou registro ausente/inativo
+    alt Formato inválido
         Lambda-->>Gateway: isAuthorized = false
         Gateway-->>Cliente: Acesso negado
+    else Formato válido
+        Lambda->>Banco: Consulta ordem e cliente ativos
+        Banco-->>Lambda: CPF e código de aprovação, se encontrados
+        Lambda->>Lambda: Valida CPF armazenado e compara SHA-256 do CPF + código
+        alt Acesso válido
+            Lambda-->>Gateway: isAuthorized = true
+            Gateway->>API: Encaminha a requisição
+            opt Aprovar execução
+                API->>Banco: Carrega ordem e cliente
+                API->>API: Valida novamente o token
+            end
+            API-->>Gateway: Resultado do caso de uso
+            Gateway-->>Cliente: Resposta HTTP
+        else Registro ausente/inativo, CPF inválido ou token divergente
+            Lambda-->>Gateway: isAuthorized = false
+            Gateway-->>Cliente: Acesso negado
+        end
     end
 ```
 
-O token é gerado na criação da ordem quando o cliente tem CPF e não é JWT. A proteção da Lambda se aplica às três rotas declaradas no gateway. Acesso direto ao backend não executa esse controle; acompanhamento e cancelamento não repetem a validação do token na aplicação.
+O token é gerado pela aplicação na criação da ordem quando o cliente tem CPF. Ele contém o SHA-256 do CPF normalizado concatenado ao código de aprovação da ordem. O cliente envia o identificador da ordem no caminho e o token na query string.
+
+| Método | Rota validada pela Lambda |
+| --- | --- |
+| GET | `/api/ordensservico/acompanhamento/{id}` |
+| PUT | `/api/ordensservico/{id}/aprovar-execucao` |
+| PUT | `/api/ordensservico/{id}/cancelar` |
+
+A Lambda verifica o formato do token e do identificador, consulta ordem e cliente ativos e compara o token com o valor esperado. Entradas inválidas são recusadas antes da consulta; registros ausentes/inativos, CPF inválido ou token divergente resultam em `isAuthorized = false`. Com acesso válido, retorna `isAuthorized = true`, e o gateway encaminha a requisição à API. A decisão não usa cache.
+
+Acesso direto ao backend não executa esse controle; acompanhamento e cancelamento não repetem a validação do token na aplicação. A aprovação valida o token também no caso de uso.
 
 ## Abertura completa de ordem
 
@@ -103,36 +120,6 @@ sequenceDiagram
 ```
 
 A criação simples (`POST /api/ordensservico`) usa cliente e veículo existentes e retorna a ordem em `Recebida`. O fluxo `/com-cliente-veiculo` faz três gravações sem transação própria quando chamado diretamente; somente o fluxo completo acima abre o escopo externo.
-
-## Autenticação por CPF exigida pela Fase 3 — pendente
-
-```mermaid
-sequenceDiagram
-    actor Cliente
-    participant Gateway as API Gateway
-    participant Funcao as Function de autenticação
-    participant Banco as Base de clientes
-    participant API as API protegida
-    Cliente->>Gateway: Solicita autenticação informando CPF
-    Gateway->>Funcao: Encaminha solicitação
-    Funcao->>Funcao: Valida CPF
-    Funcao->>Banco: Consulta existência e status do cliente
-    Banco-->>Funcao: Cliente ativo ou recusa
-    alt CPF válido e cliente ativo
-        Funcao->>Funcao: Gera JWT assinado e com expiração
-        Funcao-->>Gateway: JWT
-        Gateway-->>Cliente: JWT
-        Cliente->>Gateway: Consome API com Bearer JWT
-        Gateway->>API: Encaminha conforme política de validação JWT
-        API->>API: Aplica autorização para o cliente autenticado
-        API-->>Cliente: Resultado via gateway
-    else CPF inválido, ausente ou cliente inativo
-        Funcao-->>Gateway: Autenticação recusada
-        Gateway-->>Cliente: Erro sem emissão de token
-    end
-```
-
-Este diagrama transcreve o comportamento exigido; não define um endpoint já disponível nem uma decisão aceita. A implementação ainda deve definir contrato, assinatura, claims e escopo de acesso, e atualizar a RFC-003 junto da mudança.
 
 ## Evidências
 
