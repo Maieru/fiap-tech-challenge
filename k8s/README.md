@@ -21,7 +21,7 @@ graph LR
     BackendSecret --> Backend
 ```
 
-O API Gateway é o único componente exposto publicamente. O AWS Load Balancer Controller combina os Ingresses dos dois namespaces em um ALB interno: `/api/*` segue para o backend e as demais rotas seguem para o frontend.
+O API Gateway é o ponto de entrada público destinado ao tráfego da aplicação. O AWS Load Balancer Controller combina os Ingresses dos dois namespaces em um ALB interno: `/api/*` segue para o backend e as demais rotas seguem para o frontend. Dentro do frontend, o Nginx encaminha `/otlp/*` ao Collector, portanto essa ingestão é indiretamente acessível pela mesma borda.
 
 ## Estrutura
 
@@ -43,7 +43,7 @@ k8s/
 
 Os diretórios `backend` e `frontend` contêm somente os recursos que acompanham o ciclo de entrega da aplicação: configurações, segredos externos, deployments, serviços e escalabilidade.
 
-A stack de observabilidade em produção é aplicada pelo módulo `infra/kubernetes-configs` do repositório de infraestrutura. `src/ObservabilityConfig` permanece neste repositório porque também é utilizado pelo ambiente local com Docker Compose.
+A stack de observabilidade do ambiente remoto de laboratório é aplicada pelo módulo `infra/kubernetes-configs` do repositório de infraestrutura. `src/ObservabilityConfig` permanece neste repositório porque também é utilizado pelo ambiente local com Docker Compose.
 
 ## Recursos implantados
 
@@ -88,7 +88,7 @@ Antes de aplicar os manifests da aplicação, é necessário ter:
 - External Secrets Operator, Metrics Server e AWS Load Balancer Controller instalados;
 - namespaces `fiap-backend` e `fiap-frontend` criados;
 - `SecretStore` `aws-secrets-store` disponível no namespace do backend;
-- segredo `fiap-secret-manager-backend` disponível no AWS Secrets Manager.
+- segredos `fiap-secret-manager-database-credentials` e `fiap-secret-manager-jwt-signing-key` disponíveis no AWS Secrets Manager.
 
 Essas dependências são provisionadas pelos módulos Terraform nesta ordem:
 

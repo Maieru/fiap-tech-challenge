@@ -25,9 +25,9 @@ O projeto está distribuído por responsabilidade entre os seguintes repositóri
 - exclusão lógica para preservação do histórico;
 - interface administrativa responsiva para operação dos principais fluxos.
 
-## Arquitetura
+## Arquitetura e decisões técnicas
 
-Uma visão visual completa da infraestrutura AWS, da organização dos pods no EKS e das camadas da aplicação está disponível em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
+O catálogo em [`docs/README.md`](docs/README.md) reúne a visão visual da arquitetura, as RFCs de escolhas técnicas e os ADRs das decisões arquiteturais permanentes.
 
 O backend é um monólito modular organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP:
 
@@ -136,7 +136,7 @@ O fluxo de autenticação é:
 Authorization: Bearer <token>
 ```
 
-Além do cadastro e login, são públicos os health checks e `GET /api/ordensservico/acompanhamento/{id}`. Os demais endpoints exigem autenticação.
+Além do cadastro e login, são públicos os health checks, `GET /api/ordensservico/acompanhamento/{id}` e `PUT /api/ordensservico/{id}/aprovar-execucao`, que exige o código de aprovação no payload. Os demais endpoints exigem autenticação.
 
 ## Fluxo da ordem de serviço
 
@@ -159,7 +159,7 @@ Regras importantes:
 
 ## Infraestrutura e Kubernetes
 
-A infraestrutura de produção é declarada em Terraform nos repositórios [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) e [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db). Ela provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
+A infraestrutura remota de laboratório é declarada em Terraform nos repositórios [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) e [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db). Ela provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
 
 Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui uma réplica inicial, probes de saúde, limites de recursos e HPA de 1 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. Os dois serviços são `ClusterIP` e participam do mesmo `IngressGroup`: o AWS Load Balancer Controller cria um ALB interno que encaminha `/api/*` ao backend e as demais rotas ao frontend. Um API Gateway HTTP API é a entrada pública e acessa esse ALB por um VPC Link.
 

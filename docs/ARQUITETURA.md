@@ -37,7 +37,7 @@ flowchart LR
     BackPods -->|Dados| RDS
 ```
 
-O API Gateway é o único endpoint público. Seu VPC Link acessa o listener HTTP do ALB interno, que usa regras por caminho e target groups independentes para frontend e backend. Os services Kubernetes e os componentes de observabilidade permanecem privados.
+O API Gateway é o ponto de entrada público destinado ao tráfego da aplicação. Seu VPC Link acessa o listener HTTP do ALB interno, que usa regras por caminho e target groups independentes para frontend e backend. Os services Kubernetes não têm exposição pública direta; entretanto, o Nginx do frontend encaminha `/otlp/*` ao Collector interno. Separadamente, o Terraform atual marca o RDS como `publicly_accessible = true`, embora o security group restrinja a porta aos nós EKS. Essa configuração pertence ao laboratório atual e não constitui uma configuração aprovada para um ambiente durável.
 
 ## Organização dos pods no EKS
 
@@ -74,6 +74,7 @@ flowchart TB
         end
 
         BackPods -->|Telemetria| Telemetry
+        FrontPods -.->|"/otlp/* via Nginx"| Telemetry
     end
 
     ALB -->|"/*"| FrontService
