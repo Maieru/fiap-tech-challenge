@@ -44,6 +44,8 @@ Reconsiderar antes de uso público durável ou quando houver necessidade de perf
 
 ## Evidências e relações
 
+**Fase 3:** a Function deve autenticar por CPF, consultar existência/status e emitir JWT. O authorizer atual não emite JWT e não satisfaz esse requisito completo. A adequação depende de implementação e atualização desta decisão; veja os [diagramas de sequência](../arquitetura/sequencias.md).
+
 - [Configuração JWT Bearer](../../src/FIAP.TechChallenge.Fase1.Infrastructure/InfraestructureDependecyInjection.cs)
 - [Emissão do JWT](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Security/JwtTokenService.cs)
 - [Hash de senha](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Security/BCryptPasswordHasher.cs)

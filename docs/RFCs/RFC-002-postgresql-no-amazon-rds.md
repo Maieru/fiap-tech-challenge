@@ -40,6 +40,7 @@ Reconsiderar por requisitos de disponibilidade, distribuição ou padrões de ac
 
 ## Evidências e relações
 
+- [ER, relacionamentos e justificativa dos ajustes do modelo](../arquitetura/banco-de-dados.md)
 - [Registro do Npgsql](../../src/FIAP.TechChallenge.Fase1.Infrastructure/InfraestructureDependecyInjection.cs)
 - [Contexto EF Core](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/AppDbContext.cs)
 - [Infraestrutura do banco](https://github.com/Maieru/fiap-tech-challenge-db/tree/main/infra/database)

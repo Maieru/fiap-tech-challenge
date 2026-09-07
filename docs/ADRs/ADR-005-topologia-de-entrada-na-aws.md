@@ -45,7 +45,7 @@ Novas exposições públicas exigem decisão própria. Reconsiderar por custo, l
 - [Service do backend](../../k8s/backend/services.yaml)
 - [Proxy Nginx do frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/nginx.conf)
 - [Terraform do API Gateway](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/infra/api-gateway/api-gateway.tf)
-- [Diagrama da infraestrutura](../ARQUITETURA.md#infraestrutura-aws)
+- [Diagrama da infraestrutura](../arquitetura/README.md#diagrama-de-componentes)
 - [RFC-001 — Escolha da AWS](../RFCs/RFC-001-escolha-da-nuvem-aws.md)
 - [RFC-004 — Containers no EKS](../RFCs/RFC-004-containers-no-amazon-eks.md)
 - [ADR-009 — Observabilidade com OpenTelemetry](ADR-009-observabilidade-com-opentelemetry.md)

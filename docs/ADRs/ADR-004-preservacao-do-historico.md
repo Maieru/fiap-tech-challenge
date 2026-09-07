@@ -37,6 +37,7 @@ Reconsiderar quando houver exigência de auditoria completa, retenção ou apaga
 
 ## Evidências e relações
 
+- [Modelo ER e justificativa das migrations](../arquitetura/banco-de-dados.md)
 - [Fluxo da ordem de serviço](../../src/FIAP.TechChallenge.Fase1.Domain/Entities/OrdemServico.cs)
 - [Snapshot de serviço](../../src/FIAP.TechChallenge.Fase1.Domain/Entities/ServicoDaOrdemDeServico.cs)
 - [Snapshot de peça ou insumo](../../src/FIAP.TechChallenge.Fase1.Domain/Entities/PecaOuInsumoDaOrdemDeServico.cs)

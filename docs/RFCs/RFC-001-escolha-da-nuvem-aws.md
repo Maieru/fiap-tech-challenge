@@ -38,7 +38,7 @@ Reconsiderar por custo, residência de dados, disponibilidade ou necessidade com
 
 ## Evidências e relações
 
-- [Visão de arquitetura](../ARQUITETURA.md)
+- [Visão de arquitetura](../arquitetura/README.md)
 - [README principal](../../README.md)
 - [Infraestrutura AWS](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra)
 - [RFC-004 — Containers no Amazon EKS](RFC-004-containers-no-amazon-eks.md)

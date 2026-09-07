@@ -44,6 +44,7 @@ Reconsiderar por requisitos de aprovação, segregação de funções, GitOps ou
 
 ## Evidências e relações
 
+- [CI/CD atual e requisitos de homologação/produção da Fase 3](../operacao/ci-cd.md)
 - [Orquestrador de implantação](../../.github/workflows/initialize-and-deploy.yml)
 - [Guia da infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra)
 - [Workflow Terraform reutilizável](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/.github/workflows/terraform-stage.yml)

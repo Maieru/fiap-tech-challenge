@@ -43,4 +43,4 @@ Reconsiderar quando um módulo precisar de escala, disponibilidade ou implantaç
 - [Referências da Application](../../src/FIAP.TechChallenge.Fase1.Application/FIAP.TechChallenge.Fase1.Application.csproj)
 - [Referências da Infrastructure](../../src/FIAP.TechChallenge.Fase1.Infrastructure/FIAP.TechChallenge.Fase1.Infrastructure.csproj)
 - [Casos de uso](../../src/FIAP.TechChallenge.Fase1.Application/UseCases)
-- [Visão das camadas](../ARQUITETURA.md#camadas-da-aplicação)
+- [Visão das camadas](../arquitetura/README.md#camadas-da-aplicação)

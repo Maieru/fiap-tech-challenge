@@ -52,4 +52,4 @@ Reconsiderar por custo, volume, retenção, disponibilidade ou requisitos de pri
 - [Recursos de observabilidade no EKS](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/k8s/observability)
 - [Configuração compartilhada](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/src/ObservabilityConfig)
 - [Integração Kubernetes do New Relic](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/infra/kubernetes-configs/newrelic.tf)
-- [Métricas de negócio](../metricas-negocio-new-relic.md)
+- [Métricas de negócio](../operacao/metricas-negocio.md)
