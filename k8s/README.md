@@ -21,7 +21,7 @@ graph LR
     BackendSecret --> Backend
 ```
 
-O API Gateway é o único componente exposto publicamente. O AWS Load Balancer Controller combina os Ingresses dos dois namespaces em um ALB interno: `/api/*` segue para o backend e as demais rotas seguem para o frontend.
+O API Gateway é o ponto de entrada público destinado ao tráfego da aplicação. O AWS Load Balancer Controller combina os Ingresses dos dois namespaces em um ALB interno: `/api/*` segue para o backend e as demais rotas seguem para o frontend. Dentro do frontend, o Nginx encaminha `/otlp/*` ao Collector, portanto essa ingestão é indiretamente acessível pela mesma borda.
 
 ## Estrutura
 
@@ -43,7 +43,7 @@ k8s/
 
 Os diretórios `backend` e `frontend` contêm somente os recursos que acompanham o ciclo de entrega da aplicação: configurações, segredos externos, deployments, serviços e escalabilidade.
 
-A stack de observabilidade em produção é aplicada pelo módulo `infra/kubernetes-configs` do repositório de infraestrutura. `src/ObservabilityConfig` permanece neste repositório porque também é utilizado pelo ambiente local com Docker Compose.
+A stack de observabilidade do ambiente remoto de laboratório é aplicada pelo módulo `infra/kubernetes-configs` do repositório de infraestrutura. `src/ObservabilityConfig` permanece neste repositório porque também é utilizado pelo ambiente local com Docker Compose.
 
 ## Recursos implantados
 
@@ -88,13 +88,13 @@ Antes de aplicar os manifests da aplicação, é necessário ter:
 - External Secrets Operator, Metrics Server e AWS Load Balancer Controller instalados;
 - namespaces `fiap-backend` e `fiap-frontend` criados;
 - `SecretStore` `aws-secrets-store` disponível no namespace do backend;
-- segredo `fiap-secret-manager-backend` disponível no AWS Secrets Manager.
+- segredos `fiap-secret-manager-database-credentials` e `fiap-secret-manager-jwt-signing-key` disponíveis no AWS Secrets Manager.
 
 Essas dependências são provisionadas pelos módulos Terraform nesta ordem:
 
 ```text
 bootstrap → aws-resources → database → kubernetes-addons → kubernetes-configs
-→ deploy das aplicações e Ingresses → api-gateway
+→ deploy das aplicações e Ingresses → api-gateway → serverless → código da Lambda
 ```
 
 Consulte o [`README` de infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra) para o procedimento completo de provisionamento.
@@ -151,8 +151,10 @@ kubectl get externalsecret -n fiap-backend
 O `ExternalSecret` deve estar sincronizado e o Secret de destino deve existir:
 
 ```bash
-kubectl describe externalsecret fiap-backend-secret -n fiap-backend
-kubectl get secret fiap-backend-secret -n fiap-backend
+kubectl describe externalsecret fiap-secret-manager-database-credentials -n fiap-backend
+kubectl get secret fiap-secret-manager-database-credentials -n fiap-backend
+kubectl describe externalsecret fiap-secret-manager-jwt-signing-key -n fiap-backend
+kubectl get secret fiap-secret-manager-jwt-signing-key -n fiap-backend
 ```
 
 Os dois Ingresses devem apresentar o mesmo hostname interno:
@@ -189,7 +191,7 @@ O workflow `.github/workflows/deploy-applications.yml` realiza o deploy no EKS. 
 6. reinicia os deployments para buscar as imagens marcadas como `latest`;
 7. aguarda a conclusão dos rollouts e a criação do ALB interno.
 
-O workflow `.github/workflows/initialize-and-deploy.yml` coordena o processo completo: aplica a infraestrutura, publica as imagens, implanta as aplicações, aguarda o ALB e aplica o API Gateway.
+O workflow `.github/workflows/initialize-and-deploy.yml` coordena infraestrutura, imagens e aplicações; após aguardar o ALB, aplica API Gateway e infraestrutura serverless e publica o código da Lambda. As rotas protegidas e as limitações de autenticação estão na [RFC-003](../docs/RFCs/RFC-003-autenticacao-jwt-e-bcrypt.md).
 
 ## Configurações que exigem atenção
 
@@ -231,14 +233,20 @@ Se o backend não iniciar, verifique primeiro o `ExternalSecret`, o Secret gerad
 
 ## Remoção das aplicações
 
-Destrua primeiro o estado `infra/api-gateway`, a partir do repositório de infraestrutura, e então remova as cargas da aplicação, preservando o cluster:
+Destrua primeiro `infra/serverless` e depois `infra/api-gateway`, a partir do repositório de infraestrutura. Então, na raiz do repositório da aplicação, remova os manifests, preservando o cluster:
 
 ```bash
+terraform -chdir=infra/serverless destroy
 terraform -chdir=infra/api-gateway destroy
+```
+
+No repositório da aplicação:
+
+```bash
 kubectl delete -f k8s/frontend
 kubectl delete -f k8s/backend
 ```
 
 Namespaces, add-ons, identidades AWS e demais recursos de infraestrutura devem ser removidos por meio dos respectivos módulos Terraform, conforme o procedimento descrito no [`README` de infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra).
 
-Consulte o [guia do New Relic](../docs/OBSERVABILIDADE.md) para configurar a chave de ingestão e validar os dados.
+Consulte o [guia do New Relic](../docs/operacao/observabilidade.md) para configurar a chave de ingestão e validar os dados.

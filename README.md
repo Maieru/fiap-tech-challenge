@@ -11,7 +11,7 @@ O projeto está distribuído por responsabilidade entre os seguintes repositóri
 | [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | Aplicação principal: API .NET, frontend React, testes, Docker Compose, manifests das aplicações e orquestração dos workflows. |
 | [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) | Infraestrutura compartilhada: backend do Terraform, VPC, EKS, ECR, add-ons, configurações Kubernetes e observabilidade. |
 | [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db) | Infraestrutura do PostgreSQL no Amazon RDS e credenciais do banco no AWS Secrets Manager. |
-| [`fiap-tech-challenge-serverless`](https://github.com/Maieru/fiap-tech-challenge-serverless) | Repositório destinado aos componentes serverless do projeto. |
+| [`fiap-tech-challenge-serverless`](https://github.com/Maieru/fiap-tech-challenge-serverless) | Código, testes e publicação da Lambda Authorizer de acesso às ordens. |
 
 ## Funcionalidades
 
@@ -25,9 +25,11 @@ O projeto está distribuído por responsabilidade entre os seguintes repositóri
 - exclusão lógica para preservação do histórico;
 - interface administrativa responsiva para operação dos principais fluxos.
 
-## Arquitetura
+## Arquitetura e decisões técnicas
 
-Uma visão visual completa da infraestrutura AWS, da organização dos pods no EKS e das camadas da aplicação está disponível em [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md).
+O catálogo em [`docs/README.md`](docs/README.md) reúne a visão visual da arquitetura, as RFCs de escolhas técnicas e os ADRs das decisões arquiteturais permanentes.
+
+Consulte os [diagramas de sequência](docs/arquitetura/sequencias.md), o [modelo ER e sua evolução](docs/arquitetura/banco-de-dados.md) e o [fluxo de CI/CD](docs/operacao/ci-cd.md). Cada guia distingue o comportamento atual das pendências de implementação.
 
 O backend é um monólito modular organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP:
 
@@ -67,7 +69,7 @@ A API aplica automaticamente as migrations pendentes na inicialização, exceto 
 - Docker com Docker Compose;
 - portas `5173`, `8080`, `5050` e `5432` disponíveis.
 
-Na raiz do repositório, execute:
+Copie `src/.env.example` para `src/.env` e preencha `NEW_RELIC_LICENSE_KEY`, conforme o [guia de observabilidade](docs/operacao/observabilidade.md). O Compose atual exige esse valor para iniciar. Depois, na raiz do repositório, execute:
 
 ```bash
 docker compose -f src/docker-compose.yml up --build -d
@@ -79,8 +81,8 @@ Serviços disponíveis:
 | --- | --- | --- |
 | Frontend | `http://localhost:5173` | — |
 | API | `http://localhost:8080` | — |
-| Scalar | `http://localhost:8080/scalar/v1` | — |
-| OpenAPI | `http://localhost:8080/openapi/v1.json` | — |
+| Scalar | [Interface da API](http://localhost:8080/scalar/v1) | — |
+| OpenAPI | [Contrato JSON](http://localhost:8080/openapi/v1.json) | — |
 | Liveness | `http://localhost:8080/api/health/live` | — |
 | Readiness | `http://localhost:8080/api/health/ready` | — |
 | PostgreSQL | `localhost:5432` | `postgres / postgres` |
@@ -136,7 +138,9 @@ O fluxo de autenticação é:
 Authorization: Bearer <token>
 ```
 
-Além do cadastro e login, são públicos os health checks e `GET /api/ordensservico/acompanhamento/{id}`. Os demais endpoints exigem autenticação.
+Na API, cadastro, login, health checks, acompanhamento, aprovação e cancelamento permitem chamadas sem JWT. Na AWS, as três rotas declaradas de ordem exigem `token` na query string, validado pela Lambda Authorizer. A aprovação também valida esse token no caso de uso; acompanhamento e cancelamento dependem da proteção da borda. Os demais endpoints administrativos exigem JWT.
+
+O token de acesso à ordem é SHA-256, não JWT. A Function ainda não emite JWT a partir de CPF, como exige a Fase 3. O contrato atual e a diferença estão na [RFC-003](docs/RFCs/RFC-003-autenticacao-jwt-e-bcrypt.md).
 
 ## Fluxo da ordem de serviço
 
@@ -159,7 +163,7 @@ Regras importantes:
 
 ## Infraestrutura e Kubernetes
 
-A infraestrutura de produção é declarada em Terraform nos repositórios [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) e [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db). Ela provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
+A infraestrutura remota de laboratório é declarada em Terraform nos repositórios [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) e [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db). Ela provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
 
 Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui uma réplica inicial, probes de saúde, limites de recursos e HPA de 1 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. Os dois serviços são `ClusterIP` e participam do mesmo `IngressGroup`: o AWS Load Balancer Controller cria um ALB interno que encaminha `/api/*` ao backend e as demais rotas ao frontend. Um API Gateway HTTP API é a entrada pública e acessa esse ALB por um VPC Link.
 
@@ -167,26 +171,30 @@ Os módulos Terraform devem ser aplicados nesta ordem:
 
 ```text
 bootstrap → aws-resources → database → kubernetes-addons → kubernetes-configs
-→ deploy das aplicações e Ingresses → api-gateway
+→ deploy das aplicações e Ingresses → api-gateway → serverless → código da Lambda
 ```
 
-Os estágios `bootstrap`, `aws-resources`, `kubernetes-addons`, `kubernetes-configs` e `api-gateway` pertencem ao repositório de infraestrutura; `database` pertence ao repositório de banco. Cada repositório contém sua própria action reutilizável `terraform-stage` e seus workflows de criação e destruição. Este repositório orquestra as chamadas remotas, constrói as imagens, implanta as aplicações, aguarda a criação do ALB e então aplica o API Gateway.
+Os estágios `bootstrap`, `aws-resources`, `kubernetes-addons`, `kubernetes-configs`, `api-gateway` e `serverless` pertencem ao repositório de infraestrutura; `database` pertence ao repositório de banco. Ambos têm workflows Terraform reutilizáveis. A aplicação orquestra infraestrutura, imagens e manifests; o repositório serverless publica o código depois de a função existir.
 
 O fluxo completo executa:
 
 ```text
-Infra/Core → Database → Infra/Kubernetes → Build → Deploy/ALB → API Gateway
+Infra/Core → Database → Infra/Kubernetes → Build → Deploy/ALB
+→ API Gateway → Infra/Serverless → Código da Lambda
 ```
 
 Na destruição, o orquestrador preserva as dependências entre os estados:
 
 ```text
-Kubernetes Configs → Kubernetes Add-ons → Database → EKS
+Serverless → API Gateway → Ingresses/ALB → Kubernetes Configs
+→ Kubernetes Add-ons → Database → EKS
 ```
 
 O passo a passo operacional está no [`guia de infraestrutura`](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra) e no [`guia do banco`](https://github.com/Maieru/fiap-tech-challenge-db#readme). A organização dos manifests, o deploy manual e os comandos de diagnóstico estão em [`k8s/README.md`](k8s/README.md).
 
-Para a orquestração, configure os secrets `INFRA_ACTION_ROLE`, `DATABASE_ACTION_ROLE`, `ACTION_ROLE_ARN`, `jwt_signing_key`, `db_username`, `db_password` e `NEW_RELIC_LICENSE_KEY`. Se os repositórios forem privados, configure também `REPOSITORIES_TOKEN` com acesso de leitura aos repositórios chamados.
+Para a orquestração, configure os secrets `INFRA_ACTION_ROLE`, `DATABASE_ACTION_ROLE`, `ACTION_ROLE_ARN`, `AUTH_ACTION_ROLE`, `jwt_signing_key`, `db_username`, `db_password` e `NEW_RELIC_LICENSE_KEY`. Se os repositórios forem privados, configure também `REPOSITORIES_TOKEN` com acesso de leitura aos repositórios chamados.
+
+No GitHub Actions, inicie `Initialize Infrastructure And Deploy` para executar o fluxo completo. O orquestrador atual é manual; não há deploy por push de homologação/produção declarado. A [documentação de CI/CD](docs/operacao/ci-cd.md) descreve as adequações exigidas pela Fase 3.
 
 ## Testes
 
@@ -223,8 +231,8 @@ Este é meu primeiro projeto em que aplico esses conceitos de forma tão abrange
 
 ## Observabilidade
 
-A telemetria é enviada ao New Relic via OpenTelemetry Collector. Antes de iniciar o Docker Compose, configure a chave em `src/.env` conforme o [guia de observabilidade](docs/OBSERVABILIDADE.md).
+A telemetria é enviada ao New Relic via OpenTelemetry Collector. Antes de iniciar o Docker Compose, configure a chave em `src/.env` conforme o [guia de observabilidade](docs/operacao/observabilidade.md).
 
 ## Métricas de negócio
 
-Consulte [as métricas OpenTelemetry e consultas dos dashboards New Relic](docs/metricas-negocio-new-relic.md).
+Consulte [as métricas OpenTelemetry e consultas dos dashboards New Relic](docs/operacao/metricas-negocio.md).
