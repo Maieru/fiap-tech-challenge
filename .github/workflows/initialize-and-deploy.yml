@@ -1,6 +1,9 @@
 name: 1. Initialize Infrastructure And Deploy
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
