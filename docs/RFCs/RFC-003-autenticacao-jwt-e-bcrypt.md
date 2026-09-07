@@ -21,6 +21,8 @@ Manter autenticação local com BCrypt e JWT:
 - Enviar JWT como Bearer; a SPA limpa a sessão ao expirar ou receber `401`.
 - Receber a chave remota pelo mecanismo da ADR-007.
 
+Para as requisições de clientes às ordens, usar a Lambda como authorizer do API Gateway, validando o token de acesso e devolvendo uma decisão de autorização. Esse escopo foi alinhado para o projeto; a emissão de JWT pertence à autenticação administrativa na API.
+
 ## Alternativas consideradas
 
 - **Provedor OIDC externo:** acrescentaria federação e gestão de identidade, exigindo integração adicional.
@@ -44,7 +46,7 @@ Reconsiderar antes de uso público durável ou quando houver necessidade de perf
 
 ## Evidências e relações
 
-**Fase 3:** a Function deve autenticar por CPF, consultar existência/status e emitir JWT. O authorizer atual não emite JWT e não satisfaz esse requisito completo. A adequação depende de implementação e atualização desta decisão; veja os [diagramas de sequência](../arquitetura/sequencias.md).
+- [Sequências de autenticação e validação das requisições](../arquitetura/sequencias.md)
 
 - [Configuração JWT Bearer](../../src/FIAP.TechChallenge.Fase1.Infrastructure/InfraestructureDependecyInjection.cs)
 - [Emissão do JWT](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Security/JwtTokenService.cs)

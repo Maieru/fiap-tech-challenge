@@ -140,7 +140,7 @@ Authorization: Bearer <token>
 
 Na API, cadastro, login, health checks, acompanhamento, aprovação e cancelamento permitem chamadas sem JWT. Na AWS, as três rotas declaradas de ordem exigem `token` na query string, validado pela Lambda Authorizer. A aprovação também valida esse token no caso de uso; acompanhamento e cancelamento dependem da proteção da borda. Os demais endpoints administrativos exigem JWT.
 
-O token de acesso à ordem é SHA-256, não JWT. A Function ainda não emite JWT a partir de CPF, como exige a Fase 3. O contrato atual e a diferença estão na [RFC-003](docs/RFCs/RFC-003-autenticacao-jwt-e-bcrypt.md).
+Conforme o alinhamento do projeto, a Lambda valida requisições de clientes usando o token SHA-256 de acesso à ordem e devolve a decisão ao gateway. A API emite o JWT da autenticação administrativa. O contrato está na [RFC-003](docs/RFCs/RFC-003-autenticacao-jwt-e-bcrypt.md).
 
 ## Fluxo da ordem de serviço
 
