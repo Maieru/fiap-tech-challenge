@@ -1,5 +1,7 @@
 # Observabilidade com New Relic
 
+Para importar o painel de aplicação e Kubernetes, siga o [guia de configuração do dashboard](dashboard-new-relic.md), com um template JSON sem identificadores da conta original.
+
 Backend (.NET) e frontend (browser via proxy Nginx `/otlp`) enviam telemetria ao OpenTelemetry Collector. O Collector exporta traces, métricas e logs por OTLP/HTTP com TLS para o New Relic. A instrumentação existente e os nomes `fiap-tech-challenge-backend` e `fiap-tech-challenge-frontend` são preservados; o frontend emite traces e logs, e o backend também emite métricas.
 
 ## Ambiente local
