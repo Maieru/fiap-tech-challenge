@@ -70,10 +70,10 @@ VITE_API_BASE_URL=http://localhost:5251/api
 
 ## Subindo tudo com Docker Compose
 
-Execute a partir da raiz do repositorio (`src`):
+Na raiz do repositório, copie `src/.env.example` para `src/.env` e preencha `NEW_RELIC_LICENSE_KEY`, conforme o [guia de observabilidade](../../docs/operacao/observabilidade.md). Esse arquivo é separado do `.env` do frontend. Depois execute:
 
 ```bash
-docker compose up --build
+docker compose -f src/docker-compose.yml up --build
 ```
 
 Servicos disponiveis:
@@ -83,9 +83,11 @@ Servicos disponiveis:
 - PgAdmin: `http://localhost:5050`
 - Postgres: `localhost:5432`
 
-No modo Docker, o frontend ja e buildado com `VITE_API_BASE_URL=http://localhost:8080/api`.
+No build Docker padrão, sem `VITE_API_BASE_URL` definida, o frontend usa `/api` na mesma origem; o Nginx encaminha as chamadas ao backend configurado em `API_UPSTREAM`. O `.env` do frontend também entra no contexto de build: remova a definição local de `VITE_API_BASE_URL` ou use `/api` antes de construir a imagem. Essa é uma configuração de build, não uma variável de execução do contêiner.
 
 ## Execucao local (sem Docker)
+
+Requer Node.js 22.12 ou superior na linha 22, ou uma versão posterior compatível com o Vite. Execute na pasta `src/FIAP.TechChallenge.Fase1.Frontend`, com a API disponível no endereço configurado no `.env`:
 
 ```bash
 npm install

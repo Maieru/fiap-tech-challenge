@@ -42,7 +42,7 @@ A API passa a exportar métricas exclusivamente por OTLP; o endpoint `/metrics` 
 
 Referência: [configuração oficial OTLP do New Relic](https://docs.newrelic.com/docs/opentelemetry/best-practices/opentelemetry-otlp/).
 
-## Cobertura e validação da Fase 3
+## Cobertura e validação
 
 A configuração versionada não comprova ingestão nem alertas ativos. Validar os itens abaixo após deploy:
 
