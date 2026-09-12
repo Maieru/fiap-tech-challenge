@@ -5,7 +5,7 @@ Comece pela [visão da arquitetura](arquitetura/README.md). Os guias estão sepa
 | Área | Documentos |
 | --- | --- |
 | Arquitetura | [Componentes e camadas](arquitetura/README.md), [sequências](arquitetura/sequencias.md), [banco de dados e ER](arquitetura/banco-de-dados.md) |
-| Operação | [CI/CD](operacao/ci-cd.md), [observabilidade](operacao/observabilidade.md), [métricas de negócio](operacao/metricas-negocio.md) |
+| Operação | [CI/CD](operacao/ci-cd.md), [observabilidade](operacao/observabilidade.md), [métricas de negócio](operacao/metricas-negocio.md), [configuração do dashboard New Relic](operacao/dashboard-new-relic.md) |
 | Decisões arquiteturais | [Índice de ADRs](ADRs/README.md) |
 | Escolhas técnicas | [Índice de RFCs](RFCs/README.md) |
 
@@ -21,7 +21,10 @@ docs/
 ├── operacao/
 │   ├── ci-cd.md
 │   ├── observabilidade.md
-│   └── metricas-negocio.md
+│   ├── metricas-negocio.md
+│   ├── dashboard-new-relic.md
+│   └── dashboards/
+│       └── fiap-backend.template.json
 ├── ADRs/
 │   ├── README.md
 │   ├── TEMPLATE.md
