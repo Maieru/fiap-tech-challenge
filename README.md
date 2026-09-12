@@ -9,7 +9,7 @@ O projeto está distribuído por responsabilidade entre os seguintes repositóri
 | Repositório | Responsabilidade |
 | --- | --- |
 | [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | Aplicação principal: API .NET, frontend React, testes, Docker Compose, manifests das aplicações e orquestração dos workflows. |
-| [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) | Infraestrutura compartilhada: backend do Terraform, VPC, EKS, ECR, add-ons, configurações Kubernetes e observabilidade. |
+| [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) | Infraestrutura compartilhada: backend do Terraform, VPC, EKS, ECR, add-ons, configurações Kubernetes, observabilidade, API Gateway e infraestrutura da Lambda Authorizer. |
 | [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db) | Infraestrutura do PostgreSQL no Amazon RDS e credenciais do banco no AWS Secrets Manager. |
 | [`fiap-tech-challenge-serverless`](https://github.com/Maieru/fiap-tech-challenge-serverless) | Código, testes e publicação da Lambda Authorizer de acesso às ordens. |
 
@@ -31,7 +31,7 @@ O catálogo em [`docs/README.md`](docs/README.md) reúne a visão visual da arqu
 
 Consulte os [diagramas de sequência](docs/arquitetura/sequencias.md), o [modelo ER e sua evolução](docs/arquitetura/banco-de-dados.md) e o [fluxo de CI/CD](docs/operacao/ci-cd.md). Cada guia distingue o comportamento atual das pendências de implementação.
 
-O backend é um monólito modular organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP:
+O backend é um monólito organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP:
 
 ```mermaid
 graph LR
@@ -67,7 +67,7 @@ A API aplica automaticamente as migrations pendentes na inicialização, exceto 
 ### Pré-requisitos
 
 - Docker com Docker Compose;
-- portas `5173`, `8080`, `5050` e `5432` disponíveis.
+- portas `5173`, `8080`, `5050`, `5432`, `4317` e `4318` disponíveis.
 
 Copie `src/.env.example` para `src/.env` e preencha `NEW_RELIC_LICENSE_KEY`, conforme o [guia de observabilidade](docs/operacao/observabilidade.md). O Compose atual exige esse valor para iniciar. Depois, na raiz do repositório, execute:
 
@@ -103,12 +103,12 @@ docker compose -f src/docker-compose.yml down
 Requer o SDK .NET 10 e uma instância PostgreSQL acessível. Configure `ConnectionStrings:DefaultConnection` e as opções `Jwt` por `appsettings`, variáveis de ambiente ou User Secrets e execute:
 
 ```bash
-dotnet run --project src/FIAP.TechChallenge.Fase1.API
+dotnet run --project src/FIAP.TechChallenge.Fase1.API --launch-profile http
 ```
 
 ### Frontend
 
-Requer Node.js 22 ou superior. A partir da raiz do repositório:
+Requer Node.js 22.12 ou superior na linha 22, ou uma versão posterior compatível com o Vite. A partir da raiz do repositório:
 
 ```bash
 cd src/FIAP.TechChallenge.Fase1.Frontend
@@ -119,8 +119,10 @@ npm run dev
 Para apontar o frontend para uma API executada separadamente, crie um arquivo `.env` no diretório do frontend:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:5251/api
 ```
+
+O perfil `http` do backend usa `http://localhost:5251`. Se executar a API pelo Compose, use `http://localhost:8080/api` no frontend local.
 
 No Visual Studio, abra `src/TechChallengeFase1.slnx`. Para iniciar todo o ambiente em contêineres, selecione o projeto `docker-compose` como projeto de inicialização.
 
@@ -194,7 +196,7 @@ O passo a passo operacional está no [`guia de infraestrutura`](https://github.c
 
 Para a orquestração, configure os secrets `INFRA_ACTION_ROLE`, `DATABASE_ACTION_ROLE`, `ACTION_ROLE_ARN`, `AUTH_ACTION_ROLE`, `jwt_signing_key`, `db_username`, `db_password` e `NEW_RELIC_LICENSE_KEY`. Se os repositórios forem privados, configure também `REPOSITORIES_TOKEN` com acesso de leitura aos repositórios chamados.
 
-No GitHub Actions, inicie `Initialize Infrastructure And Deploy` para executar o fluxo completo. O orquestrador atual é manual; não há deploy por push de homologação/produção declarado. A [documentação de CI/CD](docs/operacao/ci-cd.md) descreve as adequações exigidas pela Fase 3.
+No GitHub Actions, inicie `Initialize Infrastructure And Deploy` para executar o fluxo completo. O orquestrador atual é manual; não há deploy por push de homologação/produção declarado. A [documentação de CI/CD](docs/operacao/ci-cd.md) descreve o fluxo atual e as melhorias pendentes.
 
 ## Testes
 

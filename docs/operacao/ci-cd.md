@@ -26,11 +26,11 @@ flowchart LR
 
 A [ADR-008](../ADRs/ADR-008-estados-terraform-e-repositorios.md) identifica responsáveis e estados. A destruição remove dependentes antes de gateway, banco e cluster.
 
-## Diferenças para a Fase 3
+## Melhorias pendentes de CI/CD
 
 Os arquivos revisados não contêm gatilhos `pull_request` ou `push` para homologação/produção. Nomes como `production` em grupos de concorrência não criam ambientes separados.
 
-Para atender ao enunciado, a implementação precisa:
+Para automatizar a promoção entre homologação e produção, a implementação precisa:
 
 - Definir as branches de homologação e produção e disparar deploy automaticamente após merge em cada uma.
 - Exigir PR e checks antes de merge, bloquear push direto em main/master e verificar eventuais exceções administrativas.

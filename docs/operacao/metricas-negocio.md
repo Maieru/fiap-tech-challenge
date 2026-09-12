@@ -22,7 +22,7 @@ MeteredMailService envolve IMailService e conta uma falha quando o resultado ind
 
 ## Dashboard
 
-As consultas abaixo cobrem os três painéis de negócio exigidos pela Fase 3. Sua presença neste arquivo não comprova que o dashboard foi criado ou que os dados chegaram ao New Relic. Para latência, recursos, uptime, logs e alertas, consulte a [validação de observabilidade](OBSERVABILIDADE.md#cobertura-e-validação-da-fase-3).
+As consultas abaixo cobrem os três painéis de negócio: volume de ordens, duração por etapa e falhas de integração. Sua presença neste arquivo não comprova que o dashboard foi criado ou que os dados chegaram ao New Relic. Para latência, recursos, uptime, logs e alertas, consulte a [validação de observabilidade](observabilidade.md#cobertura-e-validação).
 
 No Query Builder, execute as consultas e adicione os gráficos ao mesmo dashboard. Ajuste o filtro de serviço se o nome configurado for diferente. O seletor de período do dashboard pode substituir SINCE/UNTIL; preserve os limites de dias completos no gráfico diário.
 
