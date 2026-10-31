@@ -30,6 +30,8 @@ O volume `fiap-os_os_postgres_data` pertence apenas ao serviço. `docker compose
 
 ## Autenticação
 
+A chave de assinatura é lida exclusivamente da variável de ambiente `Jwt__SigningKey`; não é aceita de arquivo de configuração. O Compose já fornece essa variável. Issuer/audience continuam configuráveis pelas opções usuais.
+
 Endpoints administrativos exigem `Authorization: Bearer <JWT>`. O token é emitido pelo login administrativo existente, `POST /api/usuarios/login` no monólito. Copie os mesmos issuer, audience e chave para o `.env` do OS. O OS valida assinatura e validade sem consultar o banco legado, sem emitir tokens e sem alterar a Lambda atual. A API pode iniciar e atender seus health checks sem o monólito em execução.
 
 Para uma demonstração completamente isolada, `OsImageSmokeTests` cria credenciais temporárias de teste, assina um JWT real e exercita o container. Não fornece autenticação alternativa à aplicação.

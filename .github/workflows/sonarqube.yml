@@ -98,11 +98,23 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
+          # Only intentional legacy copies: coverage and all other analysis remain enabled.
+          # Remove these CPD exceptions when the OS leaves the transitional monorepo (ADR-014).
+          $copiedCode = @(
+            'src/Services/OrdensServico/**/*Cliente*.cs',
+            'src/Services/OrdensServico/**/*Veiculo*.cs',
+            'src/Services/OrdensServico/FIAP.TechChallenge.OS.Domain/ValueObjects/**',
+            'src/Services/OrdensServico/FIAP.TechChallenge.OS.Domain/Abstractions/**',
+            'src/Services/OrdensServico/FIAP.TechChallenge.OS.Application/UseCases/OrdensServico/CriarOrdemServico/**',
+            'src/Services/OrdensServico/FIAP.TechChallenge.OS.Application/UseCases/OrdensServico/ListarOrdensServico/**',
+            'src/Services/OrdensServico/FIAP.TechChallenge.OS.API/Extensions/ResultExtensions.cs'
+          ) -join ','
           $scanner = Join-Path $env:RUNNER_TEMP 'scanner/dotnet-sonarscanner.exe'
           & $scanner begin "/k:$env:SONAR_PROJECT_KEY" "/o:$env:SONAR_ORGANIZATION" `
             "/d:sonar.token=$env:SONAR_TOKEN" /d:sonar.host.url=https://sonarcloud.io `
             /d:sonar.cs.opencover.reportsPaths=artifacts/reports/**/coverage.opencover.xml `
             '/d:sonar.exclusions=**/Migrations/**,**/*.feature.cs,**/node_modules/**,**/bin/**,**/obj/**' `
+            "/d:sonar.cpd.exclusions=$copiedCode" `
             /d:sonar.scanner.scanAll=false /d:sonar.qualitygate.wait=true
           dotnet build Backend.slnx -c Release --no-incremental --disable-build-servers
           & $scanner end "/d:sonar.token=$env:SONAR_TOKEN"
