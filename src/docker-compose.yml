@@ -6,8 +6,8 @@ version: '3.9'
 services:
   fiap.techchallenge.fase1.api:
     build:
-      context: .
-      dockerfile: FIAP.TechChallenge.Fase1.API/Dockerfile
+      context: ..
+      dockerfile: src/FIAP.TechChallenge.Fase1.API/Dockerfile
     container_name: fiap-techchallenge-api
     depends_on:
       - db

@@ -1,0 +1,11 @@
+<Solution>
+  <Project Path="src/FIAP.TechChallenge.Fase1.API.Tests/FIAP.TechChallenge.Fase1.API.Tests.csproj" />
+  <Project Path="src/FIAP.TechChallenge.Fase1.API/FIAP.TechChallenge.Fase1.API.csproj" />
+  <Project Path="src/FIAP.TechChallenge.Fase1.Application.Tests/FIAP.TechChallenge.Fase1.Application.Tests.csproj" />
+  <Project Path="src/FIAP.TechChallenge.Fase1.Application/FIAP.TechChallenge.Fase1.Application.csproj" />
+  <Project Path="src/FIAP.TechChallenge.Fase1.Domain.Tests/FIAP.TechChallenge.Fase1.Domain.Tests.csproj" />
+  <Project Path="src/FIAP.TechChallenge.Fase1.Domain/FIAP.TechChallenge.Fase1.Domain.csproj" />
+  <Project Path="src/FIAP.TechChallenge.Fase1.Infaestructure.Tests/FIAP.TechChallenge.Fase1.Infaestructure.Tests.csproj" />
+  <Project Path="src/FIAP.TechChallenge.Fase1.Infrastructure/FIAP.TechChallenge.Fase1.Infrastructure.csproj" />
+  <Project Path="src/FIAP.TechChallenge.Fase1.PostgreSQL.Tests/FIAP.TechChallenge.Fase1.PostgreSQL.Tests.csproj" />
+</Solution>

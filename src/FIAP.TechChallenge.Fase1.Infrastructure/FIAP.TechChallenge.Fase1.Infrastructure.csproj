@@ -33,4 +33,7 @@
 	  <ProjectReference Include="..\FIAP.TechChallenge.Fase1.Domain\FIAP.TechChallenge.Fase1.Domain.csproj" />
 	</ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Maieru.FiapTechChallenge.Chassis" Version="$(ChassisVersion)" />
+  </ItemGroup>
 </Project>

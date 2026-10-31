@@ -1,0 +1,118 @@
+name: Monorepo CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monorepo-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CHASSIS_VERSION: 0.1.0-ci.${{ github.run_id }}.${{ github.run_attempt }}
+
+jobs:
+  component:
+    name: Test ${{ matrix.component }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [legacy, chassis, os]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build local package candidate
+        shell: pwsh
+        run: ./scripts/bootstrap.ps1 -Version $env:CHASSIS_VERSION
+      - name: Tests and component coverage gate
+        shell: pwsh
+        run: ./scripts/test-component.ps1 -Component '${{ matrix.component }}' -ChassisVersion $env:CHASSIS_VERSION
+      - name: Build OS image
+        if: matrix.component == 'os'
+        run: docker build -f src/Services/OrdensServico/Dockerfile --build-arg CHASSIS_VERSION="$CHASSIS_VERSION" -t fiap-os:ci .
+      - name: Verify OS image over HTTP and after restart
+        if: matrix.component == 'os'
+        run: python scripts/smoke_os_image.py fiap-os:ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-${{ matrix.component }}
+          path: |
+            artifacts/verification/
+            artifacts/*-sample.log
+            artifacts/os-openapi.json
+
+  quality:
+    name: Sonar quality gate
+    needs: component
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Require real Sonar configuration
+        shell: bash
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+        run: |
+          test -n "$SONAR_TOKEN" && test -n "$SONAR_ORGANIZATION" && test -n "$SONAR_PROJECT_KEY" || {
+            echo 'Configure SonarQube Cloud as documented in docs/operacao/monorepo-ci.md'; exit 1;
+          }
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: verification-*
+          path: artifacts/reports
+      - name: Prepare package and scanner
+        shell: pwsh
+        run: |
+          ./scripts/bootstrap.ps1 -Version $env:CHASSIS_VERSION
+          dotnet tool restore
+          if ($LASTEXITCODE -ne 0) { throw 'Tool restore failed' }
+      - name: Analyze backend and wait for quality gate
+        shell: bash
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+        run: |
+          dotnet sonarscanner begin /k:"$SONAR_PROJECT_KEY" /o:"$SONAR_ORGANIZATION" \
+            /d:sonar.token="$SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.opencover.reportsPaths="artifacts/reports/**/coverage.opencover.xml" \
+            /d:sonar.exclusions="**/Migrations/**,**/*.feature.cs,**/node_modules/**,**/bin/**,**/obj/**" \
+            /d:sonar.scanner.scanAll=false /d:sonar.qualitygate.wait=true
+          dotnet build Backend.slnx -c Release -p:ChassisVersion="$CHASSIS_VERSION" --no-incremental
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
+  ci-required:
+    name: ci-required
+    if: always()
+    needs: [component, quality]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require tests, coverage and quality success
+        env:
+          TEST_RESULT: ${{ needs.component.result }}
+          QUALITY_RESULT: ${{ needs.quality.result }}
+        run: test "$TEST_RESULT" = success && test "$QUALITY_RESULT" = success

@@ -2,6 +2,19 @@
 
 Aplicação para administrar o ciclo operacional de uma oficina mecânica. A solução reúne uma API em .NET, um frontend React, persistência em PostgreSQL, ambiente local com Docker Compose e infraestrutura AWS provisionada com Terraform e Kubernetes.
 
+## Primeiro incremento da Fase 4
+
+O monorepo agora inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo e gestão de clientes/veículos (edição e soft delete), e um [chassi técnico NuGet](src/Chassis/Maieru.FiapTechChallenge.Chassis/README.md). O monólito e suas rotas continuam disponíveis.
+
+Antes de restaurar ou construir consumidores, prepare o pacote local a partir da raiz:
+
+```powershell
+pwsh -File scripts/bootstrap.ps1
+dotnet build Backend.slnx -c Release
+```
+
+Consulte [arquitetura e reaproveitamento](docs/arquitetura/fase4-incremento1.md), [CI e configuração de contas externas](docs/operacao/monorepo-ci.md) e [evidências de testes](docs/operacao/evidencias-fase4-incremento1.md). O pacote foi validado localmente; publicação no NuGet.org e análise SonarQube Cloud dependem das contas externas. AWS/Saga/mensageria e migração de tráfego do novo serviço ficam para os próximos incrementos.
+
 ## Ecossistema de repositórios
 
 O projeto está distribuído por responsabilidade entre os seguintes repositórios:
@@ -196,7 +209,7 @@ O passo a passo operacional está no [`guia de infraestrutura`](https://github.c
 
 Para a orquestração, configure os secrets `INFRA_ACTION_ROLE`, `DATABASE_ACTION_ROLE`, `ACTION_ROLE_ARN`, `AUTH_ACTION_ROLE`, `jwt_signing_key`, `db_username`, `db_password` e `NEW_RELIC_LICENSE_KEY`. Se os repositórios forem privados, configure também `REPOSITORIES_TOKEN` com acesso de leitura aos repositórios chamados.
 
-No GitHub Actions, inicie `Initialize Infrastructure And Deploy` para executar o fluxo completo. O orquestrador atual é manual; não há deploy por push de homologação/produção declarado. A [documentação de CI/CD](docs/operacao/ci-cd.md) descreve o fluxo atual e as melhorias pendentes.
+No GitHub Actions, inicie `Initialize Infrastructure And Deploy` para executar o fluxo completo. O orquestrador também responde a pushes em `main` que alterem as aplicações legadas, manifests ou workflows de deploy; mudanças exclusivas de chassi/OS não provisionam a AWS. O novo OS ainda não participa desse deploy. Consulte a [documentação de CI/CD](docs/operacao/ci-cd.md) e o [CI do monorepo](docs/operacao/monorepo-ci.md).
 
 ## Testes
 

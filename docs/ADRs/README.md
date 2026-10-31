@@ -16,6 +16,8 @@ Os ADRs preservam decisões arquiteturais vigentes e suas consequências. Use o 
 | [ADR-008](ADR-008-estados-terraform-e-repositorios.md) | Aceita | Separar responsabilidades em repositórios e estados Terraform dependentes. |
 | [ADR-009](ADR-009-observabilidade-com-opentelemetry.md) | Aceita | Exportar telemetria com OpenTelemetry Collector para New Relic. |
 | [ADR-010](ADR-010-ambiente-efemero-orientado-a-custo.md) | Aceita | Tratar a infraestrutura atual como ambiente descartável de demonstração. |
+| [ADR-011](ADR-011-extracao-incremental-os-monorepo.md) | Aceita | Extrair o OS por responsabilidade em monorepo temporário, preservando o legado. |
+| [ADR-012](ADR-012-dados-historico-os.md) | Aceita | PostgreSQL exclusivo, soft delete e histórico independente de cadastros ativos. |
 
 Os ADRs iniciais formalizam decisões predominantes comprovadas pela implementação. Desvios conhecidos são explicitados no próprio registro como limitações ou dívidas de conformidade, sem serem apresentados como capacidades já atendidas.
 

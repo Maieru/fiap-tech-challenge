@@ -2,10 +2,10 @@ name: Build, Test And Push Backend
 
 env:
   DOTNET_VERSION: '10.0.x'
-  SOLUTION_FILE: './src/TechChallengeFase1.slnx'
+  SOLUTION_FILE: './Legacy.slnx'
 
   DOCKERFILE_PATH: './src/FIAP.TechChallenge.Fase1.API/Dockerfile'
-  DOCKER_BUILD_CONTEXT: './src'
+  DOCKER_BUILD_CONTEXT: '.'
 
   AWS_REGION: 'us-east-1'
   ECR_REPOSITORY: 'fiap-ecr-backend-repository'
@@ -35,6 +35,10 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Preparar pacote local do chassi
+        shell: pwsh
+        run: ./scripts/bootstrap.ps1 -Version "0.1.0-ci.$env:GITHUB_RUN_ID.$env:GITHUB_RUN_ATTEMPT"
+
       - name: Restaurar dependências
         run: dotnet restore ${{ env.SOLUTION_FILE }}
 
@@ -52,6 +56,15 @@ jobs:
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+
+      - name: Configurar .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Preparar pacote local do chassi
+        shell: pwsh
+        run: ./scripts/bootstrap.ps1 -Version "0.1.0-ci.$env:GITHUB_RUN_ID.$env:GITHUB_RUN_ATTEMPT"
 
       - name: Configurar credenciais AWS via OIDC
         uses: aws-actions/configure-aws-credentials@v4

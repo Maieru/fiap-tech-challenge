@@ -43,3 +43,9 @@ docs/
 - Use o template correspondente, inclua evidências e atualize o índice ao adicionar uma decisão.
 - Correções preservam a data original e informam a última revisão. Mudanças de decisão ganham um novo registro vinculado ao anterior.
 - Registros retrospectivos descrevem a implementação existente; suas alternativas não representam atas de discussões históricas.
+
+## Fase 4 — primeiro incremento
+
+- [Arquitetura e extração](arquitetura/fase4-incremento1.md).
+- [CI, NuGet e configurações externas](operacao/monorepo-ci.md).
+- [Evidências e limites](operacao/evidencias-fase4-incremento1.md).

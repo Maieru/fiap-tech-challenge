@@ -11,6 +11,7 @@ As RFCs documentam escolhas técnicas relevantes já aceitas, suas alternativas 
 | [RFC-003](RFC-003-autenticacao-jwt-e-bcrypt.md) | Aceita | Autenticar credenciais locais com BCrypt e access token JWT. |
 | [RFC-004](RFC-004-containers-no-amazon-eks.md) | Aceita | Executar os containers de aplicação no Amazon EKS. |
 | [RFC-005](RFC-005-terraform-e-github-actions-oidc.md) | Aceita | Provisionar com Terraform e operar pipelines AWS por OIDC. |
+| [RFC-006](RFC-006-chassi-nuget-e-verificacao-monorepo.md) | Aceita | Distribuir chassi técnico por NuGet e verificar os componentes separadamente. |
 
 ## Regra para RFCs aceitas
 

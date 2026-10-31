@@ -1,0 +1,53 @@
+name: Publish chassis
+on:
+  push:
+    tags: ['chassis-v*']
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate release tag, main ancestry and NuGet account
+        shell: bash
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          [[ "$GITHUB_REF_NAME" =~ ^chassis-v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          git merge-base --is-ancestor HEAD origin/main
+          test -n "$NUGET_USER" || { echo 'Configure NUGET_USER and Trusted Publishing first'; exit 1; }
+          echo "CHASSIS_VERSION=${GITHUB_REF_NAME#chassis-v}" >> "$GITHUB_ENV"
+      - name: Pack exact release
+        shell: pwsh
+        run: ./scripts/bootstrap.ps1 -Version $env:CHASSIS_VERSION
+      - name: Test library and packaged consumer
+        shell: pwsh
+        run: ./scripts/test-component.ps1 -Component chassis -ChassisVersion $env:CHASSIS_VERSION
+      - name: Exchange GitHub OIDC token for temporary NuGet key
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Publish immutable package
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push "artifacts/packages/Maieru.FiapTechChallenge.Chassis.$CHASSIS_VERSION.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chassis-release
+          path: artifacts/packages/*

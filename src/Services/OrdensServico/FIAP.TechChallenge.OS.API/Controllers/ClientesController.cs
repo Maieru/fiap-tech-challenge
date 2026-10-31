@@ -1,0 +1,82 @@
+using FIAP.TechChallenge.OS.API.Extensions;
+using FIAP.TechChallenge.OS.Application.UseCases.Clientes.AtualizarCliente;
+using FIAP.TechChallenge.OS.Application.UseCases.Clientes.CriarCliente;
+using FIAP.TechChallenge.OS.Application.UseCases.Clientes.ExcluirCliente;
+using FIAP.TechChallenge.OS.Application.UseCases.Clientes.ListarClientes;
+using FIAP.TechChallenge.OS.Application.UseCases.Clientes.RecuperarCliente;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FIAP.TechChallenge.OS.API.Controllers;
+
+[ApiController]
+[Route("api/os/v1/clientes")]
+[Authorize]
+public sealed class ClientesController : ControllerBase
+{
+    [HttpGet]
+    [ProducesResponseType(typeof(ListarClientesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Get(IListarClientesUseCase useCase, [FromQuery] ListarClientesCommand command, CancellationToken cancellationToken = default)
+    {
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+
+        return result.ToActionResult(this, value =>
+        {
+            if (!string.IsNullOrWhiteSpace(command.Cpf) || !string.IsNullOrWhiteSpace(command.Cnpj))
+                return Ok(value.Clientes.First());
+
+            return Ok(value);
+        });
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(RecuperarClienteResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(Guid id, IRecuperarClienteUseCase useCase, CancellationToken cancellationToken = default)
+    {
+        var command = new RecuperarClienteCommand { ClienteId = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(CriarClienteResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Post(ICriarClienteUseCase useCase, CriarClienteCommand command, CancellationToken cancellationToken)
+    {
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this, value => CreatedAtAction(nameof(GetById), new { id = value.Id }, value));
+    }
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(AtualizarClienteResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Put(Guid id, IAtualizarClienteUseCase useCase, AtualizarClienteCommand command, CancellationToken cancellationToken)
+    {
+        var updateCommand = new AtualizarClienteCommand
+        {
+            Id = id,
+            Nome = command.Nome,
+            Telefone = command.Telefone,
+            Email = command.Email
+        };
+
+        var result = await useCase.ExecuteAsync(updateCommand, cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, IExcluirClienteUseCase useCase, CancellationToken cancellationToken)
+    {
+        var command = new ExcluirClienteCommand { Id = id };
+        var result = await useCase.ExecuteAsync(command, cancellationToken);
+        return result.ToActionResult(this, _ => NoContent());
+    }
+}

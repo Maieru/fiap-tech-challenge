@@ -1,10 +1,9 @@
 using FIAP.TechChallenge.Fase1.Domain.Observability;
+using Maieru.FiapTechChallenge.Chassis;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 namespace FIAP.TechChallenge.Fase1.Infrastructure.Observability;
@@ -13,46 +12,16 @@ public static class OpenTelemetryConfiguration
 {
     public static IHostApplicationBuilder AddOpenTelemetry(this IHostApplicationBuilder builder)
     {
-        _ = builder.Services.ConfigureServices();
-        _ = builder.Logging.ConfigureLogging();
+        builder.AddChassis(new ChassisOptions
+        {
+            ServiceName = builder.Configuration["OTEL_SERVICE_NAME"] ?? "fiap-tech-challenge-backend",
+            EnableOtlp = true,
+            MeterNames = [MetricasNegocio.MeterName]
+        });
+        builder.Services.AddOpenTelemetry()
+            .WithTracing(tracing => tracing.AddEntityFrameworkCoreInstrumentation())
+            .WithMetrics(metrics => metrics.AddProcessInstrumentation());
         return builder;
     }
 
-    private static IServiceCollection ConfigureServices(this IServiceCollection services)
-    {
-        _ = services.AddOpenTelemetry()
-            .ConfigureResource(resource => ResourceBuilder.CreateDefault())
-            .WithTracing(tracing =>
-                tracing.AddAspNetCoreInstrumentation()
-                    .AddEntityFrameworkCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddOtlpExporter()
-            )
-            .WithMetrics(metrics =>
-                metrics.AddMeter(MetricasNegocio.MeterName)
-                    .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddRuntimeInstrumentation()
-                    .AddProcessInstrumentation()
-                    .AddOtlpExporter()
-            );
-
-        return services;
-    }
-
-    private static ILoggingBuilder ConfigureLogging(this ILoggingBuilder logging)
-    {
-        _ = logging.AddOpenTelemetry(options =>
-        {
-            _ = options.SetResourceBuilder(ResourceBuilder.CreateDefault());
-            options.IncludeFormattedMessage = true;
-            options.IncludeScopes = true;
-            options.ParseStateValues = true;
-
-            _ = options.AddConsoleExporter();
-            _ = options.AddOtlpExporter();
-        });
-
-        return logging;
-    }
 }

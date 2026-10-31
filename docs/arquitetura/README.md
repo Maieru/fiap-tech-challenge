@@ -1,5 +1,7 @@
 # Arquitetura da solução
 
+Esta página descreve o legado e a infraestrutura existente. A introdução paralela do OS Service e do chassi está documentada no [primeiro incremento da Fase 4](fase4-incremento1.md).
+
 A aplicação usa AWS, Kubernetes e PostgreSQL, com telemetria no New Relic. Esta visão descreve o código e a infraestrutura declarada; não comprova um deploy ativo. As limitações estão descritas junto de cada componente.
 
 ## Diagrama de componentes
