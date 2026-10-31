@@ -1,12 +1,12 @@
-# OS Service — primeiro incremento
+# OS Service
 
-API independente para clientes, veículos, abertura e consulta de ordens. O monólito continua operando com suas rotas e banco existentes. Esta versão não executa diagnóstico, cobrança, reparos ou Saga.
+API independente para clientes, veículos, abertura e consulta de ordens. O monólito continua operando com suas rotas e banco existentes. Diagnóstico, estoque e reparos pertencem ao Execution independente, conectado por Kafka; cobrança e Saga ficam para os próximos incrementos.
 
 ## Executar
 
 A solução `OrdensServico.slnx`, nesta pasta, reúne os sete projetos do serviço e seus testes.
 
-Pré-requisitos: .NET SDK 10, PowerShell 7, Docker com containers Linux e pacote `Maieru.FiapTechChallenge.Chassis` 0.1.0 publicado no NuGet.org. Na raiz do repositório:
+Pré-requisitos: .NET SDK 10, PowerShell 7, Docker com containers Linux e pacote `Maieru.FiapTechChallenge.Chassis` 1.0.2 publicado no NuGet.org. Na raiz do repositório:
 
 ```powershell
 Copy-Item src/Services/OrdensServico/.env.example src/Services/OrdensServico/.env
@@ -76,7 +76,7 @@ $env:OS_TEST_IMAGE = 'fiap-os:local'
 dotnet test src/Services/OrdensServico/FIAP.TechChallenge.OS.Integration.Tests/FIAP.TechChallenge.OS.Integration.Tests.csproj -c Release --no-build --filter 'TestCategory=ContainerImage'
 ```
 
-A suíte usa NUnit, Moq nas unidades e PostgreSQL real/Testcontainers nos testes HTTP, com JWTs realmente assinados. Os cenários Reqnroll estão no projeto de integração. O teste NUnit da imagem também verifica dados após reiniciar a API. No CI, `OS_OPENAPI_OUTPUT` seleciona a exportação da especificação para `artifacts/os-openapi.json`. Containers de teste são descartáveis e não acessam os volumes de desenvolvimento.
+A suíte usa NUnit, Moq nas unidades e PostgreSQL e Kafka reais/Testcontainers nos testes HTTP e de integração, com JWTs realmente assinados. Os cenários Reqnroll estão no projeto de integração. O teste NUnit da imagem também verifica dados após reiniciar a API. No CI, `OS_OPENAPI_OUTPUT` seleciona a exportação da especificação para `artifacts/os-openapi.json`. Containers de teste são descartáveis e não acessam os volumes de desenvolvimento.
 
 Cobertura é medida separadamente para os assemblies `FIAP.TechChallenge.OS.*`, com mínimo de 80%. Consulte [evidências](../../../docs/operacao/evidencias-fase4-incremento1.md), [arquitetura](../../../docs/arquitetura/fase4-incremento1.md) e [CI/configuração externa](../../../docs/operacao/monorepo-ci.md).
 
@@ -84,4 +84,18 @@ Cobertura é medida separadamente para os assemblies `FIAP.TechChallenge.OS.*`, 
 
 Logs JSON, `X-Correlation-ID`, W3C trace context e health checks vêm do chassi. OTLP é opcional: habilite `OS_ENABLE_OTLP=true` e indique o Collector em `OTEL_EXPORTER_OTLP_ENDPOINT`. Não é necessária uma chave New Relic para executar ou testar localmente.
 
-Permanecem pendentes o deploy AWS/Kubernetes, infraestrutura Terraform do OS, migração do frontend/dados, adaptação da autenticação de clientes, mensageria, Saga, Billing/Mercado Pago, Execution/NoSQL e BDD distribuído. O monorepo deverá ser separado para a entrega final.
+Permanecem pendentes o deploy AWS/Kubernetes, infraestrutura Terraform do OS, migração do frontend/dados, adaptação da autenticação de clientes, Saga e Billing/Mercado Pago. O monorepo deverá ser separado para a entrega final.
+
+## Integração com Execution
+
+O [segundo incremento](../../../docs/arquitetura/fase4-incremento2.md) evolui estados/datas, Outbox/Inbox e backfill de ordens Recebida existentes. Autorizar e cancelar retornam 202 com solicitação pendente; somente a confirmação do Execution aplica o resultado. Histórico registra operador, origem e resultado. Edição/soft delete de cadastros continuam preservando ordens antigas.
+
+Suba primeiro o Compose do [Execution](https://github.com/Maieru/fiap-tech-challenge-execution), que cria a rede compartilhada. Depois, na raiz deste repositório:
+
+```powershell
+docker compose -f src/Services/OrdensServico/compose.yaml -f src/Services/OrdensServico/compose.integration.yaml up --build -d
+```
+
+Esse overlay habilita Kafka sem alterar o PostgreSQL/volume do OS. O Compose simples conserva Kafka desabilitado e acumula mensagens na Outbox. Para demonstrar a autorização administrativa, habilite `MANUAL_EXECUTION_AUTHORIZATION_ENABLED=true` no `.env`; funciona apenas em Development/Testing e fica desabilitada por padrão. A autorização temporária não representa pagamento nem aprovação pelo cliente.
+
+Novas rotas autenticadas: `POST /api/os/v1/ordens/{id}/autorizar-execucao` e `/cancelar`, sem corpo. Cancelamento permitido somente em AguardandoAprovacao. O Execution mantém seu banco, catálogo e estoque próprios; não acessa o PostgreSQL do OS. O BDD distribuído fica no repositório Execution com checkout externo do OS fixado em SHA. Veja [operação, contratos e replay](https://github.com/Maieru/fiap-tech-challenge-execution/blob/main/docs/operacao.md).

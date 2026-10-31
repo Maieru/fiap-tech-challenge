@@ -12,6 +12,7 @@ As RFCs documentam escolhas técnicas relevantes já aceitas, suas alternativas 
 | [RFC-004](RFC-004-containers-no-amazon-eks.md) | Aceita | Executar os containers de aplicação no Amazon EKS. |
 | [RFC-005](RFC-005-terraform-e-github-actions-oidc.md) | Aceita | Provisionar com Terraform e operar pipelines AWS por OIDC. |
 | [RFC-006](RFC-006-chassi-nuget-e-verificacao-monorepo.md) | Aceita | Distribuir chassi técnico por NuGet e verificar os componentes separadamente. |
+| [RFC-007](RFC-007-outbox-inbox-e-autorizacao-os.md) | Aceita | Evoluir estados, persistir Outbox/Inbox e confirmar solicitações administrativas por eventos. |
 
 ## Regra para RFCs aceitas
 

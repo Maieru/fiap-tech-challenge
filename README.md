@@ -2,15 +2,15 @@
 
 Aplicação para administrar o ciclo operacional de uma oficina mecânica. A solução reúne uma API em .NET, um frontend React, persistência em PostgreSQL, ambiente local com Docker Compose e infraestrutura AWS provisionada com Terraform e Kubernetes.
 
-## Primeiro incremento da Fase 4
+## Migração incremental da Fase 4
 
 O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo e gestão de clientes/veículos (edição e soft delete). O monólito e suas rotas continuam disponíveis. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório, testes e publicação NuGet próprios.
 
 Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os sete projetos do OS. `Backend.slnx` mantém a visão integrada dos 16 projetos do legado e do OS. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
 
-Legado e OS usam `Maieru.FiapTechChallenge.Chassis` **0.1.0** por `PackageReference`. O restore em ambiente limpo exige que essa versão esteja publicada no NuGet.org; este repositório não prepara pacotes candidatos nem utiliza feed local do chassi.
+Legado e OS usam `Maieru.FiapTechChallenge.Chassis` **1.0.2** por `PackageReference`. O restore em ambiente limpo exige que essa versão esteja publicada no NuGet.org; este repositório não prepara pacotes candidatos nem utiliza feed local do chassi.
 
-Consulte [arquitetura e reaproveitamento](docs/arquitetura/fase4-incremento1.md), [CI e configuração de contas externas](docs/operacao/monorepo-ci.md) e [evidências de testes](docs/operacao/evidencias-fase4-incremento1.md). O pacote foi validado localmente; publicação no NuGet.org e análise SonarQube Cloud dependem das contas externas. AWS/Saga/mensageria e migração de tráfego do novo serviço ficam para os próximos incrementos.
+Consulte [arquitetura e reaproveitamento](docs/arquitetura/fase4-incremento1.md), [CI e configuração de contas externas](docs/operacao/monorepo-ci.md) e [evidências de testes](docs/operacao/evidencias-fase4-incremento1.md). O chassi 1.0.2 é consumido publicamente no NuGet.org. O [segundo incremento](docs/arquitetura/fase4-incremento2.md) integra o OS ao [Execution independente](https://github.com/Maieru/fiap-tech-challenge-execution) com MongoDB e Kafka. AWS, Billing/Saga e migração de tráfego ficam para os próximos incrementos.
 
 ## Ecossistema de repositórios
 
@@ -20,6 +20,7 @@ O projeto está distribuído por responsabilidade entre os seguintes repositóri
 | --- | --- |
 | [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | Aplicação principal: API .NET, frontend React, testes, Docker Compose, manifests das aplicações e orquestração dos workflows. |
 | [`fiap-tech-challenge-chassis`](https://github.com/Maieru/fiap-tech-challenge-chassis) | Biblioteca técnica, testes, exemplo consumidor e publicação NuGet com CI/Sonar próprios. |
+| [`fiap-tech-challenge-execution`](https://github.com/Maieru/fiap-tech-challenge-execution) | Diagnóstico, catálogo, estoque e execução com MongoDB e Kafka, testes e CI próprios. |
 | [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) | Infraestrutura compartilhada: backend do Terraform, VPC, EKS, ECR, add-ons, configurações Kubernetes, observabilidade, API Gateway e infraestrutura da Lambda Authorizer. |
 | [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db) | Infraestrutura do PostgreSQL no Amazon RDS e credenciais do banco no AWS Secrets Manager. |
 | [`fiap-tech-challenge-serverless`](https://github.com/Maieru/fiap-tech-challenge-serverless) | Código, testes e publicação da Lambda Authorizer de acesso às ordens. |

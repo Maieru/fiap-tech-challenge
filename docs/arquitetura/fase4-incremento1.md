@@ -71,3 +71,5 @@ sequenceDiagram
 ## Limites de conformidade
 
 Este incremento não conclui a Fase 4: continuam pendentes três serviços em repositórios independentes, SQL/NoSQL, comunicação assíncrona, Saga/compensações, Mercado Pago, BDD distribuído e deploy Kubernetes. O chassi contém somente um envelope genérico; isso não constitui implementação de mensageria. O BDD atual cobre o monólito e o primeiro fluxo do OS, não uma transação distribuída.
+
+Este registro descreve o primeiro incremento. Estados operacionais, Outbox/Inbox e integração Kafka foram acrescentados no [segundo incremento](fase4-incremento2.md).

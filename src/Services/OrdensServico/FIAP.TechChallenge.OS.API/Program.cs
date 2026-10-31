@@ -1,6 +1,7 @@
 using FIAP.TechChallenge.OS.Application;
 using FIAP.TechChallenge.OS.Infrastructure;
 using FIAP.TechChallenge.OS.Infrastructure.Persistence;
+using FIAP.TechChallenge.OS.Infrastructure.Messaging;
 using Maieru.FiapTechChallenge.Chassis;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,7 @@ public partial class Program
         {
             ServiceName = "oficina-os",
             EnableOtlp = builder.Configuration.GetValue<bool>("Observability:EnableOtlp"),
-            MeterNames = ["Fiap.TechChallenge.OS"]
+            MeterNames = ["Fiap.TechChallenge.OS", KafkaWorker.InstrumentationName], ActivitySourceNames = [KafkaWorker.InstrumentationName]
         });
         ConfigureAuthentication(builder);
         builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("postgresql", tags: ["ready"]);
@@ -80,6 +81,7 @@ public partial class Program
                 ValidateLifetime = true, ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)), ClockSkew = TimeSpan.Zero
             };
+            options.MapInboundClaims = false;
         }).ValidateOnStart();
         builder.Services.AddAuthorization();
     }

@@ -72,6 +72,23 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.DispatcherLeaseEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UntilUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DispatcherLeases");
+                });
+
             modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.HistoricoOrdemEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -81,6 +98,9 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                     b.Property<string>("CorrelationId")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Detalhes")
+                        .HasColumnType("jsonb");
 
                     b.Property<DateTime>("OcorridoEmUtc")
                         .HasColumnType("timestamp with time zone");
@@ -100,11 +120,28 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                     b.ToTable("HistoricoOrdens");
                 });
 
+            modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.InboxEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ProcessedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Inbox");
+                });
+
             modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.OrdemServicoEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("AcaoPendente")
+                        .HasColumnType("text");
 
                     b.Property<Guid>("ClienteId")
                         .HasColumnType("uuid");
@@ -112,16 +149,46 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("DataCriacao")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DataEnvioAprovacao")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DataFinalizacao")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DataInicioDiagnostico")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DataInicioExecucao")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("DescricaoProblema")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("DiagnosticoJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<long>("InputSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("OutputSequence")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(1L);
+
+                    b.Property<Guid?>("SolicitacaoPendenteId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("VeiculoId")
                         .HasColumnType("uuid");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -135,8 +202,40 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_Ordens_Descricao", "length(btrim(\"DescricaoProblema\")) >= 3");
 
-                            t.HasCheckConstraint("CK_Ordens_Status", "\"Status\" = 1");
+                            t.HasCheckConstraint("CK_Ordens_Status", "\"Status\" IN (1,2,3,4,5,6,7)");
                         });
+                });
+
+            modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.OutboxEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OrdemServicoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Published")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("Sequence")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrdemServicoId", "Sequence")
+                        .IsUnique();
+
+                    b.HasIndex("Published", "Sequence", "CreatedAtUtc");
+
+                    b.ToTable("Outbox");
                 });
 
             modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.VeiculoEntity", b =>
