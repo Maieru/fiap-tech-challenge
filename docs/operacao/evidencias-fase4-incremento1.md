@@ -2,6 +2,8 @@
 
 Verificação local em **2026-10-31**, branch **inicio-segregacao-servicos**. Estes resultados não são uma execução remota do GitHub Actions nem uma análise SonarQube Cloud.
 
+As seções iniciais registram a evolução anterior à extração do chassi. A organização e a verificação mais recentes estão em [Separação do chassi](#separação-do-chassi).
+
 ## Testes e cobertura
 
 | Componente | Testes aprovados | Linhas cobertas | Cobertas/total |
@@ -14,7 +16,7 @@ Total: **922 testes aprovados**, sem falhas ou ignorados nas execuções registr
 
 O legado inclui 588 testes originais e 115 cenários HTTP/BDD em PostgreSQL real. Antes da extração, os 588 testes passaram e a coleta inicial conjunta mediu 90,32% (coleta inicial sem o arquivo de exclusões posteriormente padronizado). O timeout anterior do testhost não se repetiu na execução fora da sandbox.
 
-Essas verificações históricas usaram o orquestrador local do primeiro incremento, posteriormente retirado. A organização atual usa as soluções específicas, comandos `dotnet` no Actions e ReportGenerator; consulte o [guia atual](monorepo-ci.md). Os [resumos estruturados](evidencias-fase4-incremento1.json) identificam as pastas locais de TRX/Cobertura/OpenCover. No GitHub, esses arquivos serão publicados pelos artefatos `verification-legacy`, `verification-chassis` e `verification-os`.
+Essas verificações históricas usaram o orquestrador local do primeiro incremento, posteriormente retirado. A organização atual usa as soluções específicas, comandos `dotnet` no Actions e ReportGenerator; consulte o [guia atual](monorepo-ci.md). Os [resumos estruturados](evidencias-fase4-incremento1.json) identificam as pastas locais de TRX/Cobertura/OpenCover. Os artefatos atuais são `verification-legacy` e `verification-os` no principal, e `verification-chassis` no repositório do chassi.
 
 ## Verificações adicionais
 
@@ -50,3 +52,18 @@ A adaptação ao modelo Sonar foi validada localmente com actionlint e análise 
 O código continua na branch local, sem push, merge ou criação de PR nesta implementação. O status de CI remoto só poderá ser comprovado após publicar a branch e executar os workflows.
 
 Ainda fora deste incremento: deploy AWS/Kubernetes do OS, novos recursos Terraform, migração de dados/frontend/autenticação de clientes, Billing/Mercado Pago, Execution/NoSQL, mensageria, Saga e BDD distribuído. O monorepo deverá ser separado para a entrega final.
+
+## Separação do chassi
+
+A [ADR-013](../ADRs/ADR-013-chassi-em-repositorio-proprio.md) registra a extração para `Maieru/fiap-tech-challenge-chassis`. O principal mantém 16 projetos; o novo repositório reúne biblioteca, testes e exemplo em três projetos, com CI/Sonar e publicação próprios.
+
+Verificação local da migração:
+
+- Build das duas soluções sem avisos ou erros.
+- 11 testes do chassi aprovados; cobertura final de 96,5% (83/86 linhas) com ReportGenerator, acima do gate de 80%.
+- Consumidor por NuGet validado por HTTP: readiness, resposta, correlação e logs JSON.
+- 703 testes legados e 208 testes do OS aprovados com a versão 0.1.0 gerada no novo repositório, incluindo integração PostgreSQL e BDD. O teste de imagem não foi repetido.
+- A validação dos consumidores usou um feed temporário e cache isolado em `artifacts/chassis-extraction`, somente por comando de validação. O hash do pacote restaurado confere com o `.nupkg` extraído. Nenhum feed ou preparação local permanece na configuração versionada do principal.
+- Workflows de ambos os repositórios aprovados no actionlint; passos PowerShell, caminhos de soluções, links locais e metadados NuGet verificados. O ajuste de caminhos OpenCover foi exercitado no relatório do novo repositório.
+
+Os Dockerfiles e o CI principal restauram a versão pública 0.1.0. A instalação pública, o build limpo das imagens e as análises remotas dependem da publicação/configuração externas e não foram comprovados por essa validação local. As alterações desta migração permanecem locais, sem commit, push ou tag de publicação.

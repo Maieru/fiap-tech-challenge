@@ -34,6 +34,6 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Maieru.FiapTechChallenge.Chassis" Version="$(ChassisVersion)" />
+    <PackageReference Include="Maieru.FiapTechChallenge.Chassis" Version="0.1.0" />
   </ItemGroup>
 </Project>

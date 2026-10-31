@@ -4,11 +4,11 @@ Aplicação para administrar o ciclo operacional de uma oficina mecânica. A sol
 
 ## Primeiro incremento da Fase 4
 
-O monorepo agora inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo e gestão de clientes/veículos (edição e soft delete), e um [chassi técnico NuGet](src/Chassis/README.md). O monólito e suas rotas continuam disponíveis.
+O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo e gestão de clientes/veículos (edição e soft delete). O monólito e suas rotas continuam disponíveis. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório, testes e publicação NuGet próprios.
 
-Abra [Chassis.slnx](src/Chassis/Chassis.slnx) para os três projetos do chassi ou [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os sete projetos do OS. `Backend.slnx` mantém a visão integrada. Build, testes, cobertura e publicação são orquestrados diretamente pelo GitHub Actions.
+Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os sete projetos do OS. `Backend.slnx` mantém a visão integrada dos 16 projetos do legado e do OS. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
 
-Enquanto o pacote público não for publicado, consulte os [comandos de preparação local](docs/operacao/monorepo-ci.md#comandos-locais-quando-necessários) ou baixe o pacote candidato gerado pelo Actions.
+Legado e OS usam `Maieru.FiapTechChallenge.Chassis` **0.1.0** por `PackageReference`. O restore em ambiente limpo exige que essa versão esteja publicada no NuGet.org; este repositório não prepara pacotes candidatos nem utiliza feed local do chassi.
 
 Consulte [arquitetura e reaproveitamento](docs/arquitetura/fase4-incremento1.md), [CI e configuração de contas externas](docs/operacao/monorepo-ci.md) e [evidências de testes](docs/operacao/evidencias-fase4-incremento1.md). O pacote foi validado localmente; publicação no NuGet.org e análise SonarQube Cloud dependem das contas externas. AWS/Saga/mensageria e migração de tráfego do novo serviço ficam para os próximos incrementos.
 
@@ -19,6 +19,7 @@ O projeto está distribuído por responsabilidade entre os seguintes repositóri
 | Repositório | Responsabilidade |
 | --- | --- |
 | [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | Aplicação principal: API .NET, frontend React, testes, Docker Compose, manifests das aplicações e orquestração dos workflows. |
+| [`fiap-tech-challenge-chassis`](https://github.com/Maieru/fiap-tech-challenge-chassis) | Biblioteca técnica, testes, exemplo consumidor e publicação NuGet com CI/Sonar próprios. |
 | [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) | Infraestrutura compartilhada: backend do Terraform, VPC, EKS, ECR, add-ons, configurações Kubernetes, observabilidade, API Gateway e infraestrutura da Lambda Authorizer. |
 | [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db) | Infraestrutura do PostgreSQL no Amazon RDS e credenciais do banco no AWS Secrets Manager. |
 | [`fiap-tech-challenge-serverless`](https://github.com/Maieru/fiap-tech-challenge-serverless) | Código, testes e publicação da Lambda Authorizer de acesso às ordens. |
@@ -210,17 +211,17 @@ No GitHub Actions, inicie `Initialize Infrastructure And Deploy` para executar o
 
 ## Testes
 
-Os componentes têm suítes independentes. Prepare o pacote candidato do chassi conforme o [guia local](docs/operacao/monorepo-ci.md#comandos-locais-quando-necessários) e mantenha o Docker disponível para os testes PostgreSQL/HTTP. Na raiz do repositório, escolha o escopo:
+Os componentes têm suítes independentes. Requer .NET 10, o pacote público do chassi disponível e Docker para os testes PostgreSQL/HTTP. Na raiz do repositório, escolha o escopo:
 
 ```bash
-# Todo o backend: legado, chassi e OS
+# Todo o backend deste repositório: legado e OS
 dotnet test Backend.slnx -c Release --filter 'TestCategory!=ContainerImage'
 
 # Somente o legado, incluindo integração PostgreSQL e BDD
 dotnet test Legacy.slnx -c Release
 ```
 
-Os comandos específicos de [chassi](src/Chassis/README.md) e [OS](src/Services/OrdensServico/README.md) estão nos respectivos guias. O teste de imagem, categoria `ContainerImage`, exige construir a imagem e definir `OS_TEST_IMAGE`; consulte o [procedimento](src/Services/OrdensServico/README.md#testes-e-imagem).
+Os comandos específicos do [OS](src/Services/OrdensServico/README.md) estão em seu guia. O teste de imagem, categoria `ContainerImage`, exige construir a imagem e definir `OS_TEST_IMAGE`; consulte o [procedimento](src/Services/OrdensServico/README.md#testes-e-imagem). Os testes do chassi ficam em seu próprio repositório.
 
 ## Estrutura do repositório
 
@@ -229,12 +230,11 @@ Os comandos específicos de [chassi](src/Chassis/README.md) e [OS](src/Services/
 ├── Backend.slnx             # visão integrada, agrupada por componente
 ├── Legacy.slnx              # backend legado e seus testes
 ├── .github/
-│   ├── actions/             # etapas reutilizáveis de preparação e validação
-│   └── workflows/           # CI, publicação e orquestração AWS
+│   ├── actions/             # gate de cobertura por componente
+│   └── workflows/           # CI, Sonar e orquestração AWS
 ├── docs/                    # guias de arquitetura/operação, RFCs e ADRs
 ├── k8s/                     # manifests das aplicações legadas
 └── src/
-    ├── Chassis/             # biblioteca, testes, exemplo e solução própria
     ├── Services/
     │   └── OrdensServico/   # OS, testes, Dockerfile, Compose e solução própria
     ├── FIAP.TechChallenge.Fase1.*/  # projetos legados e frontend
@@ -246,13 +246,12 @@ Os comandos específicos de [chassi](src/Chassis/README.md) e [OS](src/Services/
 
 | Escopo de trabalho | Solução | Projetos |
 | --- | --- | ---: |
-| Backend integrado | [Backend.slnx](Backend.slnx) | 19 |
+| Backend integrado | [Backend.slnx](Backend.slnx) | 16 |
 | Backend legado e testes | [Legacy.slnx](Legacy.slnx) | 9 |
-| Chassi, testes e exemplo | [Chassis.slnx](src/Chassis/Chassis.slnx) | 3 |
 | OS Service e testes | [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) | 7 |
 | Legado com Docker no Visual Studio | [TechChallengeFase1.slnx](src/TechChallengeFase1.slnx) | 9 .NET + Docker Compose |
 
-Os agrupamentos das soluções são visuais; os diretórios físicos são preservados. `artifacts/`, `bin/`, `obj/` e resultados de testes são gerados e não devem ser versionados. As configurações `Directory.Build.props`, `NuGet.Config` e `coverage.runsettings` na raiz são compartilhadas pelos componentes.
+Os agrupamentos das soluções são visuais; os diretórios físicos são preservados. `artifacts/`, `bin/`, `obj/` e resultados de testes são gerados e não devem ser versionados. `coverage.runsettings` na raiz padroniza a coleta dos componentes.
 
 ## Observações Finais
 

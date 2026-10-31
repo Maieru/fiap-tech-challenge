@@ -6,8 +6,6 @@
 **/.env
 **/.env.*
 !**/.env.example
-artifacts/*
-!artifacts/packages
-!artifacts/chassis-version.txt
+artifacts/
 **/TestResults
 **/.sonarqube

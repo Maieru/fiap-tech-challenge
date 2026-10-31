@@ -14,9 +14,6 @@ concurrency:
   group: monorepo-ci-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  CHASSIS_VERSION: 0.1.0-ci.${{ github.run_id }}.${{ github.run_attempt }}
-
 jobs:
   component:
     name: Test ${{ matrix.component }}
@@ -29,9 +26,6 @@ jobs:
           - component: legacy
             solution: Legacy.slnx
             assemblies: '+FIAP.TechChallenge.Fase1.*;-*.Tests*'
-          - component: chassis
-            solution: src/Chassis/Chassis.slnx
-            assemblies: '+Maieru.FiapTechChallenge.Chassis;-*.Tests*;-*.Sample'
           - component: os
             solution: src/Services/OrdensServico/OrdensServico.slnx
             assemblies: '+FIAP.TechChallenge.OS.*;-*.Tests*'
@@ -40,13 +34,10 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - uses: ./.github/actions/prepare-chassis
-        with:
-          version: ${{ env.CHASSIS_VERSION }}
       - name: Build solution
         env:
           SOLUTION: ${{ matrix.solution }}
-        run: dotnet build "$SOLUTION" -c Release -p:ChassisVersion="$CHASSIS_VERSION"
+        run: dotnet build "$SOLUTION" -c Release
       - name: Test solution with coverage
         shell: pwsh
         env:
@@ -68,18 +59,9 @@ jobs:
           reports: artifacts/test-results/${{ matrix.component }}/**/coverage.cobertura.xml
           assemblies: ${{ matrix.assemblies }}
           output: artifacts/coverage/${{ matrix.component }}
-      - uses: ./.github/actions/verify-chassis-package
-        if: matrix.component == 'chassis'
-      - uses: actions/upload-artifact@v4
-        if: matrix.component == 'chassis'
-        with:
-          name: chassis-candidate
-          path: |
-            artifacts/packages/*
-            artifacts/chassis-version.txt
       - name: Build OS image
         if: matrix.component == 'os'
-        run: docker build -f src/Services/OrdensServico/Dockerfile --build-arg CHASSIS_VERSION="$CHASSIS_VERSION" -t fiap-os:ci .
+        run: docker build -f src/Services/OrdensServico/Dockerfile -t fiap-os:ci .
       - name: Test OS image through NUnit and Testcontainers
         if: matrix.component == 'os'
         shell: pwsh
@@ -99,7 +81,6 @@ jobs:
             artifacts/test-results/
             artifacts/coverage/
             artifacts/image-tests/
-            artifacts/chassis-sample*
             artifacts/os-openapi.json
 
   quality:

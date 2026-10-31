@@ -1,13 +1,4 @@
 <Solution>
-  <Folder Name="/Chassis/">
-    <Project Path="src/Chassis/Maieru.FiapTechChallenge.Chassis/Maieru.FiapTechChallenge.Chassis.csproj" />
-  </Folder>
-  <Folder Name="/Chassis/Samples/">
-    <Project Path="src/Chassis/Maieru.FiapTechChallenge.Chassis.Sample/Maieru.FiapTechChallenge.Chassis.Sample.csproj" />
-  </Folder>
-  <Folder Name="/Chassis/Tests/">
-    <Project Path="src/Chassis/Maieru.FiapTechChallenge.Chassis.Tests/Maieru.FiapTechChallenge.Chassis.Tests.csproj" />
-  </Folder>
   <Folder Name="/Legacy/">
     <Project Path="src/FIAP.TechChallenge.Fase1.API/FIAP.TechChallenge.Fase1.API.csproj" />
     <Project Path="src/FIAP.TechChallenge.Fase1.Application/FIAP.TechChallenge.Fase1.Application.csproj" />

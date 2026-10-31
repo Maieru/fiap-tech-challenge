@@ -1,6 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <ChassisVersion Condition="'$(ChassisVersion)' == '' And Exists('$(MSBuildThisFileDirectory)artifacts/chassis-version.txt')">$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)artifacts/chassis-version.txt').Trim())</ChassisVersion>
-    <ChassisVersion Condition="'$(ChassisVersion)' == ''">0.1.0</ChassisVersion>
-  </PropertyGroup>
-</Project>

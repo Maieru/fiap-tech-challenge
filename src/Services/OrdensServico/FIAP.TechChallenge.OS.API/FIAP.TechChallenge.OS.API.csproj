@@ -5,10 +5,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Maieru.FiapTechChallenge.Chassis" Version="1.0.2" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
     <ProjectReference Include="../FIAP.TechChallenge.OS.Application/FIAP.TechChallenge.OS.Application.csproj" />
     <ProjectReference Include="../FIAP.TechChallenge.OS.Infrastructure/FIAP.TechChallenge.OS.Infrastructure.csproj" />
-    <PackageReference Include="Maieru.FiapTechChallenge.Chassis" Version="$(ChassisVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.6" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.13.22" />

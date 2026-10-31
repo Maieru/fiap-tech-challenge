@@ -1,6 +1,6 @@
 # Fase 4 — primeiro incremento
 
-O repositório hospeda o monólito existente, um chassi técnico e o OS Service. O serviço novo possui build, testes, imagem, credenciais e PostgreSQL próprios. A coexistência é local; nenhum tráfego do frontend ou da AWS foi migrado.
+O repositório hospeda o monólito existente e o OS Service. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório e publicação próprios e é consumido por versão NuGet explícita. O serviço novo possui build, testes, imagem, credenciais e PostgreSQL próprios. A coexistência é local; nenhum tráfego do frontend ou da AWS foi migrado.
 
 ```mermaid
 flowchart LR

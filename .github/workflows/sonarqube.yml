@@ -55,12 +55,6 @@ jobs:
           path: ${{ runner.temp }}\scanner
           key: ${{ runner.os }}-sonar-scanner-${{ hashFiles('.config/dotnet-tools.json') }}
 
-      - name: Download tested chassis package
-        uses: actions/download-artifact@v4
-        with:
-          name: chassis-candidate
-          path: artifacts
-
       - name: Install pinned SonarQube Cloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         run: |

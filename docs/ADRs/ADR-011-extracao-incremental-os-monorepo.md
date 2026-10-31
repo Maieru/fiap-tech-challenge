@@ -31,3 +31,5 @@ Há duplicação temporária de código de negócio, documentada no inventário 
 - [CI](../operacao/monorepo-ci.md).
 
 As ADRs 001 e 008 continuam descrevendo o legado e a infraestrutura existente.
+
+A [ADR-013](ADR-013-chassi-em-repositorio-proprio.md) atualiza a organização do chassi, extraído para repositório próprio. A coexistência temporária de legado e OS permanece neste monorepo.

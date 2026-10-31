@@ -35,11 +35,6 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Preparar pacote local do chassi
-        uses: ./.github/actions/prepare-chassis
-        with:
-          version: 0.1.0-ci.${{ github.run_id }}.${{ github.run_attempt }}
-
       - name: Restaurar dependências
         run: dotnet restore ${{ env.SOLUTION_FILE }}
 
@@ -69,11 +64,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Preparar pacote local do chassi
-        uses: ./.github/actions/prepare-chassis
-        with:
-          version: 0.1.0-ci.${{ github.run_id }}.${{ github.run_attempt }}
 
       - name: Configurar credenciais AWS via OIDC
         uses: aws-actions/configure-aws-credentials@v4

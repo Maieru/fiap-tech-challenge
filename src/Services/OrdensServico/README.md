@@ -6,7 +6,7 @@ API independente para clientes, veículos, abertura e consulta de ordens. O mon�
 
 A solução `OrdensServico.slnx`, nesta pasta, reúne os sete projetos do serviço e seus testes.
 
-Pré-requisitos: .NET SDK 10, PowerShell 7 e Docker com containers Linux. Antes da primeira publicação NuGet, prepare/baixe o pacote do chassi conforme o [guia de Actions e preparação local](../../../docs/operacao/monorepo-ci.md). Depois, na raiz do repositório:
+Pré-requisitos: .NET SDK 10, PowerShell 7, Docker com containers Linux e pacote `Maieru.FiapTechChallenge.Chassis` 0.1.0 publicado no NuGet.org. Na raiz do repositório:
 
 ```powershell
 Copy-Item src/Services/OrdensServico/.env.example src/Services/OrdensServico/.env
@@ -14,7 +14,7 @@ Copy-Item src/Services/OrdensServico/.env.example src/Services/OrdensServico/.en
 docker compose -f src/Services/OrdensServico/compose.yaml up --build -d
 ```
 
-O Actions gera um `.nupkg` candidato e seleciona a versão em `artifacts/chassis-version.txt`. API, exemplo e monólito usam `PackageReference`; não há referência aos projetos-fonte do chassi. Na preparação local, use uma versão nova ao alterar a biblioteca para evitar cache de pacotes imutáveis.
+O chassi é mantido em [repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis). O OS fixa sua versão diretamente no `PackageReference`; build, Docker e CI restauram o pacote público, sem preparar feed local ou compilar o código-fonte da biblioteca.
 
 | Recurso | Endereço |
 | --- | --- |
