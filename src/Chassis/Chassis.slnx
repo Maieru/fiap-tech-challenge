@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Maieru.FiapTechChallenge.Chassis/Maieru.FiapTechChallenge.Chassis.csproj" />
+  <Folder Name="/Tests/">
+    <Project Path="Maieru.FiapTechChallenge.Chassis.Tests/Maieru.FiapTechChallenge.Chassis.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Samples/">
+    <Project Path="Maieru.FiapTechChallenge.Chassis.Sample/Maieru.FiapTechChallenge.Chassis.Sample.csproj" />
+  </Folder>
+</Solution>

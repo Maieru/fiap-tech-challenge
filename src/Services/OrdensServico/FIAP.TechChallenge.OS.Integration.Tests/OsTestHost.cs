@@ -37,14 +37,18 @@ public sealed class OsTestHost : IAsyncDisposable
 
     public void Authenticate(bool expired = false, string issuer = "test-issuer", string? signingKey = null)
     {
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CreateToken(expired, issuer, signingKey));
+    }
+
+    internal static string CreateToken(bool expired = false, string issuer = "test-issuer", string? signingKey = null)
+    {
         var now = DateTime.UtcNow;
-        var token = new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
+        return new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
         {
             Issuer = issuer, Audience = "test-audience", Subject = new ClaimsIdentity([new Claim("sub", "operator")]),
             IssuedAt = now.AddHours(-2), NotBefore = now.AddHours(-2), Expires = expired ? now.AddHours(-1) : now.AddHours(1),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey ?? SigningKey)), SecurityAlgorithms.HmacSha256)
         });
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
     public async Task ResetAsync()

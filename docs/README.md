@@ -1,11 +1,13 @@
 # Documentação técnica
 
-Comece pela [visão da arquitetura](arquitetura/README.md). Os guias estão separados por assunto:
+Para desenvolver, comece pelo [mapa do repositório e suas soluções](../README.md#estrutura-do-repositório). Os guias estão separados por assunto e distinguem o legado do primeiro incremento da Fase 4:
 
 | Área | Documentos |
 | --- | --- |
-| Arquitetura | [Componentes e camadas](arquitetura/README.md), [sequências](arquitetura/sequencias.md), [banco de dados e ER](arquitetura/banco-de-dados.md) |
-| Operação | [CI/CD](operacao/ci-cd.md), [observabilidade](operacao/observabilidade.md), [métricas de negócio](operacao/metricas-negocio.md), [configuração do dashboard New Relic](operacao/dashboard-new-relic.md) |
+| Componentes da Fase 4 | [Chassi](../src/Chassis/README.md), [OS Service](../src/Services/OrdensServico/README.md), [arquitetura e reaproveitamento](arquitetura/fase4-incremento1.md) |
+| Qualidade e publicação | [CI do monorepo, NuGet e Sonar](operacao/monorepo-ci.md), [evidências e limites](operacao/evidencias-fase4-incremento1.md) |
+| Arquitetura do legado | [Componentes e camadas](arquitetura/README.md), [sequências](arquitetura/sequencias.md), [banco de dados e ER](arquitetura/banco-de-dados.md) |
+| Operação do legado/AWS | [CI/CD e deploy](operacao/ci-cd.md), [observabilidade](operacao/observabilidade.md), [métricas de negócio](operacao/metricas-negocio.md), [configuração do dashboard New Relic](operacao/dashboard-new-relic.md) |
 | Decisões arquiteturais | [Índice de ADRs](ADRs/README.md) |
 | Escolhas técnicas | [Índice de RFCs](RFCs/README.md) |
 
@@ -17,9 +19,13 @@ docs/
 ├── arquitetura/
 │   ├── README.md
 │   ├── sequencias.md
-│   └── banco-de-dados.md
+│   ├── banco-de-dados.md
+│   └── fase4-incremento1.md
 ├── operacao/
 │   ├── ci-cd.md
+│   ├── monorepo-ci.md
+│   ├── evidencias-fase4-incremento1.md
+│   ├── evidencias-fase4-incremento1.json
 │   ├── observabilidade.md
 │   ├── metricas-negocio.md
 │   ├── dashboard-new-relic.md
@@ -43,9 +49,3 @@ docs/
 - Use o template correspondente, inclua evidências e atualize o índice ao adicionar uma decisão.
 - Correções preservam a data original e informam a última revisão. Mudanças de decisão ganham um novo registro vinculado ao anterior.
 - Registros retrospectivos descrevem a implementação existente; suas alternativas não representam atas de discussões históricas.
-
-## Fase 4 — primeiro incremento
-
-- [Arquitetura e extração](arquitetura/fase4-incremento1.md).
-- [CI, NuGet e configurações externas](operacao/monorepo-ci.md).
-- [Evidências e limites](operacao/evidencias-fase4-incremento1.md).

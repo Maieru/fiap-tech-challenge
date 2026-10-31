@@ -4,16 +4,17 @@ API independente para clientes, veículos, abertura e consulta de ordens. O mon�
 
 ## Executar
 
-Pré-requisitos: .NET SDK 10, PowerShell 7 e Docker com containers Linux. Na raiz do repositório:
+A solução `OrdensServico.slnx`, nesta pasta, reúne os sete projetos do serviço e seus testes.
+
+Pré-requisitos: .NET SDK 10, PowerShell 7 e Docker com containers Linux. Antes da primeira publicação NuGet, prepare/baixe o pacote do chassi conforme o [guia de Actions e preparação local](../../../docs/operacao/monorepo-ci.md). Depois, na raiz do repositório:
 
 ```powershell
-pwsh -File scripts/bootstrap.ps1
 Copy-Item src/Services/OrdensServico/.env.example src/Services/OrdensServico/.env
 # Edite Jwt issuer/audience/signing key no .env para corresponder ao emissor administrativo.
 docker compose -f src/Services/OrdensServico/compose.yaml up --build -d
 ```
 
-O bootstrap gera um `.nupkg` com versão local única e grava a versão em `artifacts/chassis-version.txt`. API, exemplo e monólito usam `PackageReference`; não há referência aos projetos-fonte do chassi. Após alterar a biblioteca, execute o bootstrap novamente para evitar reutilizar uma versão já armazenada no cache NuGet.
+O Actions gera um `.nupkg` candidato e seleciona a versão em `artifacts/chassis-version.txt`. API, exemplo e monólito usam `PackageReference`; não há referência aos projetos-fonte do chassi. Na preparação local, use uma versão nova ao alterar a biblioteca para evitar cache de pacotes imutáveis.
 
 | Recurso | Endereço |
 | --- | --- |
@@ -31,7 +32,7 @@ O volume `fiap-os_os_postgres_data` pertence apenas ao serviço. `docker compose
 
 Endpoints administrativos exigem `Authorization: Bearer <JWT>`. O token é emitido pelo login administrativo existente, `POST /api/usuarios/login` no monólito. Copie os mesmos issuer, audience e chave para o `.env` do OS. O OS valida assinatura e validade sem consultar o banco legado, sem emitir tokens e sem alterar a Lambda atual. A API pode iniciar e atender seus health checks sem o monólito em execução.
 
-Para uma demonstração completamente isolada, `scripts/smoke_os_image.py` cria credenciais temporárias de teste, assina um JWT real e exercita o container. Não fornece autenticação alternativa à aplicação.
+Para uma demonstração completamente isolada, `OsImageSmokeTests` cria credenciais temporárias de teste, assina um JWT real e exercita o container. Não fornece autenticação alternativa à aplicação.
 
 ## Contratos
 
@@ -69,12 +70,13 @@ O veículo precisa pertencer ao cliente e ambos devem estar ativos. A ordem nasc
 ## Testes e imagem
 
 ```powershell
-pwsh -File scripts/test-component.ps1 -Component os
+dotnet test src/Services/OrdensServico/OrdensServico.slnx -c Release --filter 'TestCategory!=ContainerImage'
 docker build -f src/Services/OrdensServico/Dockerfile -t fiap-os:local .
-python scripts/smoke_os_image.py fiap-os:local
+$env:OS_TEST_IMAGE = 'fiap-os:local'
+dotnet test src/Services/OrdensServico/FIAP.TechChallenge.OS.Integration.Tests/FIAP.TechChallenge.OS.Integration.Tests.csproj -c Release --no-build --filter 'TestCategory=ContainerImage'
 ```
 
-A suíte usa NUnit, Moq nas unidades e PostgreSQL real/Testcontainers nos testes HTTP, com JWTs realmente assinados. Os cenários Reqnroll estão no projeto de integração. O teste da imagem também verifica dados após reiniciar a API e exporta a especificação para `artifacts/os-openapi.json`. Containers de teste são descartáveis e não acessam os volumes de desenvolvimento.
+A suíte usa NUnit, Moq nas unidades e PostgreSQL real/Testcontainers nos testes HTTP, com JWTs realmente assinados. Os cenários Reqnroll estão no projeto de integração. O teste NUnit da imagem também verifica dados após reiniciar a API. No CI, `OS_OPENAPI_OUTPUT` seleciona a exportação da especificação para `artifacts/os-openapi.json`. Containers de teste são descartáveis e não acessam os volumes de desenvolvimento.
 
 Cobertura é medida separadamente para os assemblies `FIAP.TechChallenge.OS.*`, com mínimo de 80%. Consulte [evidências](../../../docs/operacao/evidencias-fase4-incremento1.md), [arquitetura](../../../docs/arquitetura/fase4-incremento1.md) e [CI/configuração externa](../../../docs/operacao/monorepo-ci.md).
 

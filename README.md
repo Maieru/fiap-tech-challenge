@@ -4,14 +4,11 @@ Aplicação para administrar o ciclo operacional de uma oficina mecânica. A sol
 
 ## Primeiro incremento da Fase 4
 
-O monorepo agora inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo e gestão de clientes/veículos (edição e soft delete), e um [chassi técnico NuGet](src/Chassis/Maieru.FiapTechChallenge.Chassis/README.md). O monólito e suas rotas continuam disponíveis.
+O monorepo agora inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo e gestão de clientes/veículos (edição e soft delete), e um [chassi técnico NuGet](src/Chassis/README.md). O monólito e suas rotas continuam disponíveis.
 
-Antes de restaurar ou construir consumidores, prepare o pacote local a partir da raiz:
+Abra [Chassis.slnx](src/Chassis/Chassis.slnx) para os três projetos do chassi ou [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os sete projetos do OS. `Backend.slnx` mantém a visão integrada. Build, testes, cobertura e publicação são orquestrados diretamente pelo GitHub Actions.
 
-```powershell
-pwsh -File scripts/bootstrap.ps1
-dotnet build Backend.slnx -c Release
-```
+Enquanto o pacote público não for publicado, consulte os [comandos de preparação local](docs/operacao/monorepo-ci.md#comandos-locais-quando-necessários) ou baixe o pacote candidato gerado pelo Actions.
 
 Consulte [arquitetura e reaproveitamento](docs/arquitetura/fase4-incremento1.md), [CI e configuração de contas externas](docs/operacao/monorepo-ci.md) e [evidências de testes](docs/operacao/evidencias-fase4-incremento1.md). O pacote foi validado localmente; publicação no NuGet.org e análise SonarQube Cloud dependem das contas externas. AWS/Saga/mensageria e migração de tráfego do novo serviço ficam para os próximos incrementos.
 
@@ -44,7 +41,7 @@ O catálogo em [`docs/README.md`](docs/README.md) reúne a visão visual da arqu
 
 Consulte os [diagramas de sequência](docs/arquitetura/sequencias.md), o [modelo ER e sua evolução](docs/arquitetura/banco-de-dados.md) e o [fluxo de CI/CD](docs/operacao/ci-cd.md). Cada guia distingue o comportamento atual das pendências de implementação.
 
-O backend é um monólito organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP:
+O backend legado é um monólito organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP. O OS Service segue a mesma separação em projetos próprios; o diagrama abaixo representa o legado:
 
 ```mermaid
 graph LR
@@ -137,7 +134,7 @@ VITE_API_BASE_URL=http://localhost:5251/api
 
 O perfil `http` do backend usa `http://localhost:5251`. Se executar a API pelo Compose, use `http://localhost:8080/api` no frontend local.
 
-No Visual Studio, abra `src/TechChallengeFase1.slnx`. Para iniciar todo o ambiente em contêineres, selecione o projeto `docker-compose` como projeto de inicialização.
+No Visual Studio, abra `src/TechChallengeFase1.slnx` para trabalhar com o legado e seu projeto Docker Compose. Selecione `docker-compose` como projeto de inicialização para subir esse ambiente. Para o backend integrado ou os componentes novos, escolha uma das soluções da tabela em [Estrutura do repositório](#estrutura-do-repositório).
 
 ## Autenticação e documentação da API
 
@@ -213,21 +210,49 @@ No GitHub Actions, inicie `Initialize Infrastructure And Deploy` para executar o
 
 ## Testes
 
-A solução contém testes de domínio, casos de uso, infraestrutura e API. Para executar toda a suíte:
+Os componentes têm suítes independentes. Prepare o pacote candidato do chassi conforme o [guia local](docs/operacao/monorepo-ci.md#comandos-locais-quando-necessários) e mantenha o Docker disponível para os testes PostgreSQL/HTTP. Na raiz do repositório, escolha o escopo:
 
 ```bash
-dotnet test src/TechChallengeFase1.slnx
+# Todo o backend: legado, chassi e OS
+dotnet test Backend.slnx -c Release --filter 'TestCategory!=ContainerImage'
+
+# Somente o legado, incluindo integração PostgreSQL e BDD
+dotnet test Legacy.slnx -c Release
 ```
+
+Os comandos específicos de [chassi](src/Chassis/README.md) e [OS](src/Services/OrdensServico/README.md) estão nos respectivos guias. O teste de imagem, categoria `ContainerImage`, exige construir a imagem e definir `OS_TEST_IMAGE`; consulte o [procedimento](src/Services/OrdensServico/README.md#testes-e-imagem).
 
 ## Estrutura do repositório
 
 ```text
 .
-├── .github/workflows/   # CI/CD, infraestrutura e deploy
-├── docs/                # documentação de arquitetura
-├── k8s/                 # manifests do backend e frontend
-└── src/                 # solução .NET, frontend e Docker Compose
+├── Backend.slnx             # visão integrada, agrupada por componente
+├── Legacy.slnx              # backend legado e seus testes
+├── .github/
+│   ├── actions/             # etapas reutilizáveis de preparação e validação
+│   └── workflows/           # CI, publicação e orquestração AWS
+├── docs/                    # guias de arquitetura/operação, RFCs e ADRs
+├── k8s/                     # manifests das aplicações legadas
+└── src/
+    ├── Chassis/             # biblioteca, testes, exemplo e solução própria
+    ├── Services/
+    │   └── OrdensServico/   # OS, testes, Dockerfile, Compose e solução própria
+    ├── FIAP.TechChallenge.Fase1.*/  # projetos legados e frontend
+    ├── LoadTests/           # cenários de carga do legado
+    ├── ObservabilityConfig/ # Collector do ambiente local legado
+    ├── TechChallengeFase1.slnx     # legado com integração Docker no Visual Studio
+    └── docker-compose.yml  # ambiente local legado
 ```
+
+| Escopo de trabalho | Solução | Projetos |
+| --- | --- | ---: |
+| Backend integrado | [Backend.slnx](Backend.slnx) | 19 |
+| Backend legado e testes | [Legacy.slnx](Legacy.slnx) | 9 |
+| Chassi, testes e exemplo | [Chassis.slnx](src/Chassis/Chassis.slnx) | 3 |
+| OS Service e testes | [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) | 7 |
+| Legado com Docker no Visual Studio | [TechChallengeFase1.slnx](src/TechChallengeFase1.slnx) | 9 .NET + Docker Compose |
+
+Os agrupamentos das soluções são visuais; os diretórios físicos são preservados. `artifacts/`, `bin/`, `obj/` e resultados de testes são gerados e não devem ser versionados. As configurações `Directory.Build.props`, `NuGet.Config` e `coverage.runsettings` na raiz são compartilhadas pelos componentes.
 
 ## Observações Finais
 

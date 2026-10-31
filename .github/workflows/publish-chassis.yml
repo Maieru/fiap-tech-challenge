@@ -20,9 +20,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - name: Validate release tag, main ancestry and NuGet account
         shell: bash
         env:
@@ -32,12 +29,28 @@ jobs:
           git merge-base --is-ancestor HEAD origin/main
           test -n "$NUGET_USER" || { echo 'Configure NUGET_USER and Trusted Publishing first'; exit 1; }
           echo "CHASSIS_VERSION=${GITHUB_REF_NAME#chassis-v}" >> "$GITHUB_ENV"
-      - name: Pack exact release
+      - uses: ./.github/actions/prepare-chassis
+        with:
+          version: ${{ env.CHASSIS_VERSION }}
+      - name: Build chassis solution
+        run: dotnet build src/Chassis/Chassis.slnx -c Release -p:ChassisVersion="$CHASSIS_VERSION"
+      - name: Test chassis solution
         shell: pwsh
-        run: ./scripts/bootstrap.ps1 -Version $env:CHASSIS_VERSION
-      - name: Test library and packaged consumer
-        shell: pwsh
-        run: ./scripts/test-component.ps1 -Component chassis -ChassisVersion $env:CHASSIS_VERSION
+        run: |
+          dotnet test src/Chassis/Chassis.slnx `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            --settings coverage.runsettings `
+            --collect:'XPlat Code Coverage;Format=cobertura,opencover' `
+            --logger trx --results-directory artifacts/test-results/chassis
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: ./.github/actions/coverage
+        with:
+          reports: artifacts/test-results/chassis/**/coverage.cobertura.xml
+          assemblies: '+Maieru.FiapTechChallenge.Chassis;-*.Tests*;-*.Sample'
+          output: artifacts/coverage/chassis
+      - uses: ./.github/actions/verify-chassis-package
       - name: Exchange GitHub OIDC token for temporary NuGet key
         uses: NuGet/login@v1
         id: login
@@ -48,6 +61,11 @@ jobs:
           NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: dotnet nuget push "artifacts/packages/Maieru.FiapTechChallenge.Chassis.$CHASSIS_VERSION.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: chassis-release
-          path: artifacts/packages/*
+          path: |
+            artifacts/packages/*
+            artifacts/test-results/
+            artifacts/coverage/
+            artifacts/chassis-sample*

@@ -36,8 +36,9 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Preparar pacote local do chassi
-        shell: pwsh
-        run: ./scripts/bootstrap.ps1 -Version "0.1.0-ci.$env:GITHUB_RUN_ID.$env:GITHUB_RUN_ATTEMPT"
+        uses: ./.github/actions/prepare-chassis
+        with:
+          version: 0.1.0-ci.${{ github.run_id }}.${{ github.run_attempt }}
 
       - name: Restaurar dependências
         run: dotnet restore ${{ env.SOLUTION_FILE }}
@@ -46,7 +47,14 @@ jobs:
         run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
 
       - name: Executar testes
-        run: dotnet test ${{ env.SOLUTION_FILE }} --configuration Release --no-build --verbosity normal
+        shell: pwsh
+        run: |
+          dotnet test $env:SOLUTION_FILE `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            --verbosity normal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   build-and-push-docker:
     name: Build e Push Docker no ECR
@@ -63,8 +71,9 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Preparar pacote local do chassi
-        shell: pwsh
-        run: ./scripts/bootstrap.ps1 -Version "0.1.0-ci.$env:GITHUB_RUN_ID.$env:GITHUB_RUN_ATTEMPT"
+        uses: ./.github/actions/prepare-chassis
+        with:
+          version: 0.1.0-ci.${{ github.run_id }}.${{ github.run_attempt }}
 
       - name: Configurar credenciais AWS via OIDC
         uses: aws-actions/configure-aws-credentials@v4

@@ -33,7 +33,7 @@ O OS valida o JWT sem chamar o monólito. Não existem referências de projeto d
 | Testes de domínio/aplicação | Extraídos e complementados para a abertura |
 | Testes HTTP legados em PostgreSQL | Mesmos arquivos-fonte compilados em outra suíte, sem copiar os cenários |
 
-O [inventário de extração](extracao-os.csv) identifica os arquivos correspondentes. A duplicação transitória entre legado e OS é intencional: cada serviço evolui por sua responsabilidade. Antes de desativar o fluxo antigo, confrontar regras e cenários alterados durante a coexistência.
+A tabela acima concentra o inventário de responsabilidades reaproveitadas; o CSV arquivo a arquivo foi removido na organização do repositório. A duplicação transitória entre legado e OS é intencional: cada serviço evolui por sua responsabilidade. Antes de desativar o fluxo antigo, confrontar regras e cenários alterados durante a coexistência.
 
 ## Dados e histórico
 
