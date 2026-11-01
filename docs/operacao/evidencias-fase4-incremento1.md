@@ -1,5 +1,7 @@
 # Evidências — primeiro incremento da Fase 4
 
+> Registro histórico. Para entregas e pendências atuais, consulte o [estado da migração](../arquitetura/estado-da-migracao.md).
+
 Verificação local em **2026-10-31**, branch **inicio-segregacao-servicos**. Estes resultados não são uma execução remota do GitHub Actions nem uma análise SonarQube Cloud.
 
 As seções iniciais registram a evolução anterior à extração do chassi. A organização e a verificação mais recentes estão em [Separação do chassi](#separação-do-chassi).

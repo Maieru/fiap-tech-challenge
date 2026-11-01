@@ -2,7 +2,8 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-01
-- **Escopo:** implementação da etapa 3 aprovada
+- **Última revisão:** 2026-11-01
+- **Escopo:** integração OS/Execution e verificação distribuída
 
 ## Contexto e decisão
 
@@ -23,11 +24,9 @@ PostgreSQL e consumidor/broker Kafka integram readiness; liveness não consulta 
 
 A autenticação do OS registra SymmetricSecurityKey singleton na composição e injeta a chave nas opções JWT validadas no startup.
 Issuer e audience permanecem na seção Jwt de IConfiguration; a chave é lida explicitamente de Jwt__SigningKey,
-sem fallback para arquivo, conforme a correção de origem do segredo aprovada também para o Execution.
+sem fallback para arquivo, assim como no Execution.
 Issuer, audience, validade e assinatura continuam obrigatórios, com ClockSkew zero e chave mínima de 32 bytes UTF-8.
 Os testes usam chave temporária por ambiente, com restauração do valor anterior e sem execução paralela dos cenários que a alteram.
-Verificação da origem explícita da chave: 231 testes da solução OS, 1 teste da imagem e 4 cenários distribuídos aprovados;
-cobertura OS de 89,4% (1714/1916 linhas). O analisador Enterprise C# 10.35.0.4138 não emitiu S6781 nessa versão.
 
 ## Ambiente e verificação
 
@@ -54,8 +53,9 @@ e offset pendente. Não existem flags de falha no código de produção.
 
 ## Consequências
 
-Build/CI limpos exigem os dois contratos publicados. Enquanto isso, scripts explícitos validam e copiam nupkg
-para artifacts/packages e geram configuração NuGet local ignorada pelo Git. Não há seleção automática de versões.
-CI remoto, publicação NuGet e deploy permanecem ações separadas da validação local.
+Os dois pacotes de contratos estão publicados no NuGet na versão 0.1.0. Build e CI usam o restore público padrão.
+Para testar pacotes candidatos, scripts opcionais validam e copiam nupkg para artifacts/packages e geram
+configuração NuGet local ignorada pelo Git. Não há seleção automática de versões.
+A publicação dos contratos não implica deploy dos serviços; implantação e migração de tráfego ainda estão pendentes.
 
 Consulte as [evidências](../operacao/revisao-execution-etapa3.md) e os READMEs dos serviços para os comandos.

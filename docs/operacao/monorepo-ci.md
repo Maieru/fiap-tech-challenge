@@ -6,16 +6,16 @@ Este repositório contém o legado e o OS Service. O [chassi técnico](https://g
 
 | Solução | Conteúdo |
 | --- | --- |
-| `Backend.slnx` | Legado e OS: 16 projetos, agrupados por componente |
+| `Backend.slnx` | Legado e OS: 18 projetos, agrupados por componente |
 | `Legacy.slnx` | Backend legado e testes: 9 projetos |
-| `src/Services/OrdensServico/OrdensServico.slnx` | OS e testes: 7 projetos |
+| `src/Services/OrdensServico/OrdensServico.slnx` | OS, contratos de mensageria e testes: 9 projetos |
 | `src/TechChallengeFase1.slnx` | Projetos legados e integração Docker Compose do Visual Studio |
 
 ## Dependência do chassi
 
-Legado e OS fixam `Maieru.FiapTechChallenge.Chassis` **0.1.0** diretamente nos respectivos `PackageReference`. Build, CI e Docker restauram a versão pública no NuGet.org. Não há projeto-fonte, feed temporário, arquivo de seleção de versão ou publicação do chassi neste repositório.
+O legado fixa `Maieru.FiapTechChallenge.Chassis` **0.1.0**. O OS fixa o chassi **1.1.1**, o adaptador `Maieru.FiapTechChallenge.Messaging.Kafka` **0.1.1** e `FIAP.TechChallenge.Execution.Application.Messaging` **0.1.0** nos respectivos `PackageReference`. Build, CI e Docker restauram as versões públicas no NuGet.org. O chassi não é compilado nem publicado neste repositório.
 
-A primeira publicação de 0.1.0 no novo repositório é pré-requisito para restore e imagens em ambiente limpo. O cache local pode conter versões antigas e não comprova disponibilidade pública. Para atualizar o chassi, publique uma versão imutável no repositório responsável e altere explicitamente o `PackageReference` dos consumidores desejados.
+Essas versões já estão publicadas. Para atualizar uma dependência compartilhada, publique uma versão imutável no repositório responsável e altere explicitamente o `PackageReference` dos consumidores desejados. O roteiro opcional `scripts/Restore-OsLocal.ps1` permite testar um contrato Execution local; não é necessário para o restore padrão.
 
 A configuração `NUGET_USER`, a política Trusted Publishing e a tag `vX.Y.Z` pertencem somente a `Maieru/fiap-tech-challenge-chassis`. Consulte seu README para publicação e desenvolvimento da biblioteca.
 
@@ -41,7 +41,7 @@ Sem token ou com permissões inválidas, a análise falha. PRs de forks não rec
 
 ## Comandos locais
 
-Requer .NET SDK 10, pacote público do chassi disponível e Docker para os testes PostgreSQL/HTTP:
+Requer .NET SDK 10, dependências NuGet e Docker para os testes PostgreSQL/Kafka/HTTP:
 
 ```powershell
 dotnet build Backend.slnx -c Release

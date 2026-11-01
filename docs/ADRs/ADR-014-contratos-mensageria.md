@@ -2,6 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-01
+- **Última revisão:** 2026-11-01
 - **Escopo:** contratos, distribuição NuGet e dependências
 
 ## Contexto
@@ -23,7 +24,8 @@ Contratos contêm somente DTOs e identificação estável de mensagens. Consumid
 
 ## Consequências
 
-A liberação inicial precisa publicar o chassi 1.1.0 antes do adaptador 0.1.0.
+O adaptador precisa de sua versão do chassi publicada antes de sua própria liberação. A decisão inicial definiu chassi 1.1.0 e adaptador 0.1.0.
+OS e Execution atualmente consomem o chassi 1.1.1 e o adaptador 0.1.1, ambos públicos no NuGet.
 Os pacotes de contratos não dependem do chassi nem de Kafka. O adaptador depende do chassi por PackageReference,
 inclusive dentro do repositório do chassi, e tem publicação própria.
 Não há consumidor genérico, persistência ou transação distribuída na biblioteca.

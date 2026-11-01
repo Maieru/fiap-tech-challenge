@@ -2,6 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 2026-10-31
+- **Última revisão:** 2026-11-01
 - **Escopo:** primeiro incremento da Fase 4
 
 ## Contexto
@@ -18,11 +19,11 @@ O monólito reúne cadastros, orçamento e execução. A fase 4 exige independê
 
 Extrair as regras e casos de uso pertinentes, preservar suas validações e transportar seus testes. Manter o legado em funcionamento, sem referência do OS aos seus assemblies ou banco. Clientes e veículos pertencem inicialmente ao OS. Compartilhar somente recursos técnicos por pacote NuGet versionado.
 
-Cada componente tem verificação independente e artefato próprio; alterações exclusivas dos novos componentes não acionam o provisionamento AWS atual. A branch de implementação é `inicio-segregacao-servicos`.
+Cada componente tem verificação independente e artefato próprio; alterações exclusivas dos novos componentes não acionam o provisionamento AWS atual.
 
 ## Consequências
 
-Há duplicação temporária de código de negócio, documentada no inventário de extração. Mudanças no legado durante a coexistência precisam ser confrontadas antes da migração definitiva. O OS ainda não oferece todo o ciclo da ordem. A separação em repositórios e o deploy AWS permanecem pendentes para conformidade final.
+Há duplicação temporária de código de negócio, documentada no inventário de extração. Mudanças no legado durante a coexistência precisam ser confrontadas antes da migração definitiva. A extração inicial do OS não substitui todo o ciclo da ordem; a implantação dos novos serviços e a retirada do legado permanecem pendentes.
 
 ## Evidências
 
@@ -33,3 +34,5 @@ Há duplicação temporária de código de negócio, documentada no inventário 
 As ADRs 001 e 008 continuam descrevendo o legado e a infraestrutura existente.
 
 A [ADR-013](ADR-013-chassi-em-repositorio-proprio.md) atualiza a organização do chassi, extraído para repositório próprio. A coexistência temporária de legado e OS permanece neste monorepo.
+
+O Execution também possui repositório próprio, conforme a [ADR-015](ADR-015-execution-mongodb.md), e sua integração com OS está implementada conforme a [ADR-016](ADR-016-integracao-os-execution.md). O [estado da migração](../arquitetura/estado-da-migracao.md) reúne entregas e pendências atuais.

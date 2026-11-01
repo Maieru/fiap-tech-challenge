@@ -1,35 +1,36 @@
 # Sistema de Gestão de Oficina Mecânica
 
-Aplicação para administrar o ciclo operacional de uma oficina mecânica. A solução reúne uma API em .NET, um frontend React, persistência em PostgreSQL, ambiente local com Docker Compose e infraestrutura AWS provisionada com Terraform e Kubernetes.
+Aplicação para administrar o ciclo operacional de uma oficina mecânica. A solução está em migração de um monólito para serviços .NET, com frontend React, PostgreSQL, MongoDB e Kafka. Possui ambientes locais com Docker Compose e infraestrutura do legado definida para AWS com Terraform e Kubernetes.
 
-## Primeiro incremento da Fase 4
+## Migração para microsserviços
 
-O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo e gestão de clientes/veículos (edição e soft delete). O monólito e suas rotas continuam disponíveis. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório, testes e publicação NuGet próprios.
+O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo, gestão de clientes/veículos e ordens, integrado ao Execution por Kafka. O monólito e suas rotas continuam disponíveis; o frontend ainda o utiliza. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório, testes e publicação NuGet próprios.
 
 Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os nove projetos do OS, incluindo contratos de mensageria e seus testes. `Backend.slnx` mantém a visão integrada dos 18 projetos do legado e do OS. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
 
 O legado usa `Maieru.FiapTechChallenge.Chassis` **0.1.0** e o OS usa **1.1.1**, com adaptador Kafka **0.1.1**, por `PackageReference`.
-Os contratos dos serviços usam **0.1.0**; enquanto não publicados, o [roteiro local do OS](src/Services/OrdensServico/README.md) aceita o nupkg do Execution.
+Os contratos OS e Execution estão publicados no NuGet na versão **0.1.0** e são restaurados normalmente pelo feed público.
 
-Consulte [arquitetura e reaproveitamento](docs/arquitetura/fase4-incremento1.md), [CI e configuração de contas externas](docs/operacao/monorepo-ci.md) e [evidências de testes](docs/operacao/evidencias-fase4-incremento1.md). AWS, Saga de pagamento e migração de tráfego ficam para os próximos incrementos.
+Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing, pagamentos, adaptação do frontend, implantação dos novos serviços e retirada do legado ainda precisam ser realizados. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
 
 ## Ecossistema de repositórios
 
-O [Execution](docs/arquitetura/execution.md) possui implementação local em repositório próprio,
-com MongoDB, catálogo, estoque, diagnóstico e execução. A integração Kafka com o OS e o BDD das duas APIs
-estão implementados na [etapa 3](docs/operacao/revisao-execution-etapa3.md), para revisão. O fluxo do legado permanece disponível.
+O [Execution](docs/arquitetura/execution.md) possui repositório próprio, com MongoDB, catálogo, estoque, diagnóstico e execução. A integração Kafka com o OS e os testes distribuídos das duas APIs estão implementados. Isso não representa migração do tráfego nem implantação dos novos serviços na AWS.
 
 O projeto está distribuído por responsabilidade entre os seguintes repositórios:
 
 | Repositório | Responsabilidade |
 | --- | --- |
-| [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | Aplicação principal: API .NET, frontend React, testes, Docker Compose, manifests das aplicações e orquestração dos workflows. |
+| [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | OS Service, backend legado, frontend React e documentação central, com testes, imagens e workflows. |
+| [`fiap-tech-challenge-execution`](https://github.com/Maieru/fiap-tech-challenge-execution) | Execution, MongoDB, integração Kafka, contratos NuGet e testes próprios e distribuídos. |
 | [`fiap-tech-challenge-chassis`](https://github.com/Maieru/fiap-tech-challenge-chassis) | Biblioteca técnica, testes, exemplo consumidor e publicação NuGet com CI/Sonar próprios. |
 | [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) | Infraestrutura compartilhada: backend do Terraform, VPC, EKS, ECR, add-ons, configurações Kubernetes, observabilidade, API Gateway e infraestrutura da Lambda Authorizer. |
 | [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db) | Infraestrutura do PostgreSQL no Amazon RDS e credenciais do banco no AWS Secrets Manager. |
 | [`fiap-tech-challenge-serverless`](https://github.com/Maieru/fiap-tech-challenge-serverless) | Código, testes e publicação da Lambda Authorizer de acesso às ordens. |
 
 ## Funcionalidades
+
+O fluxo existente do legado oferece as funcionalidades abaixo. A distribuição entre os novos serviços e as pendências estão no [estado da migração](docs/arquitetura/estado-da-migracao.md).
 
 - autenticação de usuários com JWT;
 - cadastro e gestão de clientes e veículos;
@@ -71,12 +72,13 @@ A API aplica automaticamente as migrations pendentes na inicialização, exceto 
 
 - .NET 10, ASP.NET Core e Entity Framework Core;
 - PostgreSQL e Npgsql;
+- MongoDB e Kafka nos novos serviços;
 - JWT e BCrypt;
 - React 19, TypeScript, Vite e Tailwind CSS;
 - Docker, Docker Compose e Nginx;
 - Terraform, AWS, API Gateway, Application Load Balancer e Kubernetes;
 - Scalar e OpenAPI;
-- NUnit, Moq e FluentAssertions.
+- NUnit, Moq, FluentAssertions, Testcontainers e Reqnroll.
 
 ## Execução local com Docker Compose
 

@@ -1,16 +1,16 @@
 # Documentação técnica
 
-Para desenvolver, comece pelo [mapa do repositório e suas soluções](../README.md#estrutura-do-repositório). Os guias estão separados por assunto e distinguem o legado do primeiro incremento da Fase 4:
+Para acompanhar a transição do monólito, consulte o [estado atual da migração](arquitetura/estado-da-migracao.md), com entregas e pendências. Para desenvolver, comece pelo [mapa do repositório e suas soluções](../README.md#estrutura-do-repositório). Os guias distinguem os novos serviços do legado e dos registros históricos:
 
 | Área | Documentos |
 | --- | --- |
-| Componentes da Fase 4 | [Chassi em repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis), [OS Service](../src/Services/OrdensServico/README.md), [arquitetura e reaproveitamento](arquitetura/fase4-incremento1.md) |
-| Qualidade e dependências | [CI do monorepo, consumo NuGet e Sonar](operacao/monorepo-ci.md), [evidências e limites](operacao/evidencias-fase4-incremento1.md) |
+| Migração e serviços | [Estado atual](arquitetura/estado-da-migracao.md), [OS Service](../src/Services/OrdensServico/README.md), [Execution](arquitetura/execution.md), [chassi em repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis) |
+| Qualidade e dependências | [CI do monorepo, consumo NuGet e Sonar](operacao/monorepo-ci.md), [histórico de validação do Execution](operacao/validacao-execution.md) |
 | Arquitetura do legado | [Componentes e camadas](arquitetura/README.md), [sequências](arquitetura/sequencias.md), [banco de dados e ER](arquitetura/banco-de-dados.md) |
 | Operação do legado/AWS | [CI/CD e deploy](operacao/ci-cd.md), [observabilidade](operacao/observabilidade.md), [métricas de negócio](operacao/metricas-negocio.md), [configuração do dashboard New Relic](operacao/dashboard-new-relic.md) |
 | Decisões arquiteturais | [Índice de ADRs](ADRs/README.md) |
-| Contratos Kafka — etapa 1 | [Contratos OS](../src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging/README.md), [RFC-007](RFCs/RFC-007-contratos-mensageria-kafka.md), [padrão canônico](arquitetura/mensageria.md) |
-| Execution — etapa 2 | [Arquitetura e limites](arquitetura/execution.md), [ADR-015](ADRs/ADR-015-execution-mongodb.md), [RFC-008](RFCs/RFC-008-execution-mongodb-kafka.md) |
+| Mensageria e integração | [Padrão canônico](arquitetura/mensageria.md), [contratos OS](../src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging/README.md), [integração OS/Execution](RFCs/RFC-009-integracao-os-execution.md) |
+| Histórico da extração | [Inventário inicial](arquitetura/fase4-incremento1.md), [evidências iniciais](operacao/evidencias-fase4-incremento1.md) |
 | Escolhas técnicas | [Índice de RFCs](RFCs/README.md) |
 
 ## Organização
@@ -20,6 +20,7 @@ docs/
 ├── README.md
 ├── arquitetura/
 │   ├── README.md
+│   ├── estado-da-migracao.md
 │   ├── sequencias.md
 │   ├── banco-de-dados.md
 │   ├── mensageria.md
@@ -29,7 +30,10 @@ docs/
 │   ├── ci-cd.md
 │   ├── monorepo-ci.md
 │   ├── evidencias-fase4-incremento1.md
-│   ├── evidencias-fase4-incremento1.json
+│   ├── validacao-execution.md
+│   ├── revisao-execution-etapa1.md
+│   ├── revisao-execution-etapa2.md
+│   ├── revisao-execution-etapa3.md
 │   ├── observabilidade.md
 │   ├── metricas-negocio.md
 │   ├── dashboard-new-relic.md

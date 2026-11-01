@@ -2,6 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-01
+- **Última revisão:** 2026-11-01
 - **Escopo:** fronteira do Execution, persistência e consistência
 
 ## Contexto
@@ -40,12 +41,13 @@ O Compose local inicia um replica set de nó único. Isso não constitui configu
 MongoDB não substitui o PostgreSQL do OS e não há migração de dados antigos neste incremento.
 Inicialização cria coleções e índices antes de iniciar o consumidor.
 
-O OS ainda não publica nem recebe Kafka: a integração das duas aplicações pertence à etapa 3.
-Nos testes desta etapa, mensagens compatíveis com o OS são produzidas diretamente no broker.
+O OS publica e recebe Kafka conforme a [ADR-016](ADR-016-integracao-os-execution.md).
+Os testes isolados do Execution produzem mensagens compatíveis com o OS diretamente no broker;
+os testes distribuídos verificam as duas APIs reais. O [estado da migração](../arquitetura/estado-da-migracao.md) reúne entregas e pendências.
 
 ## Evidências e relações
 
-- [Arquitetura e limites da etapa 2](../arquitetura/execution.md).
+- [Arquitetura e limites do Execution](../arquitetura/execution.md).
 - [RFC-008](../RFCs/RFC-008-execution-mongodb-kafka.md).
 - No checkout FiapTechChallengeExecution: MongoUnitOfWork, MongoStore, repositórios e TransactionTests.
 - Os testes usam MongoDB replica set e Kafka reais, incluindo concorrência, rollback, devolução e deduplicação.

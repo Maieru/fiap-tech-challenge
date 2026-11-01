@@ -1,4 +1,4 @@
-# Execution e integração OS — etapas 2 e 3
+# Execution e integração com OS
 
 O checkout FiapTechChallengeExecution é um repositório Git independente com solução .NET 10, API, Application,
 Domain, Infrastructure, contratos de mensagens e testes próprios.
@@ -58,18 +58,19 @@ Paginação começa em 1/10 e limita PageSize a 100.
 
 O Compose local publica API em 8082, MongoDB em 27018 e Kafka em 19093, somente em loopback.
 MongoDB e Kafka têm volumes exclusivos; consumidores não reiniciam automaticamente após erro.
-Consulte o README do checkout Execution para comandos, variáveis e roteiro de restauração do contrato OS ainda não publicado.
+Consulte o [README do Execution](https://github.com/Maieru/fiap-tech-challenge-execution#readme) para comandos e variáveis. Os contratos OS e Execution 0.1.0 estão publicados no NuGet; o restore padrão usa o feed público.
 
 ## Verificação e limites
 
-A verificação local cobriu 149 testes do Execution: 81 de domínio, 44 de aplicação, 6 de contratos,
-17 de integração HTTP/MongoDB/Kafka e 1 da imagem. A cobertura consolidada final foi de 93,8% das linhas.
+Há testes de domínio, aplicação, contratos, integração HTTP/MongoDB/Kafka e da imagem.
 O teste da imagem verifica JWT, OpenAPI e permanência do catálogo após reiniciar o container.
 
 Os testes não usam volumes de desenvolvimento, autenticação substituta ou mocks nos endpoints HTTP.
-Os quatro cenários distribuídos com as duas APIs reais foram implementados em Distributed.slnx no Execution.
-O fluxo completo e a validação da etapa 3 estão nas [evidências](../operacao/revisao-execution-etapa3.md).
-Não há Billing, pagamentos, AWS, migração de dados/frontend nem deploy Kubernetes neste incremento.
+Os cenários distribuídos com as duas APIs reais estão em Distributed.slnx no Execution, separados da solução padrão.
+O workflow distribuído é manual e recebe imagens publicadas; não faz parte da execução automática de toda validação isolada.
+O [histórico de validação](../operacao/validacao-execution.md) preserva as evidências de cada entrega.
+Billing, pagamentos, adaptação do frontend, deploy dos novos serviços e retirada do legado permanecem pendentes,
+conforme o [estado da migração](estado-da-migracao.md).
 
 Decisões: [ADR-015](../ADRs/ADR-015-execution-mongodb.md), [RFC-008](../RFCs/RFC-008-execution-mongodb-kafka.md),
 [ADR-016](../ADRs/ADR-016-integracao-os-execution.md) e [RFC-009](../RFCs/RFC-009-integracao-os-execution.md).

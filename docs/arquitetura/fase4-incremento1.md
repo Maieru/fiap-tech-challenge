@@ -1,5 +1,7 @@
 # Fase 4 — primeiro incremento
 
+> Registro histórico da extração inicial. As entregas e pendências abaixo descrevem aquele momento. Para a situação atual, consulte o [estado da migração](estado-da-migracao.md).
+
 O repositório hospeda o monólito existente e o OS Service. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório e publicação próprios e é consumido por versão NuGet explícita. O serviço novo possui build, testes, imagem, credenciais e PostgreSQL próprios. A coexistência é local; nenhum tráfego do frontend ou da AWS foi migrado.
 
 ```mermaid

@@ -1,5 +1,6 @@
 # Validação do Execution e da integração com OS
 
+Para entregas e pendências atuais, consulte o [estado da migração](../arquitetura/estado-da-migracao.md).
 Este índice concentra o histórico de implementação e as evidências locais dos serviços.
 O README do Execution descreve o funcionamento, a configuração e a operação do serviço.
 

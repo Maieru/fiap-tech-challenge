@@ -1,5 +1,7 @@
 # Banco de dados e modelo relacional
 
+Este guia descreve o banco do legado. OS possui PostgreSQL exclusivo e Execution usa MongoDB exclusivo, conforme a [integração OS/Execution](execution.md). Consulte o [estado da migração](estado-da-migracao.md) para as entregas e pendências.
+
 ## Escolha do banco
 
 PostgreSQL atende aos relacionamentos, chaves estrangeiras e transações da oficina. EF Core/Npgsql mantém o acesso e as migrations junto da aplicação; Amazon RDS reduz a operação do servidor na AWS. A [RFC-002](../RFCs/RFC-002-postgresql-no-amazon-rds.md) registra alternativas e consequências.

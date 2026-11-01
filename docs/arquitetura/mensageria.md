@@ -3,10 +3,10 @@
 Este guia é mantido no repositório principal e define o padrão compartilhado por OS, Execution e chassi.
 A organização dos contratos e do publicador está registrada na [ADR-014](../ADRs/ADR-014-contratos-mensageria.md).
 
-Decisão aceita em 2026-11-01. A primeira etapa entrega contratos NuGet, interface e publicador Kafka.
-O Execution já implementa transações de negócio e consumo Kafka na [etapa 2](execution.md).
-A publicação/recepção pela API OS e o fluxo com as duas aplicações reais continuam para a etapa 3.
-Os exemplos abaixo definem o padrão compartilhado; não indicam que essa integração completa já está disponível.
+Decisão aceita em 2026-11-01. OS e Execution já publicam e recebem mensagens segundo este padrão,
+com transações locais, deduplicação e testes das duas APIs reais. Ambos os pacotes de contratos
+Application.Messaging estão publicados no NuGet na versão 0.1.0.
+Consulte a [integração implementada](execution.md) e o [estado da migração](estado-da-migracao.md).
 
 ## Responsabilidades e dependências
 
@@ -89,8 +89,7 @@ Timeout ou cancelamento não prova ausência de entrega. Rollback também pode f
 Registrar a incerteza e reconciliar; não afirmar que o negócio foi desfeito sem verificar.
 Essa limitação decorre da [coordenação necessária com sistemas externos ao Kafka](https://kafka.apache.org/40/design/design/).
 
-Os testes do Execution já cobrem publicação falhando com rollback e publicação entregue seguida de falha no commit.
-As mesmas garantias e limitações deverão ser verificadas no OS ao implementar sua integração.
+Os testes de OS e Execution cobrem publicação falhando com rollback e publicação entregue seguida de falha no commit.
 
 ## Consumo por BackgroundService
 
@@ -112,7 +111,7 @@ Para cada mensagem: ler e validar envelope/versão/chave; criar escopo com IServ
 restaurar correlação/trace; executar switch explícito e chamar o caso de uso correspondente.
 O [escopo por operação é necessário no BackgroundService](https://learn.microsoft.com/en-us/dotnet/core/extensions/scoped-service).
 
-Exemplo de roteamento previsto para Execution:
+Exemplo simplificado do roteamento do Execution:
 
 ```csharp
 switch (envelope.Type, envelope.Version)
@@ -153,7 +152,7 @@ Retries internos do cliente Kafka permanecem habilitados.
 7. Mensagem inválida pode bloquear o grupo. Não descartar nem avançar offsets silenciosamente; qualquer descarte exige decisão operacional documentada.
 
 No ambiente local, não configurar reinício automático dos hosts que esconda esse estado de falha.
-O teste Kafka desta etapa cria e remove tópicos exclusivos e não altera os tópicos de negócio.
+Os testes Kafka criam e removem tópicos exclusivos, sem alterar os tópicos de desenvolvimento.
 
 ## Integração OS e Execution
 

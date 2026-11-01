@@ -12,7 +12,7 @@ As RFCs documentam escolhas técnicas relevantes já aceitas, suas alternativas 
 | [RFC-004](RFC-004-containers-no-amazon-eks.md) | Aceita | Executar os containers de aplicação no Amazon EKS. |
 | [RFC-005](RFC-005-terraform-e-github-actions-oidc.md) | Aceita | Provisionar com Terraform e operar pipelines AWS por OIDC. |
 | [RFC-006](RFC-006-chassi-nuget-e-verificacao-monorepo.md) | Aceita | Distribuir chassi técnico por NuGet e verificar os componentes separadamente. |
-| [RFC-007](RFC-007-contratos-mensageria-kafka.md) | Aceita | Distribuir contratos de mensagens do OS em pacote próprio, preparando a integração Kafka. |
+| [RFC-007](RFC-007-contratos-mensageria-kafka.md) | Aceita | Distribuir contratos de mensagens do OS em pacote próprio para a integração Kafka. |
 | [RFC-008](RFC-008-execution-mongodb-kafka.md) | Aceita | Implementar Execution com driver MongoDB, consumidor Kafka explícito e testes reais. |
 | [RFC-009](RFC-009-integracao-os-execution.md) | Aceita | Integrar OS por Kafka, persistir decisões pendentes e verificar as duas APIs por BDD. |
 

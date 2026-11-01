@@ -25,26 +25,22 @@ dotnet pack src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messagi
 Publicação: tag `os-messaging-v0.1.0` em commit revisado de main, variável `NUGET_USER` e
 NuGet Trusted Publishing para owner Maieru, repositório fiap-tech-challenge,
 workflow publish-os-messaging.yml, environment vazio e pacote FIAP.TechChallenge.OS.Application.Messaging.
-Nenhuma publicação é executada como parte desta revisão local.
+O pacote OS.Application.Messaging 0.1.0 já está publicado no NuGet.
 
 ## Pré-requisitos locais
 
 Pré-requisitos: .NET SDK 10, PowerShell 7 e Docker com containers Linux.
 Versões fixadas: chassi 1.1.1, adaptador Kafka 0.1.1 e contrato Execution.Application.Messaging 0.1.0.
-Enquanto o contrato Execution não estiver publicado, gere o nupkg na raiz daquele repositório e restaure explicitamente aqui:
+Essas dependências estão publicadas no NuGet. Na raiz deste repositório:
 
 ```powershell
-# No repositório Execution:
-dotnet pack src/FIAP.TechChallenge.Execution.Application.Messaging -c Release -o artifacts/packages
-
-# Na raiz deste repositório:
-./scripts/Restore-OsLocal.ps1 -ExecutionMessagingPackage ../FiapTechChallengeExecution/artifacts/packages/FIAP.TechChallenge.Execution.Application.Messaging.0.1.0.nupkg
+dotnet restore src/Services/OrdensServico/OrdensServico.slnx
 dotnet build src/Services/OrdensServico/OrdensServico.slnx -c Release --no-restore
 ```
 
-O roteiro valida o pacote e gera artifacts/NuGet.Local.Config ignorado pelo Git.
-O Dockerfile aceita artifacts/packages/*.nupkg. CI limpo exige o contrato publicado; não compila outro checkout.
-Depois da publicação, dotnet restore usa o NuGet.Config público normalmente.
+Para testar um pacote de contratos gerado localmente, opcionalmente use `scripts/Restore-OsLocal.ps1 -ExecutionMessagingPackage <caminho-do-nupkg>`.
+O roteiro valida o pacote e gera artifacts/NuGet.Local.Config ignorado pelo Git; o Dockerfile também aceita artifacts/packages/*.nupkg.
+O restore padrão e o CI usam o feed público, sem compilar outro checkout.
 Na raiz do repositório:
 
 ```powershell
@@ -123,7 +119,7 @@ Consultas retornam status/datas projetados e decisão. Itens, valores e estoque 
 - Exclusão não se propaga a veículos ou ordens e não apaga referências históricas.
 - Documentos e placas de inativos podem ser cadastrados novamente, com novos IDs; índices únicos parciais protegem somente ativos.
 - Atualizações preservam `Ativo`; concorrência com inativação não reativa o registro.
-- Não há reativação ou exclusão física neste incremento.
+- Não há reativação ou exclusão física.
 
 ## Testes e imagem
 
@@ -140,15 +136,15 @@ Há testes de concorrência, deduplicação, rollback e mensagem órfã após fa
 O teste da imagem verifica reinício, OpenAPI e encerramento com offset pendente diante de mensagem inválida.
 No CI, OS_OPENAPI_OUTPUT seleciona a exportação. Containers são descartáveis e não usam volumes de desenvolvimento.
 
-Cobertura é medida separadamente para os assemblies `FIAP.TechChallenge.OS.*`, com mínimo de 80%. Consulte [evidências](../../../docs/operacao/evidencias-fase4-incremento1.md), [arquitetura](../../../docs/arquitetura/fase4-incremento1.md) e [CI/configuração externa](../../../docs/operacao/monorepo-ci.md).
+Cobertura é medida separadamente para os assemblies `FIAP.TechChallenge.OS.*`, com mínimo de 80%. Consulte a [integração OS/Execution](../../../docs/arquitetura/execution.md) e o [guia de CI/configuração externa](../../../docs/operacao/monorepo-ci.md).
 
-## Observabilidade e próximos incrementos
+## Observabilidade e estado da migração
 
 Logs JSON, `X-Correlation-ID`, W3C trace context e health checks vêm do chassi. OTLP é opcional: habilite `OS_ENABLE_OTLP=true` e indique o Collector em `OTEL_EXPORTER_OTLP_ENDPOINT`. Não é necessária uma chave New Relic para executar ou testar localmente.
 
-A integração Kafka, o Execution/MongoDB e o BDD distribuído estão implementados para revisão:
+A integração Kafka, o Execution/MongoDB e o BDD distribuído estão implementados:
 [ADR-016](../../../docs/ADRs/ADR-016-integracao-os-execution.md),
 [RFC-009](../../../docs/RFCs/RFC-009-integracao-os-execution.md) e
 [evidências](../../../docs/operacao/revisao-execution-etapa3.md).
-Permanecem pendentes deploy AWS/Kubernetes, Terraform do OS, migração do frontend/dados,
-autenticação de clientes, Saga e Billing/Mercado Pago. O monorepo deverá ser separado para a entrega final.
+O [estado da migração](../../../docs/arquitetura/estado-da-migracao.md) reúne as pendências de Billing/pagamentos,
+autenticação, frontend, infraestrutura e retirada do legado. Não há requisito de importar o histórico legado para os novos bancos de demonstração.

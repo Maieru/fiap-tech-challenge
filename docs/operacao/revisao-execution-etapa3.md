@@ -1,5 +1,7 @@
 # Revisão — etapa 3: OS e Execution por Kafka
 
+> Registro histórico da entrega local. Publicações e pendências citadas correspondem àquele momento. O [estado da migração](../arquitetura/estado-da-migracao.md) consolida a situação atual.
+
 Consulte o [índice de validação](validacao-execution.md) para o histórico das etapas anteriores.
 
 Data: 2026-11-01. Implementação local entregue para revisão, sem commit, push, tag ou publicação.

@@ -2,6 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-01
+- **Última revisão:** 2026-11-01
 - **Responsáveis:** equipe
 - **Escopo:** contratos OS, compatibilidade e publicação
 
@@ -26,9 +27,10 @@ descreve BackgroundService com switch explícito, parada em falha e publicação
 
 ## Consequências
 
-A etapa 1 entregou contratos, testes e workflow de publicação. O Execution passou a consumir Kafka na
-[etapa 2](../arquitetura/execution.md); a API OS ainda não publica nem consome essas mensagens.
-A transação local não pode garantir atomicidade com Kafka. A integração das duas aplicações será materializada na terceira etapa.
+Os contratos OS e Execution estão publicados no NuGet na versão 0.1.0, com testes e workflows de publicação próprios.
+O OS publica as entradas do Execution e recebe suas confirmações; os dois serviços usam BackgroundService e casos de uso específicos.
+A [integração das duas aplicações](RFC-009-integracao-os-execution.md) está implementada e verificada com imagens reais.
+A transação local não pode garantir atomicidade com Kafka.
 Os contratos não alteram as versões do chassi consumidas pelo OS e pelo legado.
 
 ## Evidências e relações
