@@ -1,6 +1,6 @@
 # Sequências dos fluxos principais
 
-Os diagramas descrevem a implementação atual: autenticação administrativa na API, validação das requisições dos clientes pela Lambda e abertura de ordens.
+Os diagramas descrevem o fluxo do legado: autenticação administrativa na API, validação das requisições dos clientes pela Lambda e abertura de ordens. A integração dos novos serviços está no [guia OS/Execution](execution.md); entregas e pendências estão no [estado da migração](estado-da-migracao.md).
 
 ## Autenticação administrativa atual
 

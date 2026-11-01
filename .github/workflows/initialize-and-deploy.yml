@@ -4,6 +4,17 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'src/FIAP.TechChallenge.Fase1.API/**'
+      - 'src/FIAP.TechChallenge.Fase1.Application/**'
+      - 'src/FIAP.TechChallenge.Fase1.Domain/**'
+      - 'src/FIAP.TechChallenge.Fase1.Infrastructure/**'
+      - 'src/FIAP.TechChallenge.Fase1.Frontend/**'
+      - 'k8s/**'
+      - '.github/workflows/initialize-and-deploy.yml'
+      - '.github/workflows/deploy-applications.yml'
+      - '.github/workflows/build-backend-image.yml'
+      - '.github/workflows/build-frontend-image.yaml'
   workflow_dispatch:
 
 permissions:

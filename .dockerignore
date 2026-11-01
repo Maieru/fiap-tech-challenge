@@ -1,0 +1,13 @@
+**/bin
+**/obj
+**/node_modules
+**/.git
+**/.vs
+**/.env
+**/.env.*
+!**/.env.example
+artifacts/*
+!artifacts/packages/
+!artifacts/packages/*.nupkg
+**/TestResults
+**/.sonarqube

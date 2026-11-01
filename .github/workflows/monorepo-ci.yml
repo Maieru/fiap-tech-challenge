@@ -1,0 +1,103 @@
+name: Monorepo CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monorepo-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  component:
+    name: Test ${{ matrix.component }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: legacy
+            solution: Legacy.slnx
+            assemblies: '+FIAP.TechChallenge.Fase1.*;-*.Tests*'
+          - component: os
+            solution: src/Services/OrdensServico/OrdensServico.slnx
+            assemblies: '+FIAP.TechChallenge.OS.*;-*.Tests*'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build solution
+        env:
+          SOLUTION: ${{ matrix.solution }}
+        run: dotnet build "$SOLUTION" -c Release
+      - name: Test solution with coverage
+        shell: pwsh
+        env:
+          SOLUTION: ${{ matrix.solution }}
+          COMPONENT: ${{ matrix.component }}
+        run: |
+          dotnet test $env:SOLUTION `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            --filter 'TestCategory!=ContainerImage' `
+            --settings coverage.runsettings `
+            --collect:'XPlat Code Coverage;Format=cobertura,opencover' `
+            --logger trx `
+            --results-directory "artifacts/test-results/$env:COMPONENT"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: ./.github/actions/coverage
+        with:
+          reports: artifacts/test-results/${{ matrix.component }}/**/coverage.cobertura.xml
+          assemblies: ${{ matrix.assemblies }}
+          output: artifacts/coverage/${{ matrix.component }}
+      - name: Build OS image
+        if: matrix.component == 'os'
+        run: docker build -f src/Services/OrdensServico/Dockerfile -t fiap-os:ci .
+      - name: Test OS image through NUnit and Testcontainers
+        if: matrix.component == 'os'
+        shell: pwsh
+        env:
+          OS_TEST_IMAGE: fiap-os:ci
+          OS_OPENAPI_OUTPUT: ${{ github.workspace }}/artifacts/os-openapi.json
+        run: |
+          dotnet test src/Services/OrdensServico/FIAP.TechChallenge.OS.Integration.Tests/FIAP.TechChallenge.OS.Integration.Tests.csproj `
+            --configuration Release --no-build --no-restore --filter 'TestCategory=ContainerImage' `
+            --logger trx --results-directory artifacts/image-tests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-${{ matrix.component }}
+          path: |
+            artifacts/test-results/
+            artifacts/coverage/
+            artifacts/image-tests/
+            artifacts/os-openapi.json
+
+  quality:
+    name: SonarQube
+    needs: component
+    uses: ./.github/workflows/sonarqube.yml
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  ci-required:
+    name: ci-required
+    if: always()
+    needs: [component, quality]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require tests, coverage and quality success
+        env:
+          TEST_RESULT: ${{ needs.component.result }}
+          QUALITY_RESULT: ${{ needs.quality.result }}
+        run: test "$TEST_RESULT" = success && test "$QUALITY_RESULT" = success

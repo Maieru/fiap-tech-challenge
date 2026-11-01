@@ -1,19 +1,36 @@
 # Sistema de Gestão de Oficina Mecânica
 
-Aplicação para administrar o ciclo operacional de uma oficina mecânica. A solução reúne uma API em .NET, um frontend React, persistência em PostgreSQL, ambiente local com Docker Compose e infraestrutura AWS provisionada com Terraform e Kubernetes.
+Aplicação para administrar o ciclo operacional de uma oficina mecânica. A solução está em migração de um monólito para serviços .NET, com frontend React, PostgreSQL, MongoDB e Kafka. Possui ambientes locais com Docker Compose e infraestrutura do legado definida para AWS com Terraform e Kubernetes.
+
+## Migração para microsserviços
+
+O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo, gestão de clientes/veículos e ordens, integrado ao Execution por Kafka. O monólito e suas rotas continuam disponíveis; o frontend ainda o utiliza. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório, testes e publicação NuGet próprios.
+
+Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os nove projetos do OS, incluindo contratos de mensageria e seus testes. `Backend.slnx` mantém a visão integrada dos 18 projetos do legado e do OS. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
+
+O legado usa `Maieru.FiapTechChallenge.Chassis` **0.1.0** e o OS usa **1.1.1**, com adaptador Kafka **0.1.1**, por `PackageReference`.
+Os contratos OS e Execution estão publicados no NuGet na versão **0.1.0** e são restaurados normalmente pelo feed público.
+
+Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing, pagamentos, adaptação do frontend, implantação dos novos serviços e retirada do legado ainda precisam ser realizados. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
 
 ## Ecossistema de repositórios
+
+O [Execution](docs/arquitetura/execution.md) possui repositório próprio, com MongoDB, catálogo, estoque, diagnóstico e execução. A integração Kafka com o OS e os testes distribuídos das duas APIs estão implementados. Isso não representa migração do tráfego nem implantação dos novos serviços na AWS.
 
 O projeto está distribuído por responsabilidade entre os seguintes repositórios:
 
 | Repositório | Responsabilidade |
 | --- | --- |
-| [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | Aplicação principal: API .NET, frontend React, testes, Docker Compose, manifests das aplicações e orquestração dos workflows. |
+| [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | OS Service, backend legado, frontend React e documentação central, com testes, imagens e workflows. |
+| [`fiap-tech-challenge-execution`](https://github.com/Maieru/fiap-tech-challenge-execution) | Execution, MongoDB, integração Kafka, contratos NuGet e testes próprios e distribuídos. |
+| [`fiap-tech-challenge-chassis`](https://github.com/Maieru/fiap-tech-challenge-chassis) | Biblioteca técnica, testes, exemplo consumidor e publicação NuGet com CI/Sonar próprios. |
 | [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) | Infraestrutura compartilhada: backend do Terraform, VPC, EKS, ECR, add-ons, configurações Kubernetes, observabilidade, API Gateway e infraestrutura da Lambda Authorizer. |
 | [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db) | Infraestrutura do PostgreSQL no Amazon RDS e credenciais do banco no AWS Secrets Manager. |
 | [`fiap-tech-challenge-serverless`](https://github.com/Maieru/fiap-tech-challenge-serverless) | Código, testes e publicação da Lambda Authorizer de acesso às ordens. |
 
 ## Funcionalidades
+
+O fluxo existente do legado oferece as funcionalidades abaixo. A distribuição entre os novos serviços e as pendências estão no [estado da migração](docs/arquitetura/estado-da-migracao.md).
 
 - autenticação de usuários com JWT;
 - cadastro e gestão de clientes e veículos;
@@ -31,7 +48,7 @@ O catálogo em [`docs/README.md`](docs/README.md) reúne a visão visual da arqu
 
 Consulte os [diagramas de sequência](docs/arquitetura/sequencias.md), o [modelo ER e sua evolução](docs/arquitetura/banco-de-dados.md) e o [fluxo de CI/CD](docs/operacao/ci-cd.md). Cada guia distingue o comportamento atual das pendências de implementação.
 
-O backend é um monólito organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP:
+O backend legado é um monólito organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP. O OS Service segue a mesma separação em projetos próprios; o diagrama abaixo representa o legado:
 
 ```mermaid
 graph LR
@@ -55,12 +72,13 @@ A API aplica automaticamente as migrations pendentes na inicialização, exceto 
 
 - .NET 10, ASP.NET Core e Entity Framework Core;
 - PostgreSQL e Npgsql;
+- MongoDB e Kafka nos novos serviços;
 - JWT e BCrypt;
 - React 19, TypeScript, Vite e Tailwind CSS;
 - Docker, Docker Compose e Nginx;
 - Terraform, AWS, API Gateway, Application Load Balancer e Kubernetes;
 - Scalar e OpenAPI;
-- NUnit, Moq e FluentAssertions.
+- NUnit, Moq, FluentAssertions, Testcontainers e Reqnroll.
 
 ## Execução local com Docker Compose
 
@@ -124,7 +142,7 @@ VITE_API_BASE_URL=http://localhost:5251/api
 
 O perfil `http` do backend usa `http://localhost:5251`. Se executar a API pelo Compose, use `http://localhost:8080/api` no frontend local.
 
-No Visual Studio, abra `src/TechChallengeFase1.slnx`. Para iniciar todo o ambiente em contêineres, selecione o projeto `docker-compose` como projeto de inicialização.
+No Visual Studio, abra `src/TechChallengeFase1.slnx` para trabalhar com o legado e seu projeto Docker Compose. Selecione `docker-compose` como projeto de inicialização para subir esse ambiente. Para o backend integrado ou os componentes novos, escolha uma das soluções da tabela em [Estrutura do repositório](#estrutura-do-repositório).
 
 ## Autenticação e documentação da API
 
@@ -196,25 +214,51 @@ O passo a passo operacional está no [`guia de infraestrutura`](https://github.c
 
 Para a orquestração, configure os secrets `INFRA_ACTION_ROLE`, `DATABASE_ACTION_ROLE`, `ACTION_ROLE_ARN`, `AUTH_ACTION_ROLE`, `jwt_signing_key`, `db_username`, `db_password` e `NEW_RELIC_LICENSE_KEY`. Se os repositórios forem privados, configure também `REPOSITORIES_TOKEN` com acesso de leitura aos repositórios chamados.
 
-No GitHub Actions, inicie `Initialize Infrastructure And Deploy` para executar o fluxo completo. O orquestrador atual é manual; não há deploy por push de homologação/produção declarado. A [documentação de CI/CD](docs/operacao/ci-cd.md) descreve o fluxo atual e as melhorias pendentes.
+No GitHub Actions, inicie `Initialize Infrastructure And Deploy` para executar o fluxo completo. O orquestrador também responde a pushes em `main` que alterem as aplicações legadas, manifests ou workflows de deploy; mudanças exclusivas de chassi/OS não provisionam a AWS. O novo OS ainda não participa desse deploy. Consulte a [documentação de CI/CD](docs/operacao/ci-cd.md) e o [CI do monorepo](docs/operacao/monorepo-ci.md).
 
 ## Testes
 
-A solução contém testes de domínio, casos de uso, infraestrutura e API. Para executar toda a suíte:
+Os componentes têm suítes independentes. Requer .NET 10, o pacote público do chassi disponível e Docker para os testes PostgreSQL/HTTP. Na raiz do repositório, escolha o escopo:
 
 ```bash
-dotnet test src/TechChallengeFase1.slnx
+# Todo o backend deste repositório: legado e OS
+dotnet test Backend.slnx -c Release --filter 'TestCategory!=ContainerImage'
+
+# Somente o legado, incluindo integração PostgreSQL e BDD
+dotnet test Legacy.slnx -c Release
 ```
+
+Os comandos específicos do [OS](src/Services/OrdensServico/README.md) estão em seu guia. O teste de imagem, categoria `ContainerImage`, exige construir a imagem e definir `OS_TEST_IMAGE`; consulte o [procedimento](src/Services/OrdensServico/README.md#testes-e-imagem). Os testes do chassi ficam em seu próprio repositório.
 
 ## Estrutura do repositório
 
 ```text
 .
-├── .github/workflows/   # CI/CD, infraestrutura e deploy
-├── docs/                # documentação de arquitetura
-├── k8s/                 # manifests do backend e frontend
-└── src/                 # solução .NET, frontend e Docker Compose
+├── Backend.slnx             # visão integrada, agrupada por componente
+├── Legacy.slnx              # backend legado e seus testes
+├── .github/
+│   ├── actions/             # gate de cobertura por componente
+│   └── workflows/           # CI, Sonar e orquestração AWS
+├── docs/                    # guias de arquitetura/operação, RFCs e ADRs
+├── k8s/                     # manifests das aplicações legadas
+└── src/
+    ├── Services/
+    │   └── OrdensServico/   # OS, testes, Dockerfile, Compose e solução própria
+    ├── FIAP.TechChallenge.Fase1.*/  # projetos legados e frontend
+    ├── LoadTests/           # cenários de carga do legado
+    ├── ObservabilityConfig/ # Collector do ambiente local legado
+    ├── TechChallengeFase1.slnx     # legado com integração Docker no Visual Studio
+    └── docker-compose.yml  # ambiente local legado
 ```
+
+| Escopo de trabalho | Solução | Projetos |
+| --- | --- | ---: |
+| Backend integrado | [Backend.slnx](Backend.slnx) | 16 |
+| Backend legado e testes | [Legacy.slnx](Legacy.slnx) | 9 |
+| OS Service e testes | [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) | 7 |
+| Legado com Docker no Visual Studio | [TechChallengeFase1.slnx](src/TechChallengeFase1.slnx) | 9 .NET + Docker Compose |
+
+Os agrupamentos das soluções são visuais; os diretórios físicos são preservados. `artifacts/`, `bin/`, `obj/` e resultados de testes são gerados e não devem ser versionados. `coverage.runsettings` na raiz padroniza a coleta dos componentes.
 
 ## Observações Finais
 

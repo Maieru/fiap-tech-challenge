@@ -1,5 +1,10 @@
 # Arquitetura da solução
 
+Esta página descreve o legado e a infraestrutura existente. Consulte o [estado atual da migração](estado-da-migracao.md) para os componentes extraídos e as pendências. O [primeiro incremento da Fase 4](fase4-incremento1.md) é um registro histórico da extração inicial.
+
+O [padrão de mensageria entre serviços](mensageria.md) documenta os contratos Kafka, publicação, consumo e tratamento de falhas.
+O [guia do Execution](execution.md) descreve o serviço independente com MongoDB, catálogo, estoque, execução e integração com OS.
+
 A aplicação usa AWS, Kubernetes e PostgreSQL, com telemetria no New Relic. Esta visão descreve o código e a infraestrutura declarada; não comprova um deploy ativo. As limitações estão descritas junto de cada componente.
 
 ## Diagrama de componentes

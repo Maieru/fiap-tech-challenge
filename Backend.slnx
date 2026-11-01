@@ -1,0 +1,28 @@
+<Solution>
+  <Folder Name="/Legacy/">
+    <Project Path="src/FIAP.TechChallenge.Fase1.API/FIAP.TechChallenge.Fase1.API.csproj" />
+    <Project Path="src/FIAP.TechChallenge.Fase1.Application/FIAP.TechChallenge.Fase1.Application.csproj" />
+    <Project Path="src/FIAP.TechChallenge.Fase1.Domain/FIAP.TechChallenge.Fase1.Domain.csproj" />
+    <Project Path="src/FIAP.TechChallenge.Fase1.Infrastructure/FIAP.TechChallenge.Fase1.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Legacy/Tests/">
+    <Project Path="src/FIAP.TechChallenge.Fase1.API.Tests/FIAP.TechChallenge.Fase1.API.Tests.csproj" />
+    <Project Path="src/FIAP.TechChallenge.Fase1.Application.Tests/FIAP.TechChallenge.Fase1.Application.Tests.csproj" />
+    <Project Path="src/FIAP.TechChallenge.Fase1.Domain.Tests/FIAP.TechChallenge.Fase1.Domain.Tests.csproj" />
+    <Project Path="src/FIAP.TechChallenge.Fase1.Infaestructure.Tests/FIAP.TechChallenge.Fase1.Infaestructure.Tests.csproj" />
+    <Project Path="src/FIAP.TechChallenge.Fase1.PostgreSQL.Tests/FIAP.TechChallenge.Fase1.PostgreSQL.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Services/OrdensServico/">
+    <Project Path="src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging/FIAP.TechChallenge.OS.Application.Messaging.csproj" />
+    <Project Path="src/Services/OrdensServico/FIAP.TechChallenge.OS.API/FIAP.TechChallenge.OS.API.csproj" />
+    <Project Path="src/Services/OrdensServico/FIAP.TechChallenge.OS.Application/FIAP.TechChallenge.OS.Application.csproj" />
+    <Project Path="src/Services/OrdensServico/FIAP.TechChallenge.OS.Domain/FIAP.TechChallenge.OS.Domain.csproj" />
+    <Project Path="src/Services/OrdensServico/FIAP.TechChallenge.OS.Infrastructure/FIAP.TechChallenge.OS.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Services/OrdensServico/Tests/">
+    <Project Path="src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging.Tests/FIAP.TechChallenge.OS.Application.Messaging.Tests.csproj" />
+    <Project Path="src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Tests/FIAP.TechChallenge.OS.Application.Tests.csproj" />
+    <Project Path="src/Services/OrdensServico/FIAP.TechChallenge.OS.Domain.Tests/FIAP.TechChallenge.OS.Domain.Tests.csproj" />
+    <Project Path="src/Services/OrdensServico/FIAP.TechChallenge.OS.Integration.Tests/FIAP.TechChallenge.OS.Integration.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -602,6 +602,9 @@ terraform.rc
 /infra/.terraform/providers/registry.terraform.io/hashicorp
 .terraform.lock.hcl
 # Credenciais locais do New Relic
+artifacts/
+.sonarqube/
+**/*.feature.cs
 .env
 .env.*
 !.env.example

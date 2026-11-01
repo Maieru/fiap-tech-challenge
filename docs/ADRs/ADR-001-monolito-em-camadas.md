@@ -5,7 +5,7 @@
 - **Responsáveis:** equipe do Tech Challenge
 - **Escopo:** arquitetura da aplicação
 - **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-09-07
+- **Última revisão:** 2026-10-31
 
 ## Contexto
 
@@ -44,3 +44,7 @@ Reconsiderar quando um módulo precisar de escala, disponibilidade ou implantaç
 - [Referências da Infrastructure](../../src/FIAP.TechChallenge.Fase1.Infrastructure/FIAP.TechChallenge.Fase1.Infrastructure.csproj)
 - [Casos de uso](../../src/FIAP.TechChallenge.Fase1.Application/UseCases)
 - [Visão das camadas](../arquitetura/README.md#camadas-da-aplicação)
+
+## Evolução na Fase 4
+
+Esta decisão continua descrevendo o legado e a infraestrutura existente. A [ADR-011](ADR-011-extracao-incremental-os-monorepo.md) registra a introdução paralela do OS Service e o monorepo temporário, sem migrar o tráfego atual.

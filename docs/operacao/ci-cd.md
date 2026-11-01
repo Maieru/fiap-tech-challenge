@@ -1,5 +1,7 @@
 # Repositórios e CI/CD
 
+Este guia descreve o deploy e a infraestrutura do legado. A validação do OS está no [guia de CI do monorepo](monorepo-ci.md); Execution tem automação própria. A implantação dos novos serviços e a migração de tráfego continuam pendentes, conforme o [estado da migração](../arquitetura/estado-da-migracao.md).
+
 ## Estrutura atual
 
 | Repositório | Validação e entrega declaradas | Execução |

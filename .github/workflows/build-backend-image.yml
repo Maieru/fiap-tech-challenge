@@ -2,10 +2,10 @@ name: Build, Test And Push Backend
 
 env:
   DOTNET_VERSION: '10.0.x'
-  SOLUTION_FILE: './src/TechChallengeFase1.slnx'
+  SOLUTION_FILE: './Legacy.slnx'
 
   DOCKERFILE_PATH: './src/FIAP.TechChallenge.Fase1.API/Dockerfile'
-  DOCKER_BUILD_CONTEXT: './src'
+  DOCKER_BUILD_CONTEXT: '.'
 
   AWS_REGION: 'us-east-1'
   ECR_REPOSITORY: 'fiap-ecr-backend-repository'
@@ -42,7 +42,14 @@ jobs:
         run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
 
       - name: Executar testes
-        run: dotnet test ${{ env.SOLUTION_FILE }} --configuration Release --no-build --verbosity normal
+        shell: pwsh
+        run: |
+          dotnet test $env:SOLUTION_FILE `
+            --configuration Release `
+            --no-build `
+            --no-restore `
+            --verbosity normal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   build-and-push-docker:
     name: Build e Push Docker no ECR
@@ -52,6 +59,11 @@ jobs:
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+
+      - name: Configurar .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Configurar credenciais AWS via OIDC
         uses: aws-actions/configure-aws-credentials@v4
