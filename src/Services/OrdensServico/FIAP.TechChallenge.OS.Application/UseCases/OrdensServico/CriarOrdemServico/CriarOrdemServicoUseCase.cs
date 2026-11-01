@@ -1,11 +1,14 @@
+using FIAP.TechChallenge.OS.Application.Abstractions;
+using FIAP.TechChallenge.OS.Application.Messaging;
 using FIAP.TechChallenge.OS.Domain.Abstractions;
 using FIAP.TechChallenge.OS.Domain.Entities;
 using FIAP.TechChallenge.OS.Domain.Interfaces;
-
+using Maieru.FiapTechChallenge.Chassis;
 
 namespace FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.CriarOrdemServico;
 
-public sealed class CriarOrdemServicoUseCase(IOrdemServicoRepository ordemServicoRepository, IClienteRepository clienteRepository, IVeiculoRepository veiculoRepository) : ICriarOrdemServicoUseCase
+public sealed class CriarOrdemServicoUseCase(IOrdemServicoRepository ordemServicoRepository, IClienteRepository clienteRepository,
+    IVeiculoRepository veiculoRepository, IUnitOfWork unitOfWork, IMessagingService messaging, MessageContext context) : ICriarOrdemServicoUseCase
 {
     private readonly IOrdemServicoRepository _ordemServicoRepository = ordemServicoRepository;
     private readonly IClienteRepository _clienteRepository = clienteRepository;
@@ -33,8 +36,12 @@ public sealed class CriarOrdemServicoUseCase(IOrdemServicoRepository ordemServic
 
         var ordemServico = ordemServicoResult.Value;
 
+        await using var transaction = await unitOfWork.BeginAsync(cancellationToken);
         await _ordemServicoRepository.AddAsync(ordemServico, cancellationToken);
-
+        await messaging.PublishAsync(OSMessaging.Topic, ordemServico.Id.ToString("D"), context.Create(
+            OrdemServicoCriada.Type, new OrdemServicoCriada(ordemServico.Id, ordemServico.ClienteId,
+                ordemServico.VeiculoId, ordemServico.DescricaoProblema), new DateTimeOffset(ordemServico.DataCriacao)), cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result<CriarOrdemServicoResponse>.Success(new CriarOrdemServicoResponse
         {

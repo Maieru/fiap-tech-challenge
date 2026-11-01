@@ -6,6 +6,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../FIAP.TechChallenge.OS.Domain/FIAP.TechChallenge.OS.Domain.csproj" />
+    <ProjectReference Include="../FIAP.TechChallenge.OS.Application.Messaging/FIAP.TechChallenge.OS.Application.Messaging.csproj" />
+    <PackageReference Include="Maieru.FiapTechChallenge.Chassis" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
   </ItemGroup>
 </Project>

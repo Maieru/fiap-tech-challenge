@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Maieru.FiapTechChallenge.Chassis" Version="1.0.2" />
+    <PackageReference Include="Maieru.FiapTechChallenge.Chassis" Version="1.1.1" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
     <ProjectReference Include="../FIAP.TechChallenge.OS.Application/FIAP.TechChallenge.OS.Application.csproj" />
     <ProjectReference Include="../FIAP.TechChallenge.OS.Infrastructure/FIAP.TechChallenge.OS.Infrastructure.csproj" />

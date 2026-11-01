@@ -17,4 +17,5 @@ public interface IOrdemServicoRepository
         int pageSize,
         CancellationToken cancellationToken = default);
     Task AddAsync(OrdemServico ordemServico, CancellationToken cancellationToken = default);
+    Task UpdateAsync(OrdemServico ordemServico, HistoricoOrdem historico, CancellationToken cancellationToken = default);
 }

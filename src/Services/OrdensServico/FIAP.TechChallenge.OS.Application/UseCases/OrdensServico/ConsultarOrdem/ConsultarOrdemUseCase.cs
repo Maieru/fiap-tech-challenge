@@ -4,11 +4,6 @@ using FIAP.TechChallenge.OS.Domain.Interfaces;
 
 namespace FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.ConsultarOrdem;
 
-public interface IConsultarOrdemUseCase
-{
-    Task<Result<OrdemServico>> ExecuteAsync(Guid id, CancellationToken cancellationToken = default);
-}
-
 public sealed class ConsultarOrdemUseCase(IOrdemServicoRepository repository) : IConsultarOrdemUseCase
 {
     public Task<Result<OrdemServico>> ExecuteAsync(Guid id, CancellationToken cancellationToken = default) =>

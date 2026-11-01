@@ -1,4 +1,6 @@
 using FIAP.TechChallenge.OS.Application;
+using FIAP.TechChallenge.OS.Application.Messaging;
+using FIAP.TechChallenge.OS.Domain.Abstractions;
 using FIAP.TechChallenge.OS.Infrastructure;
 using FIAP.TechChallenge.OS.Infrastructure.Persistence;
 using Maieru.FiapTechChallenge.Chassis;
@@ -17,23 +19,31 @@ public partial class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        builder.Services.AddControllers();
-        builder.Services.AddOpenApi();
-        builder.Services.AddApplication();
-        builder.Services.AddInfrastructure(builder.Configuration);
-        builder.AddChassis(new ChassisOptions
+        _ = builder.Services.AddControllers();
+        _ = builder.Services.AddOpenApi();
+        _ = builder.Services.AddApplication();
+        _ = builder.Services.AddInfrastructure(builder.Configuration);
+        _ = builder.AddChassis(new ChassisOptions
         {
             ServiceName = "oficina-os",
             EnableOtlp = builder.Configuration.GetValue<bool>("Observability:EnableOtlp"),
             MeterNames = ["Fiap.TechChallenge.OS"]
         });
         ConfigureAuthentication(builder);
-        builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("postgresql", tags: ["ready"]);
+        _ = builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("postgresql", tags: ["ready"]);
+        _ = builder.Services.AddHealthChecks().AddCheck<KafkaReadiness>("kafka", tags: ["ready"]);
         var app = builder.Build();
-        app.UseChassis();
-        app.Use(async (context, next) =>
+        _ = app.UseChassis();
+        _ = app.Use(async (context, next) =>
         {
-            try { await next(context); }
+            var messaging = context.RequestServices.GetRequiredService<MessageContext>();
+            messaging.CorrelationId = context.Items[ChassisExtensions.CorrelationHeader]?.ToString() ?? messaging.CorrelationId;
+            try
+            { await next(context); }
+            catch (ConcurrencyException)
+            {
+                await Results.Problem(statusCode: 409, title: "A ordem foi alterada por outra operação. Consulte novamente.").ExecuteAsync(context);
+            }
             catch (DbUpdateException exception) when (exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
             {
                 await Results.Problem(statusCode: 409, title: "Já existe um cadastro ativo com estes dados.").ExecuteAsync(context);
@@ -47,14 +57,14 @@ public partial class Program
                 await Results.Problem(statusCode: 404, title: "Cadastro não encontrado ou inativo.").ExecuteAsync(context);
             }
         });
-        app.UseAuthentication();
-        app.UseAuthorization();
-        app.MapControllers();
-        app.MapChassisHealthChecks("/api/os/v1/health");
+        _ = app.UseAuthentication();
+        _ = app.UseAuthorization();
+        _ = app.MapControllers();
+        _ = app.MapChassisHealthChecks("/api/os/v1/health");
         if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         {
-            app.MapOpenApi();
-            app.MapScalarApiReference();
+            _ = app.MapOpenApi();
+            _ = app.MapScalarApiReference();
         }
         if (builder.Configuration.GetValue<bool>("Database:ApplyMigrations"))
         {
@@ -66,8 +76,8 @@ public partial class Program
 
     private static void ConfigureAuthentication(WebApplicationBuilder builder)
     {
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
-        builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme).Configure<IConfiguration>((options, configuration) =>
+        _ = builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+        _ = builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme).Configure<IConfiguration>((options, configuration) =>
         {
             var issuer = configuration["Jwt:Issuer"];
             var audience = configuration["Jwt:Audience"];
@@ -76,12 +86,17 @@ public partial class Program
                 throw new InvalidOperationException("Configure Jwt:Issuer, Jwt:Audience e Jwt:SigningKey (mínimo de 32 bytes). O OS apenas valida tokens.");
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuer = true, ValidIssuer = issuer, ValidateAudience = true, ValidAudience = audience,
-                ValidateLifetime = true, ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)), ClockSkew = TimeSpan.Zero
+                ValidateIssuer = true,
+                ValidIssuer = issuer,
+                ValidateAudience = true,
+                ValidAudience = audience,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+                ClockSkew = TimeSpan.Zero
             };
         }).ValidateOnStart();
-        builder.Services.AddAuthorization();
+        _ = builder.Services.AddAuthorization();
     }
 }
 

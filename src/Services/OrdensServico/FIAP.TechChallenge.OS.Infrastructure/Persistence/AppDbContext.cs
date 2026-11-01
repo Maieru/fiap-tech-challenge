@@ -9,6 +9,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<VeiculoEntity> Veiculos => Set<VeiculoEntity>();
     public DbSet<OrdemServicoEntity> OrdensServico => Set<OrdemServicoEntity>();
     public DbSet<HistoricoOrdemEntity> HistoricoOrdens => Set<HistoricoOrdemEntity>();
+    public DbSet<ProcessedMessageEntity> MensagensProcessadas => Set<ProcessedMessageEntity>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -26,6 +27,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         veiculos.HasOne(x => x.Cliente).WithMany().HasForeignKey(x => x.ClienteId).OnDelete(DeleteBehavior.Restrict);
 
         var ordens = model.Entity<OrdemServicoEntity>();
+        ordens.Property(x => x.Version).IsConcurrencyToken().HasDefaultValue(0L);
         ordens.Property(x => x.DescricaoProblema).HasMaxLength(1000).IsRequired();
         ordens.HasIndex(x => new { x.DataCriacao, x.Id });
         // No required navigation to a filtered customer/vehicle: archived orders remain readable.
@@ -34,7 +36,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         ordens.ToTable("OrdensServico", table =>
         {
             table.HasCheckConstraint("CK_Ordens_Descricao", "length(btrim(\"DescricaoProblema\")) >= 3");
-            table.HasCheckConstraint("CK_Ordens_Status", "\"Status\" = 1");
+            table.HasCheckConstraint("CK_Ordens_Status", "\"Status\" IN (1, 2, 3, 4, 5, 7)");
+            table.HasCheckConstraint("CK_Ordens_Decisao", "\"Decisao\" IN (0, 1, 2)");
         });
 
         var historico = model.Entity<HistoricoOrdemEntity>();
@@ -42,5 +45,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         historico.Property(x => x.CorrelationId).HasMaxLength(128);
         historico.HasIndex(x => new { x.OrdemServicoId, x.OcorridoEmUtc, x.Id });
         historico.HasOne<OrdemServicoEntity>().WithMany().HasForeignKey(x => x.OrdemServicoId).OnDelete(DeleteBehavior.Restrict);
+        model.Entity<ProcessedMessageEntity>().Property(x => x.Id).HasMaxLength(100);
     }
 }

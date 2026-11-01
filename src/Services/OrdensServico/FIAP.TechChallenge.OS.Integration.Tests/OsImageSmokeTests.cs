@@ -4,6 +4,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using DotNet.Testcontainers.Builders;
 using Testcontainers.PostgreSql;
+using Testcontainers.Kafka;
+using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 
 namespace FIAP.TechChallenge.OS.Integration.Tests;
 
@@ -27,6 +30,15 @@ public sealed class OsImageSmokeTests
             .WithNetwork(network).WithNetworkAliases("database")
             .WithDatabase("fiap_os").WithUsername("fiap_os").WithPassword(password).Build();
         await database.StartAsync(timeout.Token);
+        await using var kafka = new KafkaBuilder("confluentinc/cp-kafka:7.9.2").WithKRaft()
+            .WithNetwork(network).WithNetworkAliases("kafka").WithListener("kafka:19092")
+            .WithEnvironment("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "false").Build();
+        await kafka.StartAsync(timeout.Token);
+        using var admin = new AdminClientBuilder(new AdminClientConfig { BootstrapServers = kafka.GetBootstrapAddress() }).Build();
+        await admin.CreateTopicsAsync([
+            new TopicSpecification { Name = "oficina.os.events.v1", NumPartitions = 1, ReplicationFactor = 1 },
+            new TopicSpecification { Name = "oficina.execution.events.v1", NumPartitions = 1, ReplicationFactor = 1 }
+        ]);
         await using var api = new ContainerBuilder(image!)
             .WithNetwork(network).WithPortBinding(8080, true)
             .WithEnvironment(new Dictionary<string, string>
@@ -34,6 +46,7 @@ public sealed class OsImageSmokeTests
                 ["ASPNETCORE_ENVIRONMENT"] = "Development", ["ASPNETCORE_HTTP_PORTS"] = "8080",
                 ["ConnectionStrings__DefaultConnection"] = $"Host=database;Database=fiap_os;Username=fiap_os;Password={password};GSS Encryption Mode=Disable",
                 ["Database__ApplyMigrations"] = "true", ["Observability__EnableOtlp"] = "false",
+                ["Kafka__BootstrapServers"] = "kafka:19092",
                 ["Jwt__Issuer"] = "test-issuer", ["Jwt__Audience"] = "test-audience", ["Jwt__SigningKey"] = signingKey
             })
             .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(request =>
@@ -89,6 +102,23 @@ public sealed class OsImageSmokeTests
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!);
             await File.WriteAllTextAsync(output, spec.GetRawText(), timeout.Token);
         }
+
+        // A malformed record must stop the real process and remain pending for reconciliation.
+        using var producer = new ProducerBuilder<string, string>(new ProducerConfig
+            { BootstrapServers = kafka.GetBootstrapAddress(), Acks = Acks.All }).Build();
+        var invalid = await producer.ProduceAsync("oficina.execution.events.v1",
+            new Message<string, string> { Key = orderId.ToString("D"), Value = "invalid-json" }, timeout.Token);
+        while (await api.GetExitCodeAsync(timeout.Token) == 0) await Task.Delay(100, timeout.Token);
+        using var probe = new ConsumerBuilder<string, string>(new ConsumerConfig
+            { BootstrapServers = kafka.GetBootstrapAddress(), GroupId = "oficina-os-v1", EnableAutoCommit = false }).Build();
+        var committed = probe.Committed([invalid.TopicPartition], TimeSpan.FromSeconds(10)).Single().Offset;
+        var logs = await api.GetLogsAsync(ct: timeout.Token);
+        Assert.Multiple(() =>
+        {
+            Assert.That(api.GetExitCodeAsync(timeout.Token).GetAwaiter().GetResult(), Is.EqualTo(1));
+            Assert.That(committed.Value, Is.LessThanOrEqualTo(invalid.Offset.Value));
+            Assert.That(logs.Stdout + logs.Stderr, Does.Contain("Consumo interrompido"));
+        });
     }
 
     private static async Task<JsonElement> PostAsync(HttpClient client, string path, object payload)

@@ -1,16 +1,17 @@
-# OS Service — primeiro incremento
+# OS Service — integração com Execution
 
-API independente para clientes, veículos, abertura e consulta de ordens. O monólito continua operando com suas rotas e banco existentes. Esta versão não executa diagnóstico, cobrança, reparos ou Saga.
+API independente para clientes, veículos, abertura, decisão administrativa e consulta de ordens.
+Publica as entradas do Execution e projeta suas confirmações por Kafka. O monólito continua com suas rotas e banco existentes.
 
 ## Executar
 
 A solução `OrdensServico.slnx`, nesta pasta, reúne os nove projetos do serviço, contratos e testes.
 
-## Contratos de mensageria — etapa 1
+## Contratos de mensageria
 
 O projeto [Application.Messaging](FIAP.TechChallenge.OS.Application.Messaging/README.md) publica os contratos
 OrdemServicoCriada, ExecucaoAutorizada e CancelamentoSolicitado. Ele não tem dependências de negócio ou Kafka.
-Esta etapa ainda não altera os fluxos da API nem conecta o OS ao broker.
+O OS injeta IMessagingService nos casos de uso e recebe os cinco eventos Execution em BackgroundService com switch explícito.
 Consulte a [RFC-007](../../../docs/RFCs/RFC-007-contratos-mensageria-kafka.md) e o
 [padrão de mensageria](../../../docs/arquitetura/mensageria.md).
 
@@ -28,7 +29,23 @@ Nenhuma publicação é executada como parte desta revisão local.
 
 ## Pré-requisitos locais
 
-Pré-requisitos: .NET SDK 10, PowerShell 7, Docker com containers Linux e pacote `Maieru.FiapTechChallenge.Chassis` 0.1.0 publicado no NuGet.org. Na raiz do repositório:
+Pré-requisitos: .NET SDK 10, PowerShell 7 e Docker com containers Linux.
+Versões fixadas: chassi 1.1.1, adaptador Kafka 0.1.1 e contrato Execution.Application.Messaging 0.1.0.
+Enquanto o contrato Execution não estiver publicado, gere o nupkg na raiz daquele repositório e restaure explicitamente aqui:
+
+```powershell
+# No repositório Execution:
+dotnet pack src/FIAP.TechChallenge.Execution.Application.Messaging -c Release -o artifacts/packages
+
+# Na raiz deste repositório:
+./scripts/Restore-OsLocal.ps1 -ExecutionMessagingPackage ../FiapTechChallengeExecution/artifacts/packages/FIAP.TechChallenge.Execution.Application.Messaging.0.1.0.nupkg
+dotnet build src/Services/OrdensServico/OrdensServico.slnx -c Release --no-restore
+```
+
+O roteiro valida o pacote e gera artifacts/NuGet.Local.Config ignorado pelo Git.
+O Dockerfile aceita artifacts/packages/*.nupkg. CI limpo exige o contrato publicado; não compila outro checkout.
+Depois da publicação, dotnet restore usa o NuGet.Config público normalmente.
+Na raiz do repositório:
 
 ```powershell
 Copy-Item src/Services/OrdensServico/.env.example src/Services/OrdensServico/.env
@@ -36,7 +53,9 @@ Copy-Item src/Services/OrdensServico/.env.example src/Services/OrdensServico/.en
 docker compose -f src/Services/OrdensServico/compose.yaml up --build -d
 ```
 
-O chassi é mantido em [repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis). O OS fixa sua versão diretamente no `PackageReference`; build, Docker e CI restauram o pacote público, sem preparar feed local ou compilar o código-fonte da biblioteca.
+O chassi é mantido em [repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis) e restaurado como pacote público.
+Para integrar as duas APIs, use compose.yaml + compose.integrated.yaml no Execution com uma imagem OS pronta,
+conforme o README daquele repositório. O Compose desta pasta usa broker próprio para trabalho isolado.
 
 | Recurso | Endereço |
 | --- | --- |
@@ -45,8 +64,11 @@ O chassi é mantido em [repositório próprio](https://github.com/Maieru/fiap-te
 | OpenAPI | `http://localhost:8081/openapi/v1.json` |
 | Liveness/readiness | `/api/os/v1/health/live` e `/ready` |
 | PostgreSQL 18.3 | `localhost:5433`, banco/usuário `fiap_os` |
+| Kafka isolado | `127.0.0.1:19094`; dentro do Compose, `kafka:9092` |
 
-Migrations são aplicadas na inicialização local pelo Compose. Fora dele, configure `ConnectionStrings__DefaultConnection` e habilite explicitamente `Database__ApplyMigrations=true`, ou execute `dotnet tool restore` e `dotnet ef database update --project src/Services/OrdensServico/FIAP.TechChallenge.OS.Infrastructure` na raiz. A factory de design lê a mesma variável de conexão. A readiness exige conexão e migrations aplicadas; liveness não consulta o banco.
+Migrations são aplicadas na inicialização local pelo Compose. Fora dele, configure ConnectionStrings__DefaultConnection,
+Kafka__BootstrapServers e JWT, habilitando Database__ApplyMigrations=true, ou aplique migrations com dotnet ef.
+A readiness exige PostgreSQL, migrations, consumidor ativo e Kafka; liveness não consulta dependências.
 
 O volume `fiap-os_os_postgres_data` pertence apenas ao serviço. `docker compose -f src/Services/OrdensServico/compose.yaml down` encerra o ambiente preservando seus dados. Não execute `down -v` se quiser conservá-los.
 
@@ -67,6 +89,8 @@ Para uma demonstração completamente isolada, `OsImageSmokeTests` cria credenci
 | `/api/os/v1/ordens` | POST e GET; filtros `clienteId`, `veiculoId`, `status`, ordenação e paginação |
 | `/api/os/v1/ordens/{id}` | GET |
 | `/api/os/v1/ordens/{id}/historico` | GET |
+| `/api/os/v1/ordens/{id}/aprovar-execucao` | PUT |
+| `/api/os/v1/ordens/{id}/cancelar` | PUT |
 
 Listagens usam `pageNumber` e `pageSize`, inicialmente 1 e 10. Cadastros retornam 201 com `Location`, edições 200, exclusões 204, validações 400, recursos inexistentes/inativos 404 e duplicidades de documentos/placas ativos 409. Erros de negócio preservam `{ error, errorCode }`; exceções técnicas usam `ProblemDetails`.
 
@@ -76,7 +100,14 @@ Exemplo de abertura:
 { "clienteId": "<UUID>", "veiculoId": "<UUID>", "descricaoProblema": "Motor com falha" }
 ```
 
-O veículo precisa pertencer ao cliente e ambos devem estar ativos. A ordem nasce em `Recebida`; ordem e evento `OrdemCriada` são gravados em uma única transação. O histórico contém IDs, tipo, data UTC e correlação, sem depender da leitura de clientes/veículos ativos.
+O veículo precisa pertencer ao cliente e ambos devem estar ativos. A ordem nasce Recebida;
+o caso de uso salva ordem/histórico, publica OrdemServicoCriada e faz commit local.
+Falha na publicação aborta os dados; falha posterior de commit pode deixar mensagem órfã, conforme o padrão aprovado.
+O histórico preserva IDs, tipo, data UTC e correlação, sem depender de cadastros ativos.
+
+Aprovar/cancelar só inicia uma decisão enquanto AguardandoAprovacao e retorna 202 com decisao e pendente.
+O status só avança após confirmação do Execution. Repetir a mesma decisão não republica; a oposta retorna 409.
+Consultas retornam status/datas projetados e decisão. Itens, valores e estoque são consultados no Execution.
 
 ## Edição e soft delete
 
@@ -98,7 +129,11 @@ $env:OS_TEST_IMAGE = 'fiap-os:local'
 dotnet test src/Services/OrdensServico/FIAP.TechChallenge.OS.Integration.Tests/FIAP.TechChallenge.OS.Integration.Tests.csproj -c Release --no-build --filter 'TestCategory=ContainerImage'
 ```
 
-A suíte usa NUnit, Moq nas unidades e PostgreSQL real/Testcontainers nos testes HTTP, com JWTs realmente assinados. Os cenários Reqnroll estão no projeto de integração. O teste NUnit da imagem também verifica dados após reiniciar a API. No CI, `OS_OPENAPI_OUTPUT` seleciona a exportação da especificação para `artifacts/os-openapi.json`. Containers de teste são descartáveis e não acessam os volumes de desenvolvimento.
+A suíte usa NUnit, Moq nas unidades, PostgreSQL e Kafka reais/Testcontainers nos testes HTTP, com JWTs assinados.
+Os cenários Reqnroll locais estão na integração; o BDD das duas imagens fica em Distributed.slnx no Execution.
+Há testes de concorrência, deduplicação, rollback e mensagem órfã após falha no commit PostgreSQL.
+O teste da imagem verifica reinício, OpenAPI e encerramento com offset pendente diante de mensagem inválida.
+No CI, OS_OPENAPI_OUTPUT seleciona a exportação. Containers são descartáveis e não usam volumes de desenvolvimento.
 
 Cobertura é medida separadamente para os assemblies `FIAP.TechChallenge.OS.*`, com mínimo de 80%. Consulte [evidências](../../../docs/operacao/evidencias-fase4-incremento1.md), [arquitetura](../../../docs/arquitetura/fase4-incremento1.md) e [CI/configuração externa](../../../docs/operacao/monorepo-ci.md).
 
@@ -106,4 +141,9 @@ Cobertura é medida separadamente para os assemblies `FIAP.TechChallenge.OS.*`, 
 
 Logs JSON, `X-Correlation-ID`, W3C trace context e health checks vêm do chassi. OTLP é opcional: habilite `OS_ENABLE_OTLP=true` e indique o Collector em `OTEL_EXPORTER_OTLP_ENDPOINT`. Não é necessária uma chave New Relic para executar ou testar localmente.
 
-Permanecem pendentes o deploy AWS/Kubernetes, infraestrutura Terraform do OS, migração do frontend/dados, adaptação da autenticação de clientes, mensageria, Saga, Billing/Mercado Pago, Execution/NoSQL e BDD distribuído. O monorepo deverá ser separado para a entrega final.
+A integração Kafka, o Execution/MongoDB e o BDD distribuído estão implementados para revisão:
+[ADR-016](../../../docs/ADRs/ADR-016-integracao-os-execution.md),
+[RFC-009](../../../docs/RFCs/RFC-009-integracao-os-execution.md) e
+[evidências](../../../docs/operacao/revisao-execution-etapa3.md).
+Permanecem pendentes deploy AWS/Kubernetes, Terraform do OS, migração do frontend/dados,
+autenticação de clientes, Saga e Billing/Mercado Pago. O monorepo deverá ser separado para a entrega final.

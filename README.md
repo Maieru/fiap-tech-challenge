@@ -8,15 +8,16 @@ O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README
 
 Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os nove projetos do OS, incluindo contratos de mensageria e seus testes. `Backend.slnx` mantém a visão integrada dos 18 projetos do legado e do OS. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
 
-Legado e OS usam `Maieru.FiapTechChallenge.Chassis` **0.1.0** por `PackageReference`. O restore em ambiente limpo exige que essa versão esteja publicada no NuGet.org; este repositório não prepara pacotes candidatos nem utiliza feed local do chassi.
+O legado usa `Maieru.FiapTechChallenge.Chassis` **0.1.0** e o OS usa **1.1.1**, com adaptador Kafka **0.1.1**, por `PackageReference`.
+Os contratos dos serviços usam **0.1.0**; enquanto não publicados, o [roteiro local do OS](src/Services/OrdensServico/README.md) aceita o nupkg do Execution.
 
-Consulte [arquitetura e reaproveitamento](docs/arquitetura/fase4-incremento1.md), [CI e configuração de contas externas](docs/operacao/monorepo-ci.md) e [evidências de testes](docs/operacao/evidencias-fase4-incremento1.md). O pacote foi validado localmente; publicação no NuGet.org e análise SonarQube Cloud dependem das contas externas. AWS/Saga/mensageria e migração de tráfego do novo serviço ficam para os próximos incrementos.
+Consulte [arquitetura e reaproveitamento](docs/arquitetura/fase4-incremento1.md), [CI e configuração de contas externas](docs/operacao/monorepo-ci.md) e [evidências de testes](docs/operacao/evidencias-fase4-incremento1.md). AWS, Saga de pagamento e migração de tráfego ficam para os próximos incrementos.
 
 ## Ecossistema de repositórios
 
-O [Execution — etapa 2](docs/arquitetura/execution.md) já possui implementação local em repositório próprio,
-com MongoDB, catálogo, estoque, diagnóstico e execução. A integração Kafka completa da API OS será a próxima etapa;
-o fluxo atual do legado permanece disponível.
+O [Execution](docs/arquitetura/execution.md) possui implementação local em repositório próprio,
+com MongoDB, catálogo, estoque, diagnóstico e execução. A integração Kafka com o OS e o BDD das duas APIs
+estão implementados na [etapa 3](docs/operacao/revisao-execution-etapa3.md), para revisão. O fluxo do legado permanece disponível.
 
 O projeto está distribuído por responsabilidade entre os seguintes repositórios:
 

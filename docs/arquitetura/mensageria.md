@@ -155,7 +155,19 @@ Retries internos do cliente Kafka permanecem habilitados.
 No ambiente local, não configurar reinício automático dos hosts que esconda esse estado de falha.
 O teste Kafka desta etapa cria e remove tópicos exclusivos e não altera os tópicos de negócio.
 
-## Verificação local desta etapa
+## Integração OS e Execution
+
+O OS publica abertura, autorização e solicitação de cancelamento. O Execution publica as cinco confirmações do ciclo.
+Aprovação/cancelamento no OS retornam 202, preservando AguardandoAprovacao até a confirmação.
+A mesma decisão não republica; a decisão oposta retorna 409. Status, datas, histórico e deduplicação da projeção
+compartilham a transação PostgreSQL. Uma confirmação repetida não faz o status regredir.
+
+Os dois serviços recebem por BackgroundService com switch explícito e casos de uso separados.
+O ambiente integrado usa um broker e bancos exclusivos; o Compose integrado e o BDD ficam no repositório Execution.
+Consulte [ADR-016](../ADRs/ADR-016-integracao-os-execution.md), [RFC-009](../RFCs/RFC-009-integracao-os-execution.md)
+e [evidências da etapa 3](../operacao/revisao-execution-etapa3.md).
+
+## Verificação local do chassi
 
 Na raiz do repositório do chassi, com Docker Desktop e .NET 10:
 

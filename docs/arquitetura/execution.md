@@ -1,15 +1,15 @@
-# Execution — etapa 2
+# Execution e integração OS — etapas 2 e 3
 
 O checkout FiapTechChallengeExecution é um repositório Git independente com solução .NET 10, API, Application,
 Domain, Infrastructure, contratos de mensagens e testes próprios.
-Esta etapa entrega o serviço Execution. O OS continua com seu comportamento anterior;
-a integração completa entre as duas aplicações será a etapa 3.
+O Execution possui catálogo, estoque e execução. O OS publica as entradas Kafka e projeta as confirmações,
+com aprovação e cancelamento administrativos pendentes até a resposta do Execution.
 
 ## Responsabilidades
 
 | Serviço | Dados e operações |
 | --- | --- |
-| OS | Clientes, veículos e abertura/consulta de ordens; aprovação administrativa e projeção Kafka ainda pendentes |
+| OS | Clientes, veículos, abertura/consulta, decisão administrativa e projeção Kafka da ordem |
 | Execution | Catálogo de serviços e peças/insumos, estoque, diagnóstico, snapshots e execução |
 | Legado | Continua funcionando com banco, frontend e rotas existentes |
 
@@ -67,7 +67,9 @@ A verificação local cobriu 149 testes do Execution: 81 de domínio, 44 de apli
 O teste da imagem verifica JWT, OpenAPI e permanência do catálogo após reiniciar o container.
 
 Os testes não usam volumes de desenvolvimento, autenticação substituta ou mocks nos endpoints HTTP.
-O cenário distribuído com as duas APIs reais e BDD será acrescentado na etapa 3.
+Os quatro cenários distribuídos com as duas APIs reais foram implementados em Distributed.slnx no Execution.
+O fluxo completo e a validação da etapa 3 estão nas [evidências](../operacao/revisao-execution-etapa3.md).
 Não há Billing, pagamentos, AWS, migração de dados/frontend nem deploy Kubernetes neste incremento.
 
-Decisões: [ADR-015](../ADRs/ADR-015-execution-mongodb.md) e [RFC-008](../RFCs/RFC-008-execution-mongodb-kafka.md).
+Decisões: [ADR-015](../ADRs/ADR-015-execution-mongodb.md), [RFC-008](../RFCs/RFC-008-execution-mongodb-kafka.md),
+[ADR-016](../ADRs/ADR-016-integracao-os-execution.md) e [RFC-009](../RFCs/RFC-009-integracao-os-execution.md).

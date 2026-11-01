@@ -10,6 +10,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <ProjectReference Include="../FIAP.TechChallenge.OS.Domain/FIAP.TechChallenge.OS.Domain.csproj" />
+    <ProjectReference Include="../FIAP.TechChallenge.OS.Application/FIAP.TechChallenge.OS.Application.csproj" />
+    <PackageReference Include="Maieru.FiapTechChallenge.Messaging.Kafka" Version="0.1.1" />
+    <PackageReference Include="FIAP.TechChallenge.Execution.Application.Messaging" Version="0.1.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
   </ItemGroup>
   <ItemGroup>

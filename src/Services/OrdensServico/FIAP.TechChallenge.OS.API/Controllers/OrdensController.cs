@@ -1,8 +1,11 @@
 using FIAP.TechChallenge.OS.API.Extensions;
+using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico;
+using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.AutorizarExecucao;
 using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.ConsultarHistorico;
 using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.ConsultarOrdem;
 using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.ListarOrdensServico;
+using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.SolicitarCancelamento;
 using FIAP.TechChallenge.OS.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +17,18 @@ namespace FIAP.TechChallenge.OS.API.Controllers;
 [Authorize]
 public sealed class OrdensController : ControllerBase
 {
+    [HttpPut("{id:guid}/aprovar-execucao")]
+    [ProducesResponseType(typeof(DecisaoExecucaoResponse), StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Approve(Guid id, IAutorizarExecucaoUseCase useCase, CancellationToken cancellationToken) =>
+        (await useCase.ExecuteAsync(new(id), cancellationToken)).ToActionResult(this, value => AcceptedAtAction(nameof(GetById), new { id }, value));
+
+    [HttpPut("{id:guid}/cancelar")]
+    [ProducesResponseType(typeof(DecisaoExecucaoResponse), StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Cancel(Guid id, ISolicitarCancelamentoUseCase useCase, CancellationToken cancellationToken) =>
+        (await useCase.ExecuteAsync(new(id), cancellationToken)).ToActionResult(this, value => AcceptedAtAction(nameof(GetById), new { id }, value));
+
     [HttpPost]
     [ProducesResponseType(typeof(CriarOrdemServicoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

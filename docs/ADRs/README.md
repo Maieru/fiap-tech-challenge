@@ -21,6 +21,7 @@ Os ADRs preservam decisões arquiteturais vigentes e suas consequências. Use o 
 | [ADR-013](ADR-013-chassi-em-repositorio-proprio.md) | Aceita | Manter chassi técnico e publicação NuGet em repositório independente. |
 | [ADR-014](ADR-014-contratos-mensageria.md) | Aceita | Compartilhar interface técnica, separar adaptador Kafka e distribuir contratos por produtor. |
 | [ADR-015](ADR-015-execution-mongodb.md) | Aceita | Persistir Execution em MongoDB próprio, com transações locais, snapshots e controle de concorrência. |
+| [ADR-016](ADR-016-integracao-os-execution.md) | Aceita | Confirmar decisões administrativas por eventos Execution e manter projeção transacional no OS. |
 
 Os ADRs iniciais formalizam decisões predominantes comprovadas pela implementação. Desvios conhecidos são explicitados no próprio registro como limitações ou dívidas de conformidade, sem serem apresentados como capacidades já atendidas.
 

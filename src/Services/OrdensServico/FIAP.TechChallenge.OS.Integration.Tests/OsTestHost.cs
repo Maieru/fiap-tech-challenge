@@ -12,6 +12,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Testcontainers.PostgreSql;
+using Testcontainers.Kafka;
+using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 
 namespace FIAP.TechChallenge.OS.Integration.Tests;
 
@@ -19,16 +22,26 @@ public sealed class OsTestHost : IAsyncDisposable
 {
     private const string SigningKey = "integration-tests-signing-key-at-least-32-bytes";
     private readonly PostgreSqlContainer _database = new PostgreSqlBuilder("postgres:18.3").WithDatabase("fiap_os").Build();
+    private readonly KafkaContainer _kafka = new KafkaBuilder("confluentinc/cp-kafka:7.9.2").WithKRaft()
+        .WithEnvironment("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "false").Build();
     private WebApplicationFactory<API.Program> _factory = null!;
     public HttpClient Client { get; private set; } = null!;
     public const string Root = "/api/os/v1";
     public string ConnectionString => _database.GetConnectionString();
+    public string BootstrapServers => _kafka.GetBootstrapAddress();
+    public IServiceProvider Services => _factory.Services;
+    public Task StopKafkaAsync() => _kafka.StopAsync();
 
     public async Task StartAsync()
     {
-        await _database.StartAsync();
+        await Task.WhenAll(_database.StartAsync(), _kafka.StartAsync());
+        using var admin = new AdminClientBuilder(new AdminClientConfig { BootstrapServers = BootstrapServers }).Build();
+        await admin.CreateTopicsAsync([
+            new TopicSpecification { Name = "oficina.os.events.v1", NumPartitions = 1, ReplicationFactor = 1 },
+            new TopicSpecification { Name = "oficina.execution.events.v1", NumPartitions = 1, ReplicationFactor = 1 }
+        ]);
         await using (var db = CreateDbContext()) await db.Database.MigrateAsync();
-        _factory = new Factory(ConnectionString);
+        _factory = new Factory(ConnectionString, BootstrapServers);
         Client = _factory.CreateClient();
         Authenticate();
     }
@@ -54,7 +67,7 @@ public sealed class OsTestHost : IAsyncDisposable
     public async Task ResetAsync()
     {
         await using var db = CreateDbContext();
-        await db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"HistoricoOrdens\", \"OrdensServico\", \"Veiculos\", \"Clientes\" CASCADE");
+        await db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"MensagensProcessadas\", \"HistoricoOrdens\", \"OrdensServico\", \"Veiculos\", \"Clientes\" CASCADE");
         Client.DefaultRequestHeaders.Remove("X-Correlation-ID");
         Authenticate();
     }
@@ -85,9 +98,10 @@ public sealed class OsTestHost : IAsyncDisposable
         Client?.Dispose();
         if (_factory is not null) await _factory.DisposeAsync();
         await _database.DisposeAsync();
+        await _kafka.DisposeAsync();
     }
 
-    private sealed class Factory(string connectionString) : WebApplicationFactory<API.Program>
+    private sealed class Factory(string connectionString, string bootstrapServers) : WebApplicationFactory<API.Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -95,6 +109,9 @@ public sealed class OsTestHost : IAsyncDisposable
             builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:DefaultConnection"] = connectionString,
+                ["Kafka:BootstrapServers"] = bootstrapServers,
+                ["Kafka:MessageTimeoutMs"] = "1500",
+                ["Logging:LogLevel:Default"] = "Warning",
                 ["Jwt:Issuer"] = "test-issuer", ["Jwt:Audience"] = "test-audience", ["Jwt:SigningKey"] = SigningKey,
                 ["Observability:EnableOtlp"] = "false", ["Database:ApplyMigrations"] = "false"
             }));

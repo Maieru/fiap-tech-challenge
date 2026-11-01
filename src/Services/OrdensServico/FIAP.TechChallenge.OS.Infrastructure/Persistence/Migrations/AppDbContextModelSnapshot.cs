@@ -109,8 +109,29 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ClienteId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("DataCancelamento")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("DataCriacao")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DataDecisaoUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DataEnvioAprovacao")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DataFinalizacao")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DataInicioDiagnostico")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DataInicioExecucao")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Decisao")
+                        .HasColumnType("integer");
 
                     b.Property<string>("DescricaoProblema")
                         .IsRequired()
@@ -123,6 +144,12 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("VeiculoId")
                         .HasColumnType("uuid");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
+
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
@@ -133,10 +160,26 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
 
                     b.ToTable("OrdensServico", null, t =>
                         {
+                            t.HasCheckConstraint("CK_Ordens_Decisao", "\"Decisao\" IN (0, 1, 2)");
+
                             t.HasCheckConstraint("CK_Ordens_Descricao", "length(btrim(\"DescricaoProblema\")) >= 3");
 
-                            t.HasCheckConstraint("CK_Ordens_Status", "\"Status\" = 1");
+                            t.HasCheckConstraint("CK_Ordens_Status", "\"Status\" IN (1, 2, 3, 4, 5, 7)");
                         });
+                });
+
+            modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.ProcessedMessageEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("ProcessedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MensagensProcessadas");
                 });
 
             modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.VeiculoEntity", b =>

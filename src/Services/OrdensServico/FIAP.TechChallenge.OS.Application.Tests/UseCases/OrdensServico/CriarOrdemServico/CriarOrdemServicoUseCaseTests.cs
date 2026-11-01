@@ -1,3 +1,6 @@
+using FIAP.TechChallenge.OS.Application.Abstractions;
+using FIAP.TechChallenge.OS.Application.Messaging;
+using Maieru.FiapTechChallenge.Chassis;
 using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.CriarOrdemServico;
 using FIAP.TechChallenge.OS.Domain.Abstractions;
 using FIAP.TechChallenge.OS.Domain.Entities;
@@ -22,7 +25,7 @@ internal sealed class CriarOrdemServicoUseCaseTests
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<Cliente>.Failure(new Error("Cliente nao encontrado.")));
 
-        var useCase = new CriarOrdemServicoUseCase(ordemServicoRepositoryMock.Object, clienteRepositoryMock.Object, veiculoRepositoryMock.Object);
+        var useCase = CreateUseCase(ordemServicoRepositoryMock.Object, clienteRepositoryMock.Object, veiculoRepositoryMock.Object);
         var command = CreateCommand();
 
         var result = await useCase.ExecuteAsync(command);
@@ -54,7 +57,7 @@ internal sealed class CriarOrdemServicoUseCaseTests
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<Veiculo>.Failure(new Error("Veiculo nao encontrado.")));
 
-        var useCase = new CriarOrdemServicoUseCase(ordemServicoRepositoryMock.Object, clienteRepositoryMock.Object, veiculoRepositoryMock.Object);
+        var useCase = CreateUseCase(ordemServicoRepositoryMock.Object, clienteRepositoryMock.Object, veiculoRepositoryMock.Object);
         var command = CreateCommand(clienteId: cliente.Id);
 
         var result = await useCase.ExecuteAsync(command);
@@ -88,7 +91,7 @@ internal sealed class CriarOrdemServicoUseCaseTests
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<Veiculo>.Success(veiculo));
 
-        var useCase = new CriarOrdemServicoUseCase(ordemServicoRepositoryMock.Object, clienteRepositoryMock.Object, veiculoRepositoryMock.Object);
+        var useCase = CreateUseCase(ordemServicoRepositoryMock.Object, clienteRepositoryMock.Object, veiculoRepositoryMock.Object);
         var command = CreateCommand(clienteId: cliente.Id, veiculoId: veiculo.Id);
 
         var result = await useCase.ExecuteAsync(command);
@@ -119,7 +122,7 @@ internal sealed class CriarOrdemServicoUseCaseTests
             .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<Veiculo>.Success(veiculo));
 
-        var useCase = new CriarOrdemServicoUseCase(ordemServicoRepositoryMock.Object, clienteRepositoryMock.Object, veiculoRepositoryMock.Object);
+        var useCase = CreateUseCase(ordemServicoRepositoryMock.Object, clienteRepositoryMock.Object, veiculoRepositoryMock.Object);
         var command = CreateCommand(clienteId: cliente.Id, veiculoId: veiculo.Id, descricaoProblema: " ");
 
         var result = await useCase.ExecuteAsync(command);
@@ -159,7 +162,7 @@ internal sealed class CriarOrdemServicoUseCaseTests
             .Callback<OrdemServico, CancellationToken>((ordemServico, _) => addedOrdemServico = ordemServico)
             .Returns(Task.CompletedTask);
 
-        var useCase = new CriarOrdemServicoUseCase(ordemServicoRepositoryMock.Object, clienteRepositoryMock.Object, veiculoRepositoryMock.Object);
+        var useCase = CreateUseCase(ordemServicoRepositoryMock.Object, clienteRepositoryMock.Object, veiculoRepositoryMock.Object);
 
         var result = await useCase.ExecuteAsync(command);
 
@@ -188,6 +191,17 @@ internal sealed class CriarOrdemServicoUseCaseTests
         });
     }
 
+    private static CriarOrdemServicoUseCase CreateUseCase(IOrdemServicoRepository orders, IClienteRepository customers, IVeiculoRepository vehicles)
+    {
+        var transaction = new Mock<ITransaction>();
+        transaction.Setup(x => x.CommitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        transaction.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var unitOfWork = new Mock<IUnitOfWork>();
+        unitOfWork.Setup(x => x.BeginAsync(It.IsAny<CancellationToken>())).ReturnsAsync(transaction.Object);
+        var messaging = new Mock<IMessagingService>();
+        messaging.Setup(x => x.PublishAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MessageEnvelope<OrdemServicoCriada>>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        return new(orders, customers, vehicles, unitOfWork.Object, messaging.Object, new MessageContext());
+    }
     private static CriarOrdemServicoCommand CreateCommand(
         Guid? clienteId = null,
         Guid? veiculoId = null,
