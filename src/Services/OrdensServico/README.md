@@ -4,7 +4,29 @@ API independente para clientes, veículos, abertura e consulta de ordens. O mon�
 
 ## Executar
 
-A solução `OrdensServico.slnx`, nesta pasta, reúne os sete projetos do serviço e seus testes.
+A solução `OrdensServico.slnx`, nesta pasta, reúne os nove projetos do serviço, contratos e testes.
+
+## Contratos de mensageria — etapa 1
+
+O projeto [Application.Messaging](FIAP.TechChallenge.OS.Application.Messaging/README.md) publica os contratos
+OrdemServicoCriada, ExecucaoAutorizada e CancelamentoSolicitado. Ele não tem dependências de negócio ou Kafka.
+Esta etapa ainda não altera os fluxos da API nem conecta o OS ao broker.
+Consulte a [RFC-007](../../../docs/RFCs/RFC-007-contratos-mensageria-kafka.md) e o
+[padrão de mensageria](../../../docs/arquitetura/mensageria.md).
+
+Para validar e empacotar, na raiz do repositório:
+
+```powershell
+dotnet test src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging.Tests -c Release
+dotnet pack src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging -c Release -o artifacts/packages
+```
+
+Publicação: tag `os-messaging-v0.1.0` em commit revisado de main, variável `NUGET_USER` e
+NuGet Trusted Publishing para owner Maieru, repositório fiap-tech-challenge,
+workflow publish-os-messaging.yml, environment vazio e pacote FIAP.TechChallenge.OS.Application.Messaging.
+Nenhuma publicação é executada como parte desta revisão local.
+
+## Pré-requisitos locais
 
 Pré-requisitos: .NET SDK 10, PowerShell 7, Docker com containers Linux e pacote `Maieru.FiapTechChallenge.Chassis` 0.1.0 publicado no NuGet.org. Na raiz do repositório:
 

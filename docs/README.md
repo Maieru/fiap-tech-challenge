@@ -9,6 +9,8 @@ Para desenvolver, comece pelo [mapa do repositório e suas soluções](../README
 | Arquitetura do legado | [Componentes e camadas](arquitetura/README.md), [sequências](arquitetura/sequencias.md), [banco de dados e ER](arquitetura/banco-de-dados.md) |
 | Operação do legado/AWS | [CI/CD e deploy](operacao/ci-cd.md), [observabilidade](operacao/observabilidade.md), [métricas de negócio](operacao/metricas-negocio.md), [configuração do dashboard New Relic](operacao/dashboard-new-relic.md) |
 | Decisões arquiteturais | [Índice de ADRs](ADRs/README.md) |
+| Contratos Kafka — etapa 1 | [Contratos OS](../src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging/README.md), [RFC-007](RFCs/RFC-007-contratos-mensageria-kafka.md), [padrão canônico](arquitetura/mensageria.md) |
+| Execution — etapa 2 | [Arquitetura e limites](arquitetura/execution.md), [ADR-015](ADRs/ADR-015-execution-mongodb.md), [RFC-008](RFCs/RFC-008-execution-mongodb-kafka.md) |
 | Escolhas técnicas | [Índice de RFCs](RFCs/README.md) |
 
 ## Organização
@@ -20,6 +22,8 @@ docs/
 │   ├── README.md
 │   ├── sequencias.md
 │   ├── banco-de-dados.md
+│   ├── mensageria.md
+│   ├── execution.md
 │   └── fase4-incremento1.md
 ├── operacao/
 │   ├── ci-cd.md

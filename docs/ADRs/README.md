@@ -19,6 +19,8 @@ Os ADRs preservam decisões arquiteturais vigentes e suas consequências. Use o 
 | [ADR-011](ADR-011-extracao-incremental-os-monorepo.md) | Aceita | Extrair o OS por responsabilidade em monorepo temporário, preservando o legado. |
 | [ADR-012](ADR-012-dados-historico-os.md) | Aceita | PostgreSQL exclusivo, soft delete e histórico independente de cadastros ativos. |
 | [ADR-013](ADR-013-chassi-em-repositorio-proprio.md) | Aceita | Manter chassi técnico e publicação NuGet em repositório independente. |
+| [ADR-014](ADR-014-contratos-mensageria.md) | Aceita | Compartilhar interface técnica, separar adaptador Kafka e distribuir contratos por produtor. |
+| [ADR-015](ADR-015-execution-mongodb.md) | Aceita | Persistir Execution em MongoDB próprio, com transações locais, snapshots e controle de concorrência. |
 
 Os ADRs iniciais formalizam decisões predominantes comprovadas pela implementação. Desvios conhecidos são explicitados no próprio registro como limitações ou dívidas de conformidade, sem serem apresentados como capacidades já atendidas.
 

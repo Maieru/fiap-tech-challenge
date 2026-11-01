@@ -2,6 +2,9 @@
 
 Esta página descreve o legado e a infraestrutura existente. A introdução paralela do OS Service e do chassi está documentada no [primeiro incremento da Fase 4](fase4-incremento1.md).
 
+O [padrão de mensageria entre serviços](mensageria.md) documenta os contratos Kafka, publicação, consumo e tratamento de falhas.
+O [Execution — etapa 2](execution.md) descreve o serviço independente com MongoDB, catálogo, estoque e execução.
+
 A aplicação usa AWS, Kubernetes e PostgreSQL, com telemetria no New Relic. Esta visão descreve o código e a infraestrutura declarada; não comprova um deploy ativo. As limitações estão descritas junto de cada componente.
 
 ## Diagrama de componentes

@@ -6,13 +6,17 @@ Aplicação para administrar o ciclo operacional de uma oficina mecânica. A sol
 
 O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo e gestão de clientes/veículos (edição e soft delete). O monólito e suas rotas continuam disponíveis. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório, testes e publicação NuGet próprios.
 
-Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os sete projetos do OS. `Backend.slnx` mantém a visão integrada dos 16 projetos do legado e do OS. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
+Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os nove projetos do OS, incluindo contratos de mensageria e seus testes. `Backend.slnx` mantém a visão integrada dos 18 projetos do legado e do OS. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
 
 Legado e OS usam `Maieru.FiapTechChallenge.Chassis` **0.1.0** por `PackageReference`. O restore em ambiente limpo exige que essa versão esteja publicada no NuGet.org; este repositório não prepara pacotes candidatos nem utiliza feed local do chassi.
 
 Consulte [arquitetura e reaproveitamento](docs/arquitetura/fase4-incremento1.md), [CI e configuração de contas externas](docs/operacao/monorepo-ci.md) e [evidências de testes](docs/operacao/evidencias-fase4-incremento1.md). O pacote foi validado localmente; publicação no NuGet.org e análise SonarQube Cloud dependem das contas externas. AWS/Saga/mensageria e migração de tráfego do novo serviço ficam para os próximos incrementos.
 
 ## Ecossistema de repositórios
+
+O [Execution — etapa 2](docs/arquitetura/execution.md) já possui implementação local em repositório próprio,
+com MongoDB, catálogo, estoque, diagnóstico e execução. A integração Kafka completa da API OS será a próxima etapa;
+o fluxo atual do legado permanece disponível.
 
 O projeto está distribuído por responsabilidade entre os seguintes repositórios:
 
