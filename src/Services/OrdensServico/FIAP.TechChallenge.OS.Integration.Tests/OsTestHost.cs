@@ -23,15 +23,12 @@ public sealed class OsTestHost : IAsyncDisposable
     public HttpClient Client { get; private set; } = null!;
     public const string Root = "/api/os/v1";
     public string ConnectionString => _database.GetConnectionString();
-    public bool ManualAuthorizationEnabled { get; init; }
-    public string EnvironmentName { get; init; } = "Testing";
-    public string? KafkaBootstrapServers { get; init; }
 
     public async Task StartAsync()
     {
         await _database.StartAsync();
         await using (var db = CreateDbContext()) await db.Database.MigrateAsync();
-        _factory = new Factory(ConnectionString, ManualAuthorizationEnabled, EnvironmentName, KafkaBootstrapServers);
+        _factory = new Factory(ConnectionString);
         Client = _factory.CreateClient();
         Authenticate();
     }
@@ -57,7 +54,7 @@ public sealed class OsTestHost : IAsyncDisposable
     public async Task ResetAsync()
     {
         await using var db = CreateDbContext();
-        await db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Outbox\", \"Inbox\", \"DispatcherLeases\", \"HistoricoOrdens\", \"OrdensServico\", \"Veiculos\", \"Clientes\" CASCADE");
+        await db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"HistoricoOrdens\", \"OrdensServico\", \"Veiculos\", \"Clientes\" CASCADE");
         Client.DefaultRequestHeaders.Remove("X-Correlation-ID");
         Authenticate();
     }
@@ -90,20 +87,16 @@ public sealed class OsTestHost : IAsyncDisposable
         await _database.DisposeAsync();
     }
 
-    private sealed class Factory(string connectionString, bool manualAuthorization, string environment, string? kafka) : WebApplicationFactory<API.Program>
+    private sealed class Factory(string connectionString) : WebApplicationFactory<API.Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.UseEnvironment(environment);
+            builder.UseEnvironment("Testing");
             builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:DefaultConnection"] = connectionString,
                 ["Jwt:Issuer"] = "test-issuer", ["Jwt:Audience"] = "test-audience", ["Jwt:SigningKey"] = SigningKey,
-                ["Observability:EnableOtlp"] = "false", ["Database:ApplyMigrations"] = "false",
-                ["ManualExecutionAuthorizationEnabled"] = manualAuthorization.ToString(), ["Logging:LogLevel:Default"] = "Warning"
-                , ["Messaging:Enabled"] = (kafka is not null).ToString(), ["Messaging:BootstrapServers"] = kafka ?? "localhost:9092",
-                ["Messaging:RetryDelaysSeconds:0"] = "0", ["Messaging:RetryDelaysSeconds:1"] = "0", ["Messaging:RetryDelaysSeconds:2"] = "0",
-                ["Messaging:RetryDelaysSeconds:3"] = "0", ["Messaging:RetryDelaysSeconds:4"] = "0"
+                ["Observability:EnableOtlp"] = "false", ["Database:ApplyMigrations"] = "false"
             }));
         }
     }

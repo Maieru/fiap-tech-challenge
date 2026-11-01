@@ -4,11 +4,10 @@ using FIAP.TechChallenge.OS.Domain.Enums;
 using FIAP.TechChallenge.OS.Domain.Interfaces;
 using FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
-using FIAP.TechChallenge.OS.Infrastructure.Messaging;
 
 namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Repositories;
 
-public sealed class OrdemServicoRepository(AppDbContext context, IntegrationContext? integration = null) : IOrdemServicoRepository, IHistoricoOrdemRepository
+public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServicoRepository, IHistoricoOrdemRepository
 {
     public async Task<Result<OrdemServico>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -50,10 +49,6 @@ public sealed class OrdemServicoRepository(AppDbContext context, IntegrationCont
             CorrelationId = System.Diagnostics.Activity.Current?.GetBaggageItem("correlation.id")
                 ?? System.Diagnostics.Activity.Current?.TraceId.ToString()
         });
-        var message = (integration ?? new IntegrationContext()).Create("OrdemCriada", new FlowPayload(ordem.Id, 1,
-            ordem.ClienteId, ordem.VeiculoId, ordem.DescricaoProblema)) with { OccurredAtUtc = ordem.DataCriacao };
-        context.Outbox.Add(new OutboxEntity { Id = message.MessageId, OrdemServicoId = ordem.Id, Sequence = 1,
-            Body = IntegrationContext.Serialize(message), CreatedAtUtc = DateTime.UtcNow });
         // A single relational SaveChanges transaction commits both records or neither.
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -61,17 +56,8 @@ public sealed class OrdemServicoRepository(AppDbContext context, IntegrationCont
     public async Task<IReadOnlyCollection<HistoricoOrdem>> GetByOrdemAsync(Guid ordemServicoId, CancellationToken cancellationToken = default) =>
         await context.HistoricoOrdens.AsNoTracking().Where(x => x.OrdemServicoId == ordemServicoId)
             .OrderBy(x => x.OcorridoEmUtc).ThenBy(x => x.Id)
-            .Select(x => new HistoricoOrdem(x.Id, x.OrdemServicoId, x.Tipo, x.OcorridoEmUtc, x.CorrelationId, x.Detalhes)).ToArrayAsync(cancellationToken);
+            .Select(x => new HistoricoOrdem(x.Id, x.OrdemServicoId, x.Tipo, x.OcorridoEmUtc, x.CorrelationId)).ToArrayAsync(cancellationToken);
 
-    internal static Result<OrdemServico> Map(OrdemServicoEntity row) =>
-        OrdemServico.Rehydrate(new OrdemServicoSnapshot(row.Id, row.ClienteId, row.VeiculoId, row.DescricaoProblema, row.DataCriacao,
-            row.Status, row.DataInicioDiagnostico, row.DataEnvioAprovacao, row.DataInicioExecucao, row.DataFinalizacao,
-            row.AcaoPendente, row.SolicitacaoPendenteId, row.DiagnosticoJson));
-
-    internal static void Apply(OrdemServicoEntity row, OrdemServico value)
-    {
-        row.Status = value.Status; row.DataInicioDiagnostico = value.DataInicioDiagnostico; row.DataEnvioAprovacao = value.DataEnvioAprovacao;
-        row.DataInicioExecucao = value.DataInicioExecucao; row.DataFinalizacao = value.DataFinalizacao; row.AcaoPendente = value.AcaoPendente;
-        row.SolicitacaoPendenteId = value.SolicitacaoPendenteId; row.DiagnosticoJson = value.DiagnosticoJson;
-    }
+    private static Result<OrdemServico> Map(OrdemServicoEntity row) =>
+        OrdemServico.Rehydrate(row.Id, row.ClienteId, row.VeiculoId, row.DescricaoProblema, row.DataCriacao);
 }

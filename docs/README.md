@@ -49,7 +49,3 @@ docs/
 - Use o template correspondente, inclua evidências e atualize o índice ao adicionar uma decisão.
 - Correções preservam a data original e informam a última revisão. Mudanças de decisão ganham um novo registro vinculado ao anterior.
 - Registros retrospectivos descrevem a implementação existente; suas alternativas não representam atas de discussões históricas.
-
-Execution e integração Kafka: [segundo incremento](arquitetura/fase4-incremento2.md), [ADR-014](ADRs/ADR-014-execution-kafka-consistencia.md), [RFC-007](RFCs/RFC-007-outbox-inbox-e-autorizacao-os.md).
-
-Testes do segundo incremento: [evidências](operacao/evidencias-fase4-incremento2.md).

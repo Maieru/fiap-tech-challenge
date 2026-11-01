@@ -9,9 +9,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<VeiculoEntity> Veiculos => Set<VeiculoEntity>();
     public DbSet<OrdemServicoEntity> OrdensServico => Set<OrdemServicoEntity>();
     public DbSet<HistoricoOrdemEntity> HistoricoOrdens => Set<HistoricoOrdemEntity>();
-    public DbSet<OutboxEntity> Outbox => Set<OutboxEntity>();
-    public DbSet<InboxEntity> Inbox => Set<InboxEntity>();
-    public DbSet<DispatcherLeaseEntity> DispatcherLeases => Set<DispatcherLeaseEntity>();
 
     protected override void OnModelCreating(ModelBuilder model)
     {
@@ -31,16 +28,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         var ordens = model.Entity<OrdemServicoEntity>();
         ordens.Property(x => x.DescricaoProblema).HasMaxLength(1000).IsRequired();
         ordens.HasIndex(x => new { x.DataCriacao, x.Id });
-        ordens.Property(x => x.Version).IsConcurrencyToken();
-        ordens.Property(x => x.OutputSequence).HasDefaultValue(1L);
-        ordens.Property(x => x.DiagnosticoJson).HasColumnType("jsonb");
         // No required navigation to a filtered customer/vehicle: archived orders remain readable.
         ordens.HasOne<ClienteEntity>().WithMany().HasForeignKey(x => x.ClienteId).OnDelete(DeleteBehavior.Restrict);
         ordens.HasOne<VeiculoEntity>().WithMany().HasForeignKey(x => x.VeiculoId).OnDelete(DeleteBehavior.Restrict);
         ordens.ToTable("OrdensServico", table =>
         {
             table.HasCheckConstraint("CK_Ordens_Descricao", "length(btrim(\"DescricaoProblema\")) >= 3");
-            table.HasCheckConstraint("CK_Ordens_Status", "\"Status\" IN (1,2,3,4,5,6,7)");
+            table.HasCheckConstraint("CK_Ordens_Status", "\"Status\" = 1");
         });
 
         var historico = model.Entity<HistoricoOrdemEntity>();
@@ -48,9 +42,5 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         historico.Property(x => x.CorrelationId).HasMaxLength(128);
         historico.HasIndex(x => new { x.OrdemServicoId, x.OcorridoEmUtc, x.Id });
         historico.HasOne<OrdemServicoEntity>().WithMany().HasForeignKey(x => x.OrdemServicoId).OnDelete(DeleteBehavior.Restrict);
-        historico.Property(x => x.Detalhes).HasColumnType("jsonb");
-        model.Entity<OutboxEntity>().Property(x => x.Body).HasColumnType("jsonb");
-        model.Entity<OutboxEntity>().HasIndex(x => new { x.OrdemServicoId, x.Sequence }).IsUnique();
-        model.Entity<OutboxEntity>().HasIndex(x => new { x.Published, x.Sequence, x.CreatedAtUtc });
     }
 }

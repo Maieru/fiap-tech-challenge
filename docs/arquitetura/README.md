@@ -100,5 +100,3 @@ Domain concentra entidades e regras; Application coordena casos de uso; API trad
 - [Observabilidade e validação](../operacao/observabilidade.md).
 - [Estados e repositórios](../ADRs/ADR-008-estados-terraform-e-repositorios.md).
 - [Escolhas técnicas](../RFCs/README.md) e [decisões arquiteturais](../ADRs/README.md).
-
-A evolução com Execution, MongoDB e Kafka está no [segundo incremento](fase4-incremento2.md).
