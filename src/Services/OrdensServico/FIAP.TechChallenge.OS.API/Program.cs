@@ -1,16 +1,14 @@
 using FIAP.TechChallenge.OS.Application;
+using FIAP.TechChallenge.OS.API.Security;
 using FIAP.TechChallenge.OS.Application.Messaging;
 using FIAP.TechChallenge.OS.Domain.Abstractions;
 using FIAP.TechChallenge.OS.Infrastructure;
 using FIAP.TechChallenge.OS.Infrastructure.Persistence;
 using Maieru.FiapTechChallenge.Chassis;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using Scalar.AspNetCore;
-using System.Text;
 
 namespace FIAP.TechChallenge.OS.API;
 
@@ -29,7 +27,7 @@ public partial class Program
             EnableOtlp = builder.Configuration.GetValue<bool>("Observability:EnableOtlp"),
             MeterNames = ["Fiap.TechChallenge.OS"]
         });
-        ConfigureAuthentication(builder);
+        _ = builder.Services.AddJwtAuthentication();
         _ = builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("postgresql", tags: ["ready"]);
         _ = builder.Services.AddHealthChecks().AddCheck<KafkaReadiness>("kafka", tags: ["ready"]);
         var app = builder.Build();
@@ -74,30 +72,6 @@ public partial class Program
         await app.RunAsync();
     }
 
-    private static void ConfigureAuthentication(WebApplicationBuilder builder)
-    {
-        _ = builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
-        _ = builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme).Configure<IConfiguration>((options, configuration) =>
-        {
-            var issuer = configuration["Jwt:Issuer"];
-            var audience = configuration["Jwt:Audience"];
-            var key = configuration["Jwt:SigningKey"];
-            if (string.IsNullOrWhiteSpace(issuer) || string.IsNullOrWhiteSpace(audience) || string.IsNullOrWhiteSpace(key) || Encoding.UTF8.GetByteCount(key) < 32)
-                throw new InvalidOperationException("Configure Jwt:Issuer, Jwt:Audience e Jwt:SigningKey (mínimo de 32 bytes). O OS apenas valida tokens.");
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = issuer,
-                ValidateAudience = true,
-                ValidAudience = audience,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-                ClockSkew = TimeSpan.Zero
-            };
-        }).ValidateOnStart();
-        _ = builder.Services.AddAuthorization();
-    }
 }
 
 public sealed class DatabaseHealthCheck(IServiceScopeFactory scopeFactory) : IHealthCheck

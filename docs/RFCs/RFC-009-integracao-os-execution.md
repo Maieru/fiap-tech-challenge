@@ -21,6 +21,14 @@ PUT /api/os/v1/ordens/{id}/aprovar-execucao e PUT /api/os/v1/ordens/{id}/cancela
 Retornam 202 com decisão, status e pendente. Estado inadequado retorna 400, inexistente 404 e decisão oposta 409.
 PostgreSQL e consumidor/broker Kafka integram readiness; liveness não consulta dependências.
 
+A autenticação do OS registra SymmetricSecurityKey singleton na composição e injeta a chave nas opções JWT validadas no startup.
+Issuer e audience permanecem na seção Jwt de IConfiguration; a chave é lida explicitamente de Jwt__SigningKey,
+sem fallback para arquivo, conforme a correção de origem do segredo aprovada também para o Execution.
+Issuer, audience, validade e assinatura continuam obrigatórios, com ClockSkew zero e chave mínima de 32 bytes UTF-8.
+Os testes usam chave temporária por ambiente, com restauração do valor anterior e sem execução paralela dos cenários que a alteram.
+Verificação da origem explícita da chave: 231 testes da solução OS, 1 teste da imagem e 4 cenários distribuídos aprovados;
+cobertura OS de 89,4% (1714/1916 linhas). O analisador Enterprise C# 10.35.0.4138 não emitiu S6781 nessa versão.
+
 ## Ambiente e verificação
 
 O Compose independente do OS inclui seu próprio Kafka para desenvolvimento isolado.

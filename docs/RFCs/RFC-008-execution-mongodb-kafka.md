@@ -28,6 +28,18 @@ A API valida JWT administrativo sem chamar o legado. MongoDB e Kafka compõem re
 liveness não consulta essas dependências. OpenAPI/Scalar ficam disponíveis em Development/Testing.
 OTLP é opcional.
 
+Issuer e audience usam a seção Jwt de IConfiguration. A composição lê a chave explicitamente de Jwt__SigningKey
+e registra uma SymmetricSecurityKey singleton, com mínimo de 32 bytes UTF-8, injetada nas opções JWT validadas no startup.
+No Compose, JWT_SIGNING_KEY do .env é mapeada para Jwt__SigningKey; não há fallback da chave para IConfiguration/arquivo.
+Essa restrição de origem foi aprovada após confirmar S6781 aberto também no legado: reorganizar a DI não eliminava o alerta.
+O analisador Enterprise C# 10.35.0.4138 do SonarCloud reproduziu S6781 na composição anterior e não o emitiu com a origem explícita.
+Isso verifica a correção localmente; o encerramento da issue ainda depende da nova análise remota após commit/push.
+Segredos devem ser provisionados externamente, sem valores versionados no código/configuração.
+Os testes HTTP usam chave criptográfica temporária por ambiente e restauram o valor anterior no encerramento/falha;
+os testes que modificam essa variável não são paralelos. Containers recebem a variável explicitamente.
+Verificação dessa correção: 161 testes da solução Execution, 1 teste da imagem e 4 cenários distribuídos aprovados;
+cobertura consolidada de 94,6% (1517/1603 linhas).
+
 ## Alternativas consideradas
 
 - Consumidor genérico, mediator ou reflexão para handlers: aumentariam a abstração sem benefício para três entradas.

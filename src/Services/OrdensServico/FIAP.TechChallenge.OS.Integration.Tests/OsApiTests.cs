@@ -189,6 +189,22 @@ public sealed class OsApiTests
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("too-short")]
+    public async Task Authentication_ShouldRejectMissingOrWeakEnvironmentKey(string? signingKey)
+    {
+        var previous = Environment.GetEnvironmentVariable("Jwt__SigningKey");
+        try
+        {
+            Environment.SetEnvironmentVariable("Jwt__SigningKey", signingKey);
+            await using var factory = _host.CreateFactory();
+            Assert.That(() => { using var client = factory.CreateClient(); },
+                Throws.TypeOf<InvalidOperationException>().With.Message.Contains("Jwt__SigningKey"));
+        }
+        finally { Environment.SetEnvironmentVariable("Jwt__SigningKey", previous); }
+    }
+
     [TestCase("/ordens?pageNumber=0")]
     [TestCase("/clientes?pageSize=0")]
     [TestCase("/veiculos?pageSize=0")]

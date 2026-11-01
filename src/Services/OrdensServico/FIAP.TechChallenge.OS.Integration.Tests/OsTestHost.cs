@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using FIAP.TechChallenge.OS.Infrastructure.Persistence;
@@ -20,7 +21,9 @@ namespace FIAP.TechChallenge.OS.Integration.Tests;
 
 public sealed class OsTestHost : IAsyncDisposable
 {
-    private const string SigningKey = "integration-tests-signing-key-at-least-32-bytes";
+    private static readonly string SigningKey = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+    private string? previousSigningKey;
+    private bool signingKeyConfigured;
     private readonly PostgreSqlContainer _database = new PostgreSqlBuilder("postgres:18.3").WithDatabase("fiap_os").Build();
     private readonly KafkaContainer _kafka = new KafkaBuilder("confluentinc/cp-kafka:7.9.2").WithKRaft()
         .WithEnvironment("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "false").Build();
@@ -41,12 +44,21 @@ public sealed class OsTestHost : IAsyncDisposable
             new TopicSpecification { Name = "oficina.execution.events.v1", NumPartitions = 1, ReplicationFactor = 1 }
         ]);
         await using (var db = CreateDbContext()) await db.Database.MigrateAsync();
-        _factory = new Factory(ConnectionString, BootstrapServers);
-        Client = _factory.CreateClient();
-        Authenticate();
+        previousSigningKey = Environment.GetEnvironmentVariable("Jwt__SigningKey");
+        Environment.SetEnvironmentVariable("Jwt__SigningKey", SigningKey);
+        signingKeyConfigured = true;
+        try
+        {
+            _factory = CreateFactory();
+            Client = _factory.CreateClient();
+            Authenticate();
+        }
+        catch { RestoreSigningKey(); throw; }
     }
 
     public AppDbContext CreateDbContext() => new(new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(ConnectionString).Options);
+
+    internal WebApplicationFactory<API.Program> CreateFactory() => new Factory(ConnectionString, BootstrapServers);
 
     public void Authenticate(bool expired = false, string issuer = "test-issuer", string? signingKey = null)
     {
@@ -95,10 +107,21 @@ public sealed class OsTestHost : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        Client?.Dispose();
-        if (_factory is not null) await _factory.DisposeAsync();
-        await _database.DisposeAsync();
-        await _kafka.DisposeAsync();
+        try
+        {
+            Client?.Dispose();
+            if (_factory is not null) await _factory.DisposeAsync();
+            await _database.DisposeAsync();
+            await _kafka.DisposeAsync();
+        }
+        finally { RestoreSigningKey(); }
+    }
+
+    private void RestoreSigningKey()
+    {
+        if (!signingKeyConfigured) return;
+        Environment.SetEnvironmentVariable("Jwt__SigningKey", previousSigningKey);
+        signingKeyConfigured = false;
     }
 
     private sealed class Factory(string connectionString, string bootstrapServers) : WebApplicationFactory<API.Program>
@@ -110,9 +133,8 @@ public sealed class OsTestHost : IAsyncDisposable
             {
                 ["ConnectionStrings:DefaultConnection"] = connectionString,
                 ["Kafka:BootstrapServers"] = bootstrapServers,
-                ["Kafka:MessageTimeoutMs"] = "1500",
                 ["Logging:LogLevel:Default"] = "Warning",
-                ["Jwt:Issuer"] = "test-issuer", ["Jwt:Audience"] = "test-audience", ["Jwt:SigningKey"] = SigningKey,
+                ["Jwt:Issuer"] = "test-issuer", ["Jwt:Audience"] = "test-audience",
                 ["Observability:EnableOtlp"] = "false", ["Database:ApplyMigrations"] = "false"
             }));
         }
