@@ -12,7 +12,6 @@ public class Result<T>
     [JsonConstructor]
     private Result(bool isSuccess, T? value, Error error)
     {
-        ArgumentNullException.ThrowIfNull(error);
         if (isSuccess && error.Code != ErrorCode.None)
             throw new JsonException("IsSuccess=true exige ErrorCode.None.");
 
@@ -24,7 +23,7 @@ public class Result<T>
 
         IsSuccess = isSuccess;
         Value = value;
-        Error = error;
+        Error = error ?? throw new ArgumentNullException(nameof(error));
     }
 
     private Result(T value)

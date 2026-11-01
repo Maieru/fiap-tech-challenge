@@ -28,9 +28,3 @@ Autorizar e cancelar retornam 202 após persistência da solicitação, históri
 Transportes e contratos existem em cada serviço; BDD entre imagens independentes detecta incompatibilidade. O CI Execution fixa um SHA externo do OS e mede sua própria cobertura; o CI OS conserva seu gate de 80%. O overlay Compose usa a rede `fiap-oficina` sem mudar o volume PostgreSQL existente. Testes exercitam upgrade do esquema anterior, backfill, concorrência, rollback de histórico/Inbox, broker indisponível, lacunas/DLQ/replay e confirmação duplicada. A regressão do legado continua separada.
 
 Billing substituirá a autorização manual; aprovação pelo cliente, frontend, AWS, entrega e migração de tráfego/dados ficam fora desta entrega. A separação futura do repositório OS continua pendente. Detalhes de contratos, operação e adaptações estão no [segundo incremento](../arquitetura/fase4-incremento2.md) e na [documentação do Execution](https://github.com/Maieru/fiap-tech-challenge-execution/tree/main/docs).
-
-## Análise da duplicação durante a coexistência
-
-O Sonar compara legado e OS no mesmo projeto e identifica como duplicação as cópias intencionais de cadastros, value objects, resultados, abertura/listagem e seus adaptadores. Criar dependência de negócio entre os serviços apenas para eliminar esse apontamento contrariaria os limites desta decisão.
-
-O workflow lista exceções temporárias **somente de CPD** para esses componentes reaproveitados. Eles continuam no build, testes, cobertura, análise de bugs e segurança. O fluxo novo de integração, Outbox/Inbox e a entidade operacional não estão excluídos do CPD. Remover as exceções ao separar o OS em repositório/projeto Sonar próprios. A cobertura mínima de 80% por componente permanece integral.

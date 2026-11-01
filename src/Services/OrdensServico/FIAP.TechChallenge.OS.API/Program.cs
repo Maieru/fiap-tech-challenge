@@ -72,7 +72,7 @@ public partial class Program
         {
             var issuer = configuration["Jwt:Issuer"];
             var audience = configuration["Jwt:Audience"];
-            var key = Environment.GetEnvironmentVariable("Jwt__SigningKey");
+            var key = configuration["Jwt:SigningKey"];
             if (string.IsNullOrWhiteSpace(issuer) || string.IsNullOrWhiteSpace(audience) || string.IsNullOrWhiteSpace(key) || Encoding.UTF8.GetByteCount(key) < 32)
                 throw new InvalidOperationException("Configure Jwt:Issuer, Jwt:Audience e Jwt:SigningKey (mínimo de 32 bytes). O OS apenas valida tokens.");
             options.TokenValidationParameters = new TokenValidationParameters

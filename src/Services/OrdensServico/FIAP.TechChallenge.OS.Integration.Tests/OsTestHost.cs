@@ -94,7 +94,6 @@ public sealed class OsTestHost : IAsyncDisposable
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            Environment.SetEnvironmentVariable("Jwt__SigningKey", SigningKey);
             builder.UseEnvironment(environment);
             builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
