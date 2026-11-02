@@ -26,6 +26,10 @@ public static class AuthenticationDependencyInjection
                 if (string.IsNullOrWhiteSpace(issuer) || string.IsNullOrWhiteSpace(audience))
                     throw new InvalidOperationException("Configure Jwt:Issuer e Jwt:Audience.");
 
+                var accessTokenMinutes = jwtSection.GetValue<int?>("AccessTokenMinutes") ?? 60;
+                if (accessTokenMinutes is < 1 or > 1440)
+                    throw new InvalidOperationException("Jwt:AccessTokenMinutes deve estar entre 1 e 1440.");
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,

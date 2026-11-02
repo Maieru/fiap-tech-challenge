@@ -5,6 +5,7 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
+    public DbSet<UsuarioEntity> Usuarios => Set<UsuarioEntity>();
     public DbSet<ClienteEntity> Clientes => Set<ClienteEntity>();
     public DbSet<VeiculoEntity> Veiculos => Set<VeiculoEntity>();
     public DbSet<OrdemServicoEntity> OrdensServico => Set<OrdemServicoEntity>();
@@ -13,6 +14,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     protected override void OnModelCreating(ModelBuilder model)
     {
+        var usuarios = model.Entity<UsuarioEntity>();
+        usuarios.HasQueryFilter(x => x.Ativo);
+        usuarios.Property(x => x.Login).HasMaxLength(100).IsRequired();
+        usuarios.Property(x => x.Senha).HasMaxLength(200).IsRequired();
+        usuarios.Property(x => x.Ativo).HasDefaultValue(true);
+        usuarios.HasIndex(x => x.Login).IsUnique().HasFilter("\"Ativo\" = true");
+
         var clientes = model.Entity<ClienteEntity>();
         clientes.HasQueryFilter(x => x.Ativo);
         clientes.Property(x => x.Ativo).HasDefaultValue(true).IsConcurrencyToken();

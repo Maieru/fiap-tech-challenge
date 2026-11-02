@@ -81,7 +81,7 @@ public sealed class OsTestHost : IAsyncDisposable
     public async Task ResetAsync()
     {
         await using var db = CreateDbContext();
-        await db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"MensagensProcessadas\", \"HistoricoOrdens\", \"OrdensServico\", \"Veiculos\", \"Clientes\" CASCADE");
+        await db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Usuarios\", \"MensagensProcessadas\", \"HistoricoOrdens\", \"OrdensServico\", \"Veiculos\", \"Clientes\" CASCADE");
         Client.DefaultRequestHeaders.Remove("X-Correlation-ID");
         Authenticate();
     }

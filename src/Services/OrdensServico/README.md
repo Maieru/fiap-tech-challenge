@@ -72,7 +72,7 @@ O volume `fiap-os_os_postgres_data` pertence apenas ao serviço. `docker compose
 
 ## Autenticação
 
-Endpoints administrativos exigem `Authorization: Bearer <JWT>`. O token é emitido pelo login administrativo existente, `POST /api/usuarios/login` no monólito. Copie os mesmos issuer, audience e chave para o `.env` do OS. O OS valida assinatura e validade sem consultar o banco legado, sem emitir tokens e sem alterar a Lambda atual. A API pode iniciar e atender seus health checks sem o monólito em execução.
+Endpoints administrativos exigem `Authorization: Bearer <JWT>`. O OS emite o token em `POST /api/os/v1/usuarios/login`, com usuários cadastrados em seu próprio PostgreSQL. Os três serviços usam os mesmos issuer, audience e chave; Execution e Billing validam o JWT localmente. Cadastro/login são anônimos por escolha do projeto. A stack não depende do monólito para autenticar; a Lambda e o fluxo de acesso do cliente à ordem continuam separados.
 
 Issuer e audience usam a seção Jwt de IConfiguration. A chave simétrica vem explicitamente de Jwt__SigningKey,
 com pelo menos 32 bytes UTF-8, e é registrada como singleton e injetada nas opções de validação JWT.
@@ -154,3 +154,7 @@ autenticação, frontend, infraestrutura e retirada do legado. Não há requisit
 ## Billing e Saga de pagamento
 
 A aprovação agora publica PagamentoSolicitado no tópico oficina.os.billing.requests.v1 e só a confirmação do Billing autoriza Execution. Consultas e resposta 202 incluem Pagamento/Etapa. Recusa solicita cancelamento com devolução de estoque, preservando a aprovação administrativa; cancelamento administrativo após aprovação continua vedado. Aplicar a migration BillingSaga e provisionar oficina.billing.events.v1 antes de iniciar OS. Durante revisão use scripts/Restore-BillingLocal.ps1 com o pacote Billing.Application.Messaging 0.1.0 candidato; o build independente depende de sua publicação. Ordens sem orçamento não iniciam cobrança. Ver ADR-017/RFC-010 e relatório validacao-billing.
+
+## Identidade administrativa
+
+OS oferece cadastro anônimo, login JWT e exclusão autenticada de usuários sob `/api/os/v1/usuarios`, no banco exclusivo OS. Não há usuário padrão; cadastre pela API e use o JWT retornado por `/login` nos três serviços. Consulte o [guia](../../../docs/arquitetura/autenticacao-os.md).

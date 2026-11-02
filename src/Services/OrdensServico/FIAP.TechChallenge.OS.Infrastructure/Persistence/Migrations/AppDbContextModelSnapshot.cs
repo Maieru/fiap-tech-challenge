@@ -191,6 +191,36 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                     b.ToTable("MensagensProcessadas");
                 });
 
+            modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.UsuarioEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Ativo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Senha")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Login")
+                        .IsUnique()
+                        .HasFilter("\"Ativo\" = true");
+
+                    b.ToTable("Usuarios");
+                });
+
             modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.VeiculoEntity", b =>
                 {
                     b.Property<Guid>("Id")

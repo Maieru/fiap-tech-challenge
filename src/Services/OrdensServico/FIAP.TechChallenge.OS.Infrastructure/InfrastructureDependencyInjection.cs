@@ -1,3 +1,5 @@
+using FIAP.TechChallenge.OS.Infrastructure.Security;
+using Microsoft.IdentityModel.Tokens;
 using FIAP.TechChallenge.OS.Domain.Interfaces;
 using FIAP.TechChallenge.OS.Infrastructure.Persistence;
 using FIAP.TechChallenge.OS.Infrastructure.Persistence.Repositories;
@@ -20,6 +22,13 @@ public static class InfrastructureDependencyInjection
         services.AddDbContext<AppDbContext>((provider, options) => options.UseNpgsql(
             provider.GetRequiredService<IConfiguration>().GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection deve ser configurada.")));
+        services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+        services.AddSingleton<ITokenService>(provider => new JwtTokenService(
+            configuration["Jwt:Issuer"]!, configuration["Jwt:Audience"]!,
+            provider.GetRequiredService<SymmetricSecurityKey>(),
+            configuration.GetValue<int?>("Jwt:AccessTokenMinutes") ?? 60,
+            provider.GetRequiredService<TimeProvider>()));
         services.AddScoped<IClienteRepository, ClienteRepository>();
         services.AddScoped<IVeiculoRepository, VeiculoRepository>();
         services.AddScoped<OrdemServicoRepository>();

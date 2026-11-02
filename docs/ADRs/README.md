@@ -28,3 +28,5 @@ Os ADRs iniciais formalizam decisões predominantes comprovadas pela implementa�
 A data original identifica o registro; a última revisão indica a atualização do texto e das evidências. As alternativas são avaliações retrospectivas, não atas de discussões históricas.
 
 - [Billing e Saga de pagamento](ADR-017-billing-saga-pagamento.md).
+
+- [Autenticação administrativa no OS](ADR-018-autenticacao-administrativa-no-os.md).

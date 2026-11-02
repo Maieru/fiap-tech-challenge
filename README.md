@@ -23,7 +23,7 @@ docker compose up -d --build
 
 O `compose.yaml` da raiz constrói as três APIs e inicia seus dois PostgreSQL, MongoDB replica set e Kafka. Tópicos e migrations são inicializados pelas dependências. OS fica em http://localhost:8081/scalar/v1, Execution em http://localhost:8082/scalar/v1 e Billing em http://localhost:8083/scalar/v1. Os consumidores não reiniciam automaticamente após falha.
 
-Na primeira configuração de um checkout novo, copie `.env.example` para `.env` e preencha as senhas e `JWT_SIGNING_KEY` (pelo menos 32 bytes). Issuer/audience/chave devem coincidir com o emissor dos tokens administrativos. O arquivo `.env` é ignorado pelo Git. Nesta migração do comando anterior, a configuração local existente foi reaproveitada, sem regenerar credenciais. Não troque senhas de bancos com volumes existentes sem atualizar os bancos correspondentes.
+Na primeira configuração de um checkout novo, copie `.env.example` para `.env` e preencha as senhas e `JWT_SIGNING_KEY` (pelo menos 32 bytes). OS emite os tokens administrativos; issuer/audience/chave devem coincidir nos três serviços. O arquivo `.env` é ignorado pelo Git. Nesta migração do comando anterior, a configuração local existente foi reaproveitada, sem regenerar credenciais. Não troque senhas de bancos com volumes existentes sem atualizar os bancos correspondentes.
 
 Enquanto os contratos candidatos ainda não estiverem publicados no NuGet, prepare-os uma vez com .NET SDK 10, nesta mesma pasta:
 
@@ -40,7 +40,23 @@ docker compose logs -f    # Acompanhar logs
 docker compose down       # Parar preservando os volumes
 ```
 
-O projeto continua chamado `fiap-integrated`, com os mesmos volumes do comando anterior. O Compose da raiz reúne os três serviços; o Compose em `src/Services/OrdensServico` continua atendendo ao OS isolado. Pare outros ambientes que utilizem as mesmas portas antes de iniciar. O frontend e o emissor de JWT do legado não fazem parte desta stack.
+O projeto continua chamado `fiap-integrated`, com os mesmos volumes do comando anterior. O Compose da raiz reúne os três serviços; o Compose em `src/Services/OrdensServico` continua atendendo ao OS isolado. Pare outros ambientes que utilizem as mesmas portas antes de iniciar. O OS oferece cadastro/login próprios em `/api/os/v1/usuarios` e `/api/os/v1/usuarios/login`; o frontend legado não faz parte desta stack.
+
+## Documentação HTTP com Scalar
+
+As APIs já registram OpenAPI e Scalar. Com a stack integrada iniciada:
+
+| API | Scalar | OpenAPI |
+| --- | --- | --- |
+| OS | http://localhost:8081/scalar/v1 | http://localhost:8081/openapi/v1.json |
+| Execution | http://localhost:8082/scalar/v1 | http://localhost:8082/openapi/v1.json |
+| Billing | http://localhost:8083/scalar/v1 | http://localhost:8083/openapi/v1.json |
+
+Na API legada, quando executada pelo Compose do legado, o endereço é http://localhost:8080/scalar/v1. Ela não integra o Compose dos três novos serviços. O authorizer Lambda não hospeda uma API HTTP ASP.NET para receber uma interface Scalar.
+
+Scalar/OpenAPI ficam habilitados em `Development`; OS, Execution e Billing também os habilitam em `Testing`. O Compose integrado usa `Development`. A autenticação JWT dos endpoints administrativos permanece exigida nas chamadas realizadas pela documentação.
+
+Verificação local em 2026-11-02: Scalar e OpenAPI retornaram HTTP 200 em OS, Execution e Billing, com 9, 14 e 3 rotas documentadas, respectivamente.
 
 ## Ecossistema de repositórios
 
@@ -311,3 +327,7 @@ A telemetria é enviada ao New Relic via OpenTelemetry Collector. Antes de inici
 ## Métricas de negócio
 
 Consulte [as métricas OpenTelemetry e consultas dos dashboards New Relic](docs/operacao/metricas-negocio.md).
+
+## Autenticação no OS
+
+O cadastro administrativo permanece anônimo e o login emite JWT válido nas três APIs. Não há conta padrão nem importação automática dos usuários legados. Veja o [guia de autenticação](docs/arquitetura/autenticacao-os.md), incluindo configuração, exemplos e limites de autorização/revogação.
