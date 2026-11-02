@@ -97,7 +97,9 @@ public sealed class OsKafkaConsumer(IConfiguration configuration, IServiceScopeF
                             if (payload.Servicos is null || payload.PecasInsumos is null)
                                 throw new InvalidOperationException("Itens do diagnóstico ausentes.");
                             result = await scope.ServiceProvider.GetRequiredService<IRegistrarDiagnosticoConcluidoUseCase>()
-                                .ExecuteAsync(new(payload.OrdemServicoId, envelope.OccurredAtUtc, envelope.MessageId, payload.ValorTotal), stoppingToken);
+                                .ExecuteAsync(new(payload.OrdemServicoId, envelope.OccurredAtUtc, envelope.MessageId, payload.ValorTotal, new FIAP.TechChallenge.OS.Domain.Entities.OrcamentoOrdem(
+                                    payload.Servicos.Select(x => new FIAP.TechChallenge.OS.Domain.Entities.ItemOrcamento(x.ItemId, x.Descricao, x.Quantidade, x.ValorUnitario, x.ValorTotal)).ToArray(),
+                                    payload.PecasInsumos.Select(x => new FIAP.TechChallenge.OS.Domain.Entities.ItemOrcamento(x.ItemId, x.Nome, x.Quantidade, x.PrecoUnitario, x.ValorTotal)).ToArray())), stoppingToken);
                             break;
                         }
                     case (ExecucaoIniciada.Type, ExecutionMessaging.Version):

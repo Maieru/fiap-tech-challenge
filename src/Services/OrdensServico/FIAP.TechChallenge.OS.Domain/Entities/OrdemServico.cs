@@ -15,7 +15,8 @@ public sealed class OrdemServico
     public DateTime? DataEnvioAprovacao { get; private set; }
     public DateTime? DataInicioExecucao { get; private set; }
     public DateTime? DataFinalizacao { get; private set; }
-    public DateTime? DataEntrega => null;
+    public DateTime? DataEntrega { get; private set; }
+    public OrcamentoOrdem? Orcamento { get; private set; }
     public DateTime? DataCancelamento { get; private set; }
     public DecisaoExecucao Decisao { get; private set; }
     public DateTime? DataDecisaoUtc { get; private set; }
@@ -60,13 +61,16 @@ public sealed class OrdemServico
         var result = Rehydrate(snapshot.Id, snapshot.ClienteId, snapshot.VeiculoId, snapshot.DescricaoProblema, snapshot.DataCriacao);
         if (!result.IsSuccess)
             return result;
-        if (!Enum.IsDefined(snapshot.Status) || snapshot.Status == StatusOrdemServico.Entregue
+        if (!Enum.IsDefined(snapshot.Status)
             || !Enum.IsDefined(snapshot.Decisao) || snapshot.Version < 0
             || (snapshot.Decisao != DecisaoExecucao.Nenhuma && snapshot.DataDecisaoUtc is null)
             || (snapshot.Status != StatusOrdemServico.Recebida && snapshot.DataInicioDiagnostico is null)
-            || (snapshot.Status is StatusOrdemServico.AguardandoAprovacao or StatusOrdemServico.EmExecucao or StatusOrdemServico.Finalizada or StatusOrdemServico.Cancelada && snapshot.DataEnvioAprovacao is null)
-            || (snapshot.Status is StatusOrdemServico.EmExecucao or StatusOrdemServico.Finalizada && (snapshot.DataInicioExecucao is null || snapshot.Decisao != DecisaoExecucao.Autorizada))
-            || (snapshot.Status == StatusOrdemServico.Finalizada && snapshot.DataFinalizacao is null)
+            || (snapshot.Status is StatusOrdemServico.AguardandoAprovacao or StatusOrdemServico.EmExecucao or StatusOrdemServico.Finalizada or StatusOrdemServico.Entregue or StatusOrdemServico.Cancelada && snapshot.DataEnvioAprovacao is null)
+            || (snapshot.Status is StatusOrdemServico.EmExecucao or StatusOrdemServico.Finalizada or StatusOrdemServico.Entregue && (snapshot.DataInicioExecucao is null || snapshot.Decisao != DecisaoExecucao.Autorizada))
+            || (snapshot.Status is StatusOrdemServico.Finalizada or StatusOrdemServico.Entregue && snapshot.DataFinalizacao is null)
+            || ((snapshot.Status == StatusOrdemServico.Entregue) != snapshot.DataEntrega.HasValue)
+            || (snapshot.DataEntrega.HasValue && (snapshot.DataEntrega.Value.Kind != DateTimeKind.Utc || snapshot.DataEntrega < snapshot.DataFinalizacao))
+            || (snapshot.Orcamento is not null && (!snapshot.ValorOrcamento.HasValue || !snapshot.Orcamento.Valido(snapshot.ValorOrcamento.Value)))
             || (snapshot.Status == StatusOrdemServico.Cancelada && (snapshot.DataCancelamento is null || snapshot.Decisao != DecisaoExecucao.CancelamentoSolicitado && snapshot.Pagamento?.Etapa != EtapaPagamento.Compensada)))
             return Result<OrdemServico>.Failure(new Error("Estado e datas da ordem inconsistentes."));
         var ordem = result.Value!;
@@ -79,13 +83,14 @@ public sealed class OrdemServico
         ordem.DataFinalizacao = snapshot.DataFinalizacao;
         ordem.DataCancelamento = snapshot.DataCancelamento;
         ordem.Version = snapshot.Version;
+        ordem.DataEntrega = snapshot.DataEntrega; ordem.Orcamento = snapshot.Orcamento;
         ordem.OrcamentoId = snapshot.OrcamentoId; ordem.ValorOrcamento = snapshot.ValorOrcamento; ordem.Pagamento = snapshot.Pagamento;
         return result;
     }
 
     public OrdemServicoSnapshot Snapshot() => new(Id, ClienteId, VeiculoId, DescricaoProblema, DataCriacao,
         Status, Decisao, DataDecisaoUtc, DataInicioDiagnostico, DataEnvioAprovacao, DataInicioExecucao,
-        DataFinalizacao, DataCancelamento, Version, OrcamentoId, ValorOrcamento, Pagamento);
+        DataFinalizacao, DataCancelamento, Version, OrcamentoId, ValorOrcamento, Pagamento, DataEntrega, Orcamento);
 
     public Result<bool> DecidirExecucao(DecisaoExecucao decisao, DateTime ocorridoEmUtc)
     {
@@ -118,16 +123,22 @@ public sealed class OrdemServico
         DataInicioDiagnostico = ocorridoEmUtc;
         return Result<bool>.Success(true);
     }
-    public Result<bool> RegistrarDiagnosticoConcluido(DateTime ocorridoEmUtc, Guid? orcamentoId = null, decimal? valor = null)
+    public Result<bool> RegistrarDiagnosticoConcluido(DateTime ocorridoEmUtc, Guid? orcamentoId = null, decimal? valor = null, OrcamentoOrdem? orcamento = null)
     {
         if (ocorridoEmUtc == default || ocorridoEmUtc.Kind != DateTimeKind.Utc)
             return Result<bool>.Failure(new Error("Data da transição inválida."));
         if (DataEnvioAprovacao.HasValue)
-            return valor.HasValue && ValorOrcamento.HasValue && valor != ValorOrcamento ? Result<bool>.Failure(Error.Conflict("Orçamento conflitante.")) : Result<bool>.Success(false);
+        {
+            var conflict = valor.HasValue && ValorOrcamento.HasValue && valor != ValorOrcamento
+                || orcamento is not null && Orcamento is not null &&
+                    (!orcamento.Servicos.SequenceEqual(Orcamento.Servicos) || !orcamento.PecasInsumos.SequenceEqual(Orcamento.PecasInsumos));
+            return conflict ? Result<bool>.Failure(Error.Conflict("Orçamento conflitante.")) : Result<bool>.Success(false);
+        }
         if (Status != StatusOrdemServico.EmDiagnostico)
             return Result<bool>.Failure(new Error("Transição DiagnosticoConcluido incompatível com o estado ou decisão atual."));
         if (valor < 0 || orcamentoId == Guid.Empty) return Result<bool>.Failure(new Error("Orçamento inválido."));
-        OrcamentoId = orcamentoId; ValorOrcamento = valor;
+        if (orcamento is not null && (!valor.HasValue || !orcamento.Valido(valor.Value))) return Result<bool>.Failure(new Error("Itens e valor do orçamento inconsistentes."));
+        OrcamentoId = orcamentoId; ValorOrcamento = valor; Orcamento = orcamento;
         Status = StatusOrdemServico.AguardandoAprovacao;
         DataEnvioAprovacao = ocorridoEmUtc;
         return Result<bool>.Success(true);
@@ -181,6 +192,17 @@ public sealed class OrdemServico
             return same ? Result<bool>.Success(false) : Result<bool>.Failure(Error.Conflict("Resultado de pagamento conflitante."));
         }
         Pagamento = Pagamento with { CobrancaId = cobranca, Etapa = confirmado ? EtapaPagamento.AutorizacaoSolicitada : EtapaPagamento.CompensacaoSolicitada, GatewayPaymentId = confirmado ? detalhe : null, Motivo = confirmado ? null : detalhe };
+        return Result<bool>.Success(true);
+    }
+    public Result<bool> Entregar(DateTime ocorridoEmUtc)
+    {
+        if (ocorridoEmUtc == default || ocorridoEmUtc.Kind != DateTimeKind.Utc) return Result<bool>.Failure(new Error("Data de entrega inválida."));
+        if (Status == StatusOrdemServico.Entregue) return Result<bool>.Success(false);
+        if (Status != StatusOrdemServico.Finalizada || !DataFinalizacao.HasValue || ocorridoEmUtc < DataFinalizacao.Value)
+            return Result<bool>.Failure(new Error("Somente ordens finalizadas podem ser entregues."));
+        if (Pagamento is not null && Pagamento.Etapa != EtapaPagamento.Concluida)
+            return Result<bool>.Failure(new Error("O pagamento e a execução precisam estar concluídos."));
+        Status = StatusOrdemServico.Entregue; DataEntrega = ocorridoEmUtc;
         return Result<bool>.Success(true);
     }
 }

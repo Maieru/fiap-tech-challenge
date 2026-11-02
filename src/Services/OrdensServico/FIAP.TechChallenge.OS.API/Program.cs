@@ -17,6 +17,8 @@ public partial class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        // Hosting request-start logs include query strings; private customer links must not leak there.
+        builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
         _ = builder.Services.AddControllers();
         _ = builder.Services.AddOpenApi();
         _ = builder.Services.AddApplication();

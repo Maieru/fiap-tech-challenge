@@ -25,3 +25,5 @@ As alternativas são avaliações retrospectivas, não atas de discussões hist�
 - [Billing e Saga de pagamento](RFC-010-billing-mock-kafka.md).
 
 - [Autenticação administrativa no OS](RFC-011-autenticacao-os-bcrypt-jwt.md).
+
+- [APIs de entrega e acompanhamento privado no OS](RFC-012-entrega-acompanhamento-os.md).

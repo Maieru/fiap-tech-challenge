@@ -1,3 +1,3 @@
 namespace FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.AutorizarExecucao;
 
-public sealed record AutorizarExecucaoCommand(Guid OrdemServicoId);
+public sealed record AutorizarExecucaoCommand(Guid OrdemServicoId, string? TokenCliente = null);

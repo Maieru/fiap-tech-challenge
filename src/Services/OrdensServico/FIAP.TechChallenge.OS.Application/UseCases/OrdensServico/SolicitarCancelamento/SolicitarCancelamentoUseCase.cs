@@ -9,7 +9,7 @@ using Maieru.FiapTechChallenge.Chassis;
 namespace FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.SolicitarCancelamento;
 
 public sealed class SolicitarCancelamentoUseCase(IOrdemServicoRepository repository, IUnitOfWork unitOfWork,
-    IMessagingService messaging, MessageContext context, TimeProvider clock) : ISolicitarCancelamentoUseCase
+    IMessagingService messaging, MessageContext context, TimeProvider clock, IAcessoClienteService acessoCliente) : ISolicitarCancelamentoUseCase
 {
     public async Task<Result<DecisaoExecucaoResponse>> ExecuteAsync(SolicitarCancelamentoCommand command, CancellationToken cancellationToken = default)
     {
@@ -20,7 +20,9 @@ public sealed class SolicitarCancelamentoUseCase(IOrdemServicoRepository reposit
         var result = await repository.GetByIdAsync(command.OrdemServicoId, cancellationToken);
 
         if (!result.IsSuccess)
-            return Result<DecisaoExecucaoResponse>.Failure(result.Error);
+            return Result<DecisaoExecucaoResponse>.Failure(command.TokenCliente is null ? result.Error : Error.Unauthorized("Acesso à ordem inválido."));
+        if (command.TokenCliente is not null && !await acessoCliente.ValidarAsync(command.OrdemServicoId, command.TokenCliente, cancellationToken))
+            return Result<DecisaoExecucaoResponse>.Failure(Error.Unauthorized("Acesso à ordem inválido."));
 
         var order = result.Value!;
         var now = clock.GetUtcNow();

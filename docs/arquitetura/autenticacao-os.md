@@ -26,6 +26,6 @@ A emissão é HS256 com sub, unique_name e jti. Assinatura, expiração, issuer 
 
 Os testes HTTP exercitam cadastro anônimo, login real, hash, espaços na senha, limite BCrypt, duplicidade concorrente, credenciais inválidas e exclusão. O BDD distribuído cria usuário e faz login na imagem real do OS; usa esse JWT em OS, Billing e Execution, verifica 401 sem token/com token inválido e percorre o fluxo de negócio completo.
 
-Decisões: [ADR-018](../ADRs/ADR-018-autenticacao-administrativa-no-os.md), [RFC-011](../RFCs/RFC-011-autenticacao-os-bcrypt-jwt.md). O [estado da migração](estado-da-migracao.md) distingue a identidade administrativa do acesso do cliente à própria ordem, que continua pendente de migração.
+Decisões: [ADR-018](../ADRs/ADR-018-autenticacao-administrativa-no-os.md), [RFC-011](../RFCs/RFC-011-autenticacao-os-bcrypt-jwt.md). O [estado da migração](estado-da-migracao.md) distingue a identidade administrativa do acesso do cliente à própria ordem, implementado por [link privado no OS](acompanhamento-e-entrega.md), separado do JWT administrativo.
 
 Resultados locais em 2026-11-02: 259 testes OS sem imagem aprovados (134 domínio, 66 aplicação, 4 contratos e 55 integração/validação) e 7 cenários distribuídos aprovados com login real. Logs locais: OS `artifacts/os-auth-regression.log` e `artifacts/os-auth-tests.log`; Execution `artifacts/os-auth-e2e.log`, com TRX em `artifacts/os-auth-e2e/`. Não houve publicação de pacotes, execução de CI remoto ou importação de usuários do legado.

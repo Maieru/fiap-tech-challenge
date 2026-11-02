@@ -23,7 +23,7 @@ public sealed class RegistrarDiagnosticoConcluidoUseCase(IOrdemServicoRepository
 
         var order = result.Value!;
         var occurredAt = command.OcorridoEmUtc.UtcDateTime;
-        var changed = order.RegistrarDiagnosticoConcluido(occurredAt, command.OrcamentoId, command.Valor);
+        var changed = order.RegistrarDiagnosticoConcluido(occurredAt, command.OrcamentoId, command.Valor, command.Orcamento);
 
         if (!changed.IsSuccess)
             return Result<bool>.Failure(changed.Error);

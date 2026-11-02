@@ -30,3 +30,5 @@ A data original identifica o registro; a última revisão indica a atualização
 - [Billing e Saga de pagamento](ADR-017-billing-saga-pagamento.md).
 
 - [Autenticação administrativa no OS](ADR-018-autenticacao-administrativa-no-os.md).
+
+- [Entrega e acesso do cliente à ordem no OS](ADR-019-entrega-acesso-cliente.md).

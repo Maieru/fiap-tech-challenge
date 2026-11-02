@@ -41,7 +41,7 @@ sequenceDiagram
     Kafka->>OS: Projetar Finalizada e concluir Saga
 ```
 
-1. Execution encerra o diagnóstico e publica os snapshots e `ValorTotal`. OS guarda o total e usa o `MessageId` original desse evento como `OrcamentoId`. Itens e preços detalhados continuam pertencendo ao Execution.
+1. Execution encerra o diagnóstico e publica os snapshots e `ValorTotal`. OS guarda o total e usa o `MessageId` original desse evento como `OrcamentoId`. Itens e preços detalhados continuam pertencendo ao Execution; o OS mantém uma projeção imutável dos snapshots para o acompanhamento privado do cliente.
 2. A aprovação administrativa registra `Decisao = Autorizada`, cria `Pagamento` em `AguardandoPagamento` e grava histórico `PagamentoSolicitado`. Publica o pedido de pagamento e retorna 202 após o commit local. Essa resposta não comprova pagamento nem início de execução.
 3. Billing abre transação, verifica deduplicação e adquire um advisory lock PostgreSQL pela ordem. Uma solicitação já concluída com os mesmos dados não chama novamente o gateway nem republica resultado. Dados diferentes para a mesma ordem são recusados.
 4. Na primeira solicitação, Billing cria a cobrança em memória e chama `IPaymentGateway.ChargeAsync`. O mock aprova imediatamente e devolve `mock-<UUID da ordem>`. Valor zero é permitido; o valor decimal recebido é preservado, sem recalcular ou arredondar os itens.
@@ -141,3 +141,7 @@ Os novos serviços podem usar dados novos de demonstração. Ordens antigas sem 
 - Cobrança: `ProcessarPagamentoUseCase`, `BillingDbContext`, `IPaymentGateway` e `MockPaymentGateway` no Billing.
 - Compensação de estoque: `CancelarExecucaoUseCase` no Execution.
 - Consulte o [padrão de mensageria](mensageria.md), o [estado da migração](estado-da-migracao.md) e as [evidências Billing](../operacao/validacao-billing.md). Os testes isolados e distribuídos verificam caminhos de negócio e falhas específicas; não oferecem garantia de exactly-once entre serviços.
+
+## Cliente e entrega
+
+A aprovação também pode ocorrer por [link privado do cliente](acompanhamento-e-entrega.md), com os mesmos casos de uso e invariantes. O cancelamento pelo link só é aceito antes da aprovação. Após a execução concluir, um administrador pode marcar a ordem `Entregue` no OS. A etapa financeira continua `Concluida`; Execution permanece `Finalizada`. Entrega não publica evento nem movimenta cobrança/estoque.

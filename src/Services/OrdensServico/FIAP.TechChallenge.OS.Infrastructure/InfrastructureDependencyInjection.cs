@@ -22,6 +22,7 @@ public static class InfrastructureDependencyInjection
         services.AddDbContext<AppDbContext>((provider, options) => options.UseNpgsql(
             provider.GetRequiredService<IConfiguration>().GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection deve ser configurada.")));
+        services.AddScoped<IAcessoClienteService, AcessoClienteService>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
         services.AddSingleton<ITokenService>(provider => new JwtTokenService(

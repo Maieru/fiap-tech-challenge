@@ -22,6 +22,21 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.AcessoClienteEntity", b =>
+                {
+                    b.Property<Guid>("OrdemServicoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("OrdemServicoId");
+
+                    b.ToTable("AcessosCliente");
+                });
+
             modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.ClienteEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -118,6 +133,9 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DataDecisaoUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DataEntrega")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("DataEnvioAprovacao")
                         .HasColumnType("timestamp with time zone");
 
@@ -140,6 +158,9 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("OrcamentoId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("OrcamentoJson")
+                        .HasColumnType("text");
 
                     b.Property<string>("PagamentoJson")
                         .HasColumnType("text");
@@ -173,7 +194,7 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_Ordens_Descricao", "length(btrim(\"DescricaoProblema\")) >= 3");
 
-                            t.HasCheckConstraint("CK_Ordens_Status", "\"Status\" IN (1, 2, 3, 4, 5, 7)");
+                            t.HasCheckConstraint("CK_Ordens_Status", "\"Status\" IN (1, 2, 3, 4, 5, 6, 7)");
                         });
                 });
 
@@ -263,6 +284,15 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                         .HasFilter("\"Ativo\" = true");
 
                     b.ToTable("Veiculos");
+                });
+
+            modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.AcessoClienteEntity", b =>
+                {
+                    b.HasOne("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.OrdemServicoEntity", null)
+                        .WithMany()
+                        .HasForeignKey("OrdemServicoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("FIAP.TechChallenge.OS.Infrastructure.Persistence.Entities.HistoricoOrdemEntity", b =>

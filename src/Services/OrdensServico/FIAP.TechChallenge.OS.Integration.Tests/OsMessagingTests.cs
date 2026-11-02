@@ -74,6 +74,133 @@ public sealed class OsMessagingTests
         return messages;
     }
 
+    private async Task<string> IssueAccess(Guid id)
+    {
+        using var response = await host.Client.PostAsJsonAsync($"{OsTestHost.Root}/ordens/{id}/acesso-cliente", new { });
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK), await response.Content.ReadAsStringAsync());
+        return (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("token").GetString()!;
+    }
+    private static string Tracking(Guid id, string? token = null) => $"{OsTestHost.Root}/ordens/acompanhamento/{id}?token={token}";
+
+    [Test]
+    public async Task PrivateAccess_ShouldRequireJwtForIssuance_ValidateScope_AndRotateOnlyTheHash()
+    {
+        var id = await Order();
+        var token = await IssueAccess(id);
+        var row = await host.Client.GetFromJsonAsync<JsonElement>($"{OsTestHost.Root}/ordens/{id}");
+        var other = (await host.CreateOrderAsync(row.GetProperty("clienteId").GetGuid(), row.GetProperty("veiculoId").GetGuid())).GetProperty("id").GetGuid();
+        await using (var db = host.CreateDbContext())
+        {
+            var stored = await db.AcessosCliente.SingleAsync(x => x.OrdemServicoId == id);
+            Assert.That(stored.TokenHash, Is.Not.EqualTo(token));
+        }
+        host.Client.DefaultRequestHeaders.Authorization = null;
+        using var denied = await host.Client.PostAsJsonAsync($"{OsTestHost.Root}/ordens/{id}/acesso-cliente", new { });
+        using var read = await host.Client.GetAsync(Tracking(id, token));
+        var text = await read.Content.ReadAsStringAsync();
+        Assert.Multiple(() =>
+        {
+            Assert.That(denied.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+            Assert.That(read.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(read.Headers.CacheControl?.NoStore, Is.True);
+            Assert.That(read.Headers.GetValues("Referrer-Policy").Single(), Is.EqualTo("no-referrer"));
+            Assert.That(text, Does.Not.Contain("clienteId").And.Not.Contain("cpf").And.Not.Contain("tokenHash").And.Not.Contain("gatewayPaymentId"));
+        });
+        foreach (var path in new[] { Tracking(id), Tracking(id, new string('0', 64)), Tracking(other, token), Tracking(Guid.NewGuid(), token) })
+        {
+            using var invalid = await host.Client.GetAsync(path);
+            Assert.That(invalid.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+        }
+        foreach (var action in new[] { "aprovar-execucao", "cancelar" })
+        {
+            using var invalid = await host.Client.PutAsJsonAsync($"{OsTestHost.Root}/ordens/acompanhamento/{id}/{action}", new { });
+            Assert.That(invalid.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+            using var wrongOrder = await host.Client.PutAsJsonAsync($"{OsTestHost.Root}/ordens/acompanhamento/{other}/{action}?token={token}", new { });
+            Assert.That(wrongOrder.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+        }
+        host.Authenticate();
+        var unchanged = await host.Client.GetFromJsonAsync<JsonElement>($"{OsTestHost.Root}/ordens/{id}");
+        Assert.That(unchanged.GetProperty("decisao").GetInt32(), Is.Zero);
+        var replacement = await IssueAccess(id);
+        host.Client.DefaultRequestHeaders.Authorization = null;
+        using var old = await host.Client.GetAsync(Tracking(id, token));
+        using var current = await host.Client.GetAsync(Tracking(id, replacement));
+        Assert.Multiple(() =>
+        {
+            Assert.That(replacement, Has.Length.EqualTo(64).And.Not.EqualTo(token));
+            Assert.That(old.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+            Assert.That(current.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        });
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task CustomerDecision_ShouldUseTheSameSaga_AndSerializeConflictingDecisions(bool approve)
+    {
+        var id = await Order(); await Awaiting(id); var token = await IssueAccess(id);
+        host.Client.DefaultRequestHeaders.Authorization = null;
+        var action = approve ? "aprovar-execucao" : "cancelar";
+        var contrary = approve ? "cancelar" : "aprovar-execucao";
+        var route = $"{OsTestHost.Root}/ordens/acompanhamento/{id}";
+        using var accepted = await host.Client.PutAsJsonAsync($"{route}/{action}?token={token}", new { });
+        using var repeated = await host.Client.PutAsJsonAsync($"{route}/{action}?token={token}", new { });
+        using var conflict = await host.Client.PutAsJsonAsync($"{route}/{contrary}?token={token}", new { });
+        var acceptedBody = await accepted.Content.ReadAsStringAsync();
+        Assert.Multiple(() =>
+        {
+            Assert.That(accepted.StatusCode, Is.EqualTo(HttpStatusCode.Accepted));
+            Assert.That(repeated.StatusCode, Is.EqualTo(HttpStatusCode.Accepted));
+            Assert.That(conflict.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
+            Assert.That(acceptedBody, Does.Not.Contain("clienteId").And.Not.Contain("gatewayPaymentId").And.Not.Contain("cobrancaId"));
+            Assert.That(Outgoing(id, approve ? "oficina.os.billing.requests.v1" : "oficina.os.events.v1")
+                .Count(x => x.Type == (approve ? "os.pagamento-solicitado" : "os.cancelamento-solicitado")), Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public async Task Delivery_ShouldPersistOnce_ExposeBudget_AndSurviveLateExecutionConfirmation()
+    {
+        var id = await Order(); var token = await IssueAccess(id);
+        using var early = await host.Client.PutAsJsonAsync($"{OsTestHost.Root}/ordens/{id}/entregar", new { });
+        Assert.That(early.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        await Send(id, DiagnosticoIniciado.Type, new DiagnosticoIniciado(id)); await Wait(id, 2);
+        var serviceId = Guid.NewGuid();
+        await Send(id, DiagnosticoConcluido.Type, new { ordemServicoId = id, servicos = new[] { new { itemId = serviceId, descricao = "Revisão", quantidade = 1, valorUnitario = 12.345m, valorTotal = 12.345m } }, pecasInsumos = Array.Empty<object>(), valorTotal = 12.345m });
+        var order = await Wait(id, 3);
+        var tracking = await host.Client.GetFromJsonAsync<JsonElement>(Tracking(id, token));
+        Assert.Multiple(() =>
+        {
+            Assert.That(tracking.GetProperty("valorOrcamento").GetDecimal(), Is.EqualTo(12.345m));
+            Assert.That(tracking.GetProperty("orcamento").GetProperty("servicos")[0].GetProperty("descricao").GetString(), Is.EqualTo("Revisão"));
+        });
+        using var accepted = await host.Client.PutAsJsonAsync($"{OsTestHost.Root}/ordens/{id}/aprovar-execucao", new { });
+        Assert.That(accepted.StatusCode, Is.EqualTo(HttpStatusCode.Accepted));
+        await Send(id, "billing.pagamento-confirmado", new FIAP.TechChallenge.Billing.Application.Messaging.PagamentoConfirmado(id, order.GetProperty("orcamentoId").GetGuid(), Guid.NewGuid(), 12.345m, "BRL", "mock"));
+        using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+            while (Outgoing(id).All(x => x.Type != "os.execucao-autorizada")) await Task.Delay(100, timeout.Token);
+        await Send(id, ExecucaoIniciada.Type, new ExecucaoIniciada(id)); await Wait(id, 4);
+        await Send(id, ExecucaoConcluida.Type, new ExecucaoConcluida(id)); await Wait(id, 5);
+        host.Client.DefaultRequestHeaders.Authorization = null;
+        using var denied = await host.Client.PutAsJsonAsync($"{OsTestHost.Root}/ordens/{id}/entregar", new { });
+        Assert.That(denied.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+        host.Authenticate();
+        var deliveries = await Task.WhenAll(Enumerable.Range(0, 2).Select(_ => host.Client.PutAsJsonAsync($"{OsTestHost.Root}/ordens/{id}/entregar", new { })));
+        foreach (var delivery in deliveries) { Assert.That(delivery.StatusCode, Is.EqualTo(HttpStatusCode.OK)); delivery.Dispose(); }
+        var delivered = await Wait(id, 6);
+        await Send(id, ExecucaoConcluida.Type, new ExecucaoConcluida(id));
+        var barrier = (await host.CreateOrderAsync(order.GetProperty("clienteId").GetGuid(), order.GetProperty("veiculoId").GetGuid())).GetProperty("id").GetGuid();
+        await Send(barrier, DiagnosticoIniciado.Type, new DiagnosticoIniciado(barrier)); await Wait(barrier, 2);
+        var history = await host.Client.GetFromJsonAsync<JsonElement>($"{OsTestHost.Root}/ordens/{id}/historico");
+        host.Client.DefaultRequestHeaders.Authorization = null;
+        var publicOrder = await host.Client.GetFromJsonAsync<JsonElement>(Tracking(id, token));
+        Assert.Multiple(() =>
+        {
+            Assert.That(publicOrder.GetProperty("status").GetInt32(), Is.EqualTo(6));
+            Assert.That(publicOrder.GetProperty("dataEntrega").GetDateTime(), Is.EqualTo(delivered.GetProperty("dataEntrega").GetDateTime()));
+            Assert.That(history.EnumerateArray().Count(x => x.GetProperty("tipo").GetString() == "OrdemEntregue"), Is.EqualTo(1));
+        });
+    }
+
     [Test]
     public async Task Creation_ShouldPublishNormalizedContractWithCorrelation()
     {

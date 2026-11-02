@@ -34,7 +34,7 @@ public sealed class AutorizarExecucaoUseCaseTests
         var messaging = new Mock<IMessagingService>();
         _ = messaging.Setup(x => x.PublishAsync(OSMessaging.BillingTopic, order.Id.ToString("D"),
             It.IsAny<MessageEnvelope<PagamentoSolicitado>>(), It.IsAny<CancellationToken>())).Returns(() => Step("publish"));
-        var useCase = new AutorizarExecucaoUseCase(repository.Object, work.Object, messaging.Object, new MessageContext(), TimeProvider.System);
+        var useCase = new AutorizarExecucaoUseCase(repository.Object, work.Object, messaging.Object, new MessageContext(), TimeProvider.System, Mock.Of<IAcessoClienteService>());
         if (failure == "none")
         {
             var result = await useCase.ExecuteAsync(new(order.Id));

@@ -1,4 +1,5 @@
 using FIAP.TechChallenge.OS.API.Extensions;
+using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.EntregarOrdemServico;
 using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico;
 using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.AutorizarExecucao;
 using FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.ConsultarHistorico;
@@ -28,6 +29,14 @@ public sealed class OrdensController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Cancel(Guid id, ISolicitarCancelamentoUseCase useCase, CancellationToken cancellationToken) =>
         (await useCase.ExecuteAsync(new(id), cancellationToken)).ToActionResult(this, value => AcceptedAtAction(nameof(GetById), new { id }, value));
+
+    [HttpPut("{id:guid}/entregar")]
+    [ProducesResponseType(typeof(EntregarOrdemServicoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Entregar(Guid id, [FromServices] IEntregarOrdemServicoUseCase useCase, CancellationToken cancellationToken) =>
+        (await useCase.ExecuteAsync(new(id), cancellationToken)).ToActionResult(this);
 
     [HttpPost]
     [ProducesResponseType(typeof(CriarOrdemServicoResponse), StatusCodes.Status201Created)]

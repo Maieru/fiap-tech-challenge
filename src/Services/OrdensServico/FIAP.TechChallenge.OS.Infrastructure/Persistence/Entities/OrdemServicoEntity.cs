@@ -20,6 +20,8 @@ public sealed class OrdemServicoEntity
     public Guid? OrcamentoId { get; set; }
     public decimal? ValorOrcamento { get; set; }
     public string? PagamentoJson { get; set; }
+    public DateTime? DataEntrega { get; set; }
+    public string? OrcamentoJson { get; set; }
     public long Version { get; set; }
 }
 

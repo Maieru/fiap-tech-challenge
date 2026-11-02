@@ -1,6 +1,6 @@
 # Validação ponta a ponta dos três serviços
 
-Executada em 2026-11-02. As três imagens foram reconstruídas a partir dos checkouts atuais. A suíte `Distributed.slnx` passou com **6 cenários, 0 falhas**, em aproximadamente 41 segundos após os builds.
+Validação inicial em 2026-11-02, anterior ao login OS e à entrega. As três imagens foram reconstruídas a partir dos checkouts atuais. A suíte `Distributed.slnx` passou com **6 cenários, 0 falhas**, em aproximadamente 41 segundos após os builds.
 
 ## Ambiente e fronteiras verificadas
 
@@ -60,6 +60,18 @@ Imagens locais verificadas (IDs de imagem, não digests de publicação):
 
 ## O que esta validação permite afirmar
 
-O fluxo atual dos três backends funciona com o gateway mockado nos cenários executados, incluindo reentrega e retomada. Isso não comprova pagamento real no Mercado Pago, integração do frontend, entrega da ordem ao cliente ou deploy AWS. O JWT do teste é assinado pelo ambiente de teste; o fluxo de login/emissão de tokens no legado não é exercitado.
+O fluxo atual dos três backends funciona com o gateway mockado nos cenários executados, incluindo reentrega e retomada. A execução inicial não cobria login do OS nem entrega administrativa. Os resultados adicionais abaixo cobrem essas funcionalidades. Pagamento real no Mercado Pago, frontend e deploy AWS permanecem fora desta validação.
 
 A publicação direta antes do commit continua sem atomicidade entre banco, Kafka e gateway. Esta execução não elimina a necessidade de reconciliação em entrega incerta nem demonstra tolerância a todas as falhas de infraestrutura. Consulte a [Saga](../arquitetura/saga-pagamento.md), as [correções da revisão](revisao-billing-saga.md) e o [estado da migração](../arquitetura/estado-da-migracao.md).
+
+## Validação adicional — acompanhamento e entrega (2026-11-02)
+
+A suíte distribuída passou com **9 cenários, 0 falhas**, em aproximadamente 46 segundos. OS foi reconstruído com as novas funcionalidades; as imagens Execution/Billing foram reutilizadas porque seu código de produção não mudou. Os JWTs administrativos são obtidos por cadastro/login real no OS. As chamadas do cliente são feitas sem JWT, usando somente o token privado da ordem.
+
+Dois novos cenários verificam consulta do orçamento de R$ 140,55, aprovação pelo link com publicação única, pagamento confirmado, execução e entrega administrativa idempotente; e cancelamento pelo link com devolução de cinco unidades ao estoque, sem nova devolução após replay. Uma confirmação tardia de conclusão não regride `Entregue` (OS 6). Execution continua `Finalizada` (5) e Billing confirmado.
+
+Os 265 testes OS sem imagem passaram (136 domínio, 66 aplicação, 4 contratos e 59 integração). Dois testes da imagem também passaram. A integração HTTP verificou rotação, token de outra ordem, hash persistido, ausência de campos internos na resposta, JWT para emissão/entrega e entrega concorrente com histórico único.
+
+Artefatos locais: OS `artifacts/customer-delivery/` e `artifacts/customer-delivery-image/`; Execution `artifacts/customer-delivery-distributed/` e `artifacts/customer-delivery-distributed.log`. O [guia de acompanhamento e entrega](../arquitetura/acompanhamento-e-entrega.md) descreve o contrato e os limites. O frontend continua no legado.
+
+Revalidação da imagem final após incluir os schemas de resposta no OpenAPI: **9/9 cenários distribuídos aprovados**, em aproximadamente 54 segundos. A suíte OS com coleta de cobertura manteve **265/265 testes aprovados**. ReportGenerator 5.5.12 consolidou **90,9% de linhas cobertas**, acima do gate de 80%; relatórios em `artifacts/customer-delivery-coverage-summary/`. A stack local recebeu a nova imagem OS e aplicou a migration; readiness das três APIs e Scalar OS responderam 200. A especificação final inclui schemas de acompanhamento, decisão do cliente e entrega, exportada em `artifacts/os-openapi.json`.

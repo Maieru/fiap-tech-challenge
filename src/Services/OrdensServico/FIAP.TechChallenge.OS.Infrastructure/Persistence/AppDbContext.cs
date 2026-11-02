@@ -5,6 +5,7 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
+    public DbSet<AcessoClienteEntity> AcessosCliente => Set<AcessoClienteEntity>();
     public DbSet<UsuarioEntity> Usuarios => Set<UsuarioEntity>();
     public DbSet<ClienteEntity> Clientes => Set<ClienteEntity>();
     public DbSet<VeiculoEntity> Veiculos => Set<VeiculoEntity>();
@@ -14,6 +15,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     protected override void OnModelCreating(ModelBuilder model)
     {
+        var acessos = model.Entity<AcessoClienteEntity>();
+        acessos.HasKey(x => x.OrdemServicoId);
+        acessos.Property(x => x.TokenHash).HasMaxLength(64).IsRequired();
+        acessos.HasOne<OrdemServicoEntity>().WithMany().HasForeignKey(x => x.OrdemServicoId).OnDelete(DeleteBehavior.Cascade);
+
         var usuarios = model.Entity<UsuarioEntity>();
         usuarios.HasQueryFilter(x => x.Ativo);
         usuarios.Property(x => x.Login).HasMaxLength(100).IsRequired();
@@ -44,7 +50,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         ordens.ToTable("OrdensServico", table =>
         {
             table.HasCheckConstraint("CK_Ordens_Descricao", "length(btrim(\"DescricaoProblema\")) >= 3");
-            table.HasCheckConstraint("CK_Ordens_Status", "\"Status\" IN (1, 2, 3, 4, 5, 7)");
+            table.HasCheckConstraint("CK_Ordens_Status", "\"Status\" IN (1, 2, 3, 4, 5, 6, 7)");
             table.HasCheckConstraint("CK_Ordens_Decisao", "\"Decisao\" IN (0, 1, 2)");
         });
 

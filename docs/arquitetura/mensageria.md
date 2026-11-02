@@ -188,3 +188,7 @@ Validação local não significa publicação NuGet, execução remota do CI ou 
 ## Billing e Saga no OS
 
 PagamentoSolicitado usa oficina.os.billing.requests.v1; PagamentoConfirmado e PagamentoRecusado usam oficina.billing.events.v1. Grupo oficina-billing-v1. OS assina os eventos Billing além do Execution; o tópico dedicado evita expor novos tipos ao consumidor Execution. A publicação permanece direta, sem atomicidade distribuída. Consulte ADR-017/RFC-010 e README Billing para operação e pacotes candidatos.
+
+## Acompanhamento e entrega
+
+OS projeta os snapshots de DiagnosticoConcluido para consultas privadas do cliente; não há chamada HTTP ao Execution. Aprovação pelo link usa os mesmos casos de uso e contratos da aprovação administrativa. A entrega é local ao OS e não cria novo contrato Kafka. Execution continua Finalizada após OS Entregue. Consulte [acompanhamento e entrega](acompanhamento-e-entrega.md).

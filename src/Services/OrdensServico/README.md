@@ -110,7 +110,7 @@ O histórico preserva IDs, tipo, data UTC e correlação, sem depender de cadast
 
 Aprovar/cancelar só inicia uma decisão enquanto AguardandoAprovacao e retorna 202 com decisao e pendente.
 O status só avança após confirmação do Execution. Repetir a mesma decisão não republica; a oposta retorna 409.
-Consultas retornam status/datas projetados e decisão. Itens, valores e estoque são consultados no Execution.
+Consultas retornam status/datas projetados e decisão. O OS também projeta os itens e o total do orçamento para o acompanhamento; catálogo, edição dos itens e estoque continuam no Execution.
 
 ## Edição e soft delete
 
@@ -158,3 +158,7 @@ A aprovação agora publica PagamentoSolicitado no tópico oficina.os.billing.re
 ## Identidade administrativa
 
 OS oferece cadastro anônimo, login JWT e exclusão autenticada de usuários sob `/api/os/v1/usuarios`, no banco exclusivo OS. Não há usuário padrão; cadastre pela API e use o JWT retornado por `/login` nos três serviços. Consulte o [guia](../../../docs/arquitetura/autenticacao-os.md).
+
+## Acompanhamento privado e entrega
+
+Implementados no OS: emissão/rotação de link privado com JWT (`POST /ordens/{id}/acesso-cliente`), consulta, aprovação e cancelamento pelo link sem JWT, e entrega administrativa (`PUT /ordens/{id}/entregar`). Prefixo `/api/os/v1`. O link exige token aleatório; somente seu hash é persistido. Aprovação/cancelamento usam a mesma Saga e as mesmas invariantes administrativas. Entrega exige `Finalizada`, avança para `Entregue` e registra data/histórico uma única vez. Consulte [rotas, segurança e exemplos](../../../docs/arquitetura/acompanhamento-e-entrega.md). Frontend permanece no legado.

@@ -11,7 +11,7 @@ Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os
 O legado usa `Maieru.FiapTechChallenge.Chassis` **0.1.0** e o OS usa **1.1.1**, com adaptador Kafka **0.1.1**, por `PackageReference`.
 Os contratos OS e Execution estão publicados no NuGet na versão **0.1.0** e são restaurados normalmente pelo feed público.
 
-Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing, pagamentos, adaptação do frontend, implantação dos novos serviços e retirada do legado ainda precisam ser realizados. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
+Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing com gateway mockado, Saga, acompanhamento privado e entrega administrativa estão implementados. Adaptação do frontend, gateway real, implantação dos novos serviços e retirada do legado permanecem pendentes. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
 
 ## Subir OS, Execution e Billing
 
