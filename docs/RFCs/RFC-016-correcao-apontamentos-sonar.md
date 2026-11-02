@@ -27,7 +27,11 @@ Corrigir as causas no código ativo e validar o comportamento. O catálogo abaix
 | `csharpsquid:S6781` | 1 | Fallback de chave JWT pertencia ao monólito removido. OS exige configuração de chave, sem fallback equivalente. |
 | `csharpsquid:S2583` | 1 | Arquivo antigo removido; cópia do Result no OS agora rejeita Error nulo antes de ler Code. Testes verificam JSON com erro nulo/ausente e round-trip válido. |
 
-Preservar os três apontamentos dos manifests arquivados como referência histórica: não aplicar esses manifests nem alterar seu conteúdo para aparentar segurança. Excluir somente `legacy/**` do escopo ativo, conforme a retirada já documentada na ADR-021. Habilitar análise de outras linguagens no scanner .NET (`scanAll=true`), mantendo frontend e infraestrutura ativos analisáveis.
+Preservar os três apontamentos dos manifests arquivados como referência histórica: não aplicar esses manifests nem alterar seu conteúdo para aparentar segurança. Excluir `legacy/**` conforme a retirada já documentada na ADR-021. Manter análise de outras linguagens no scanner .NET (`scanAll=true`) para a infraestrutura ativa.
+
+### Revisão do escopo solicitada em 2026-11-02
+
+Retirar `src/FIAP.TechChallenge.Fase1.Frontend/**` do Sonar por solicitação explícita da equipe, usando `sonar.exclusions` e `sonar.test.exclusions`. A exclusão cobre código, testes, Dockerfile e Nginx dessa pasta; os manifests Kubernetes e workflows permanecem analisáveis. As correções anteriores são preservadas e o job frontend continua exigindo testes, lint, build e verificação da imagem no CI. A consequência é que o Sonar deixa de apresentar métricas e findings dos arquivos excluídos após a próxima análise dessa configuração. A tabela acima registra o tratamento das 20 issues consultadas antes desta revisão.
 
 ## Contrato de transporte e execução
 
@@ -40,7 +44,7 @@ O pod frontend não usa credenciais Kubernetes. Executa sem root, sem elevação
 ## Alternativas consideradas
 
 - Apenas encerrar issues remotamente: não corrige a causa nem valida o checkout.
-- Excluir frontend/infraestrutura da análise: perde cobertura de código ativo.
+- Excluir também toda a infraestrutura: descartado por retirar análise de arquivos ativos além do frontend solicitado. Para o frontend, a equipe optou pela exclusão descrita na revisão de escopo, mantendo as verificações próprias do CI.
 - Aceitar HTTP interno como solução definitiva na nuvem: mantém tokens e dados em trânsito sem criptografia entre Nginx e upstream.
 - Exigir gateway/certificados no desenvolvimento local: adiciona dependências desnecessárias ao fluxo local já existente.
 - Executar Nginx como root para manter a porta 80 interna: desnecessário; Service e Compose podem publicar portas estáveis sobre 8080.

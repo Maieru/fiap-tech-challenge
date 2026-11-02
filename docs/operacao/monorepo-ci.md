@@ -54,7 +54,7 @@ O check agregado `ci-required` exige sucesso de `frontend`, `component` (OS) e `
 
 ## SonarQube Cloud do principal
 
-A análise usa `sonar.scanner.scanAll=true` para incluir TypeScript, Docker, Kubernetes e Actions além do C#. As exclusões abrangem os manifests não implantáveis em `legacy/**` e arquivos gerados (`artifacts`, migrations, feature gerada, dependências e saída de build). Código ativo permanece no escopo; nenhum apontamento foi encerrado manualmente ou suprimido. Ver [RFC-016](../RFCs/RFC-016-correcao-apontamentos-sonar.md).
+A análise mantém `sonar.scanner.scanAll=true` para analisar as linguagens de infraestrutura além do C#. Por solicitação da equipe, `src/FIAP.TechChallenge.Fase1.Frontend/**` está excluído de fontes e testes do Sonar, incluindo TypeScript, testes, Dockerfile e Nginx dessa pasta. Os manifests Kubernetes e workflows continuam no escopo. As demais exclusões abrangem os manifests não implantáveis em `legacy/**` e arquivos gerados (`artifacts`, migrations, feature gerada, dependências e saída de build). Nenhum apontamento foi encerrado manualmente no painel. A exclusão terá efeito na próxima análise CI que usar esta configuração. Ver [RFC-016](../RFCs/RFC-016-correcao-apontamentos-sonar.md).
 
 O job frontend instala pelo lockfile sem lifecycle scripts e executa também o teste isolado de Nginx sem root e validação TLS. Actions de build, análise e publicação estão fixadas em SHAs completos, conferidos nos repositórios oficiais; atualizações exigem revisar o novo commit. O job que publica a imagem frontend recebe `id-token: write` somente em seu próprio escopo. A destruição agendada preexistente permanece fora desta alteração.
 

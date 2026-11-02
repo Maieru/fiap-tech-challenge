@@ -102,7 +102,8 @@ jobs:
           & $scanner begin "/k:$env:SONAR_PROJECT_KEY" "/o:$env:SONAR_ORGANIZATION" `
             "/d:sonar.token=$env:SONAR_TOKEN" /d:sonar.host.url=https://sonarcloud.io `
             /d:sonar.cs.opencover.reportsPaths=artifacts/reports/**/coverage.opencover.xml `
-            '/d:sonar.exclusions=legacy/**,artifacts/**,**/Migrations/**,**/*.feature.cs,**/node_modules/**,**/dist/**,**/bin/**,**/obj/**' `
+            '/d:sonar.exclusions=src/FIAP.TechChallenge.Fase1.Frontend/**,legacy/**,artifacts/**,**/Migrations/**,**/*.feature.cs,**/node_modules/**,**/dist/**,**/bin/**,**/obj/**' `
+            '/d:sonar.test.exclusions=src/FIAP.TechChallenge.Fase1.Frontend/**' `
             /d:sonar.scanner.scanAll=true /d:sonar.qualitygate.wait=true
           dotnet build Backend.slnx -c Release --no-incremental --disable-build-servers
           & $scanner end "/d:sonar.token=$env:SONAR_TOKEN"
