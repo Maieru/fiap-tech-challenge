@@ -156,8 +156,9 @@ public sealed class OsKafkaConsumer(IConfiguration configuration, IServiceScopeF
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
         catch (Exception exception)
         {
-            logger.LogCritical(exception, "Consumo interrompido sem avançar offset. Tópico {Topic}, partição {Partition}, offset {Offset}, mensagem {MessageId}, correlação {CorrelationId}. Corrija e reinicie.",
-                record?.Topic, record?.Partition.Value, record?.Offset.Value, messageId, correlationId);
+            if (logger.IsEnabled(LogLevel.Critical))
+                logger.LogCritical(exception, "Consumo interrompido sem avançar offset. Tópico {Topic}, partição {Partition}, offset {Offset}, mensagem {MessageId}, correlação {CorrelationId}. Corrija e reinicie.",
+                    record?.Topic, record?.Partition.Value, record?.Offset.Value, messageId, correlationId);
             Environment.ExitCode = 1;
             throw;
         }

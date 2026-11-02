@@ -51,7 +51,7 @@ public sealed class OsMessagingTests
         await Send(id, DiagnosticoConcluido.Type, new DiagnosticoConcluido(id, [], [], 0));
         await Wait(id, 3);
     }
-    private IReadOnlyList<MessageEnvelope<JsonElement>> Outgoing(Guid id, string topic = "oficina.os.events.v1")
+    private List<MessageEnvelope<JsonElement>> Outgoing(Guid id, string topic = "oficina.os.events.v1")
     {
         using var consumer = new ConsumerBuilder<string, string>(new ConsumerConfig
         { BootstrapServers = host.BootstrapServers, GroupId = $"inspect-{Guid.NewGuid():N}", EnableAutoCommit = false }).Build();

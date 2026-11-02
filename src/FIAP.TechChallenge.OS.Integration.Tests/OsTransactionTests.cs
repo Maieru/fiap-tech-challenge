@@ -13,6 +13,7 @@ namespace FIAP.TechChallenge.OS.Integration.Tests;
 [NonParallelizable]
 public sealed class OsTransactionTests
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private OsTestHost host = null!;
     [SetUp] public async Task Start() { host = new OsTestHost(); await host.StartAsync(); }
     [TearDown] public async Task Stop() => await host.DisposeAsync();
@@ -38,7 +39,7 @@ public sealed class OsTransactionTests
                     DateTimeOffset.UtcNow, "transaction-test", null, null, null,
                     new { OrdemServicoId = id, Servicos = Array.Empty<object>(), PecasInsumos = Array.Empty<object>(), ValorTotal = 0 });
                 await producer.ProduceAsync("oficina.execution.events.v1", new Message<string, string>
-                { Key = id.ToString("D"), Value = JsonSerializer.Serialize(envelope, new JsonSerializerOptions(JsonSerializerDefaults.Web)) });
+                { Key = id.ToString("D"), Value = JsonSerializer.Serialize(envelope, JsonOptions) });
             }
         }
         using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30)))

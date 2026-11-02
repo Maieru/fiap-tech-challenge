@@ -30,7 +30,7 @@ jobs:
           cache-dependency-path: src/FIAP.TechChallenge.Fase1.Frontend/package-lock.json
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm test
-      - run: npx eslint src/services src/types/ordemServico.ts src/pages/ordens-servico src/observability src/components/ui/card.tsx src/layouts/AdminLayout.tsx vite.config.ts
+      - run: npm run lint:ci
       - run: npm run build
       - run: docker build -t fiap-frontend:ci .
       - name: Verify unprivileged Nginx and upstream TLS

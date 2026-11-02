@@ -65,6 +65,7 @@ Para integrar as três APIs, prefira `docker compose up -d --build` na raiz do O
 
 Migrations são aplicadas na inicialização local pelo Compose. Fora dele, configure ConnectionStrings__DefaultConnection,
 Kafka__BootstrapServers e JWT, habilitando Database__ApplyMigrations=true, ou aplique migrations com dotnet ef.
+As ferramentas `dotnet ef` usam a `DesignTimeFactory` e exigem `ConnectionStrings__DefaultConnection` no ambiente, inclusive para gerar migrations. A factory não carrega o arquivo `.env` automaticamente e não possui conexão ou senha padrão.
 A readiness exige PostgreSQL, migrations, consumidor ativo e Kafka; liveness não consulta dependências.
 
 O volume `fiap-os_os_postgres_data` pertence apenas ao serviço. `docker compose -f compose.os.yaml down` encerra o ambiente preservando seus dados. Não execute `down -v` se quiser conservá-los.

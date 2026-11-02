@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "lint:ci": "eslint src/services src/types/ordemServico.ts src/pages/ordens-servico src/observability src/components/ui/card.tsx src/layouts/AdminLayout.tsx vite.config.ts",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -18,7 +18,7 @@ Os destinos da nuvem devem terminar TLS, diretamente na aplicação ou em proxy 
 
 Antes do rollout, crie no namespace `fiap-frontend` o Secret `fiap-upstream-ca`, com chave `ca.crt` contendo o bundle PEM das CAs confiáveis. Por exemplo: `kubectl create secret generic fiap-upstream-ca -n fiap-frontend --from-file=ca.crt=/caminho/ca-bundle.pem`. Use a CA real do ambiente; não versione chaves privadas. Se os destinos usarem uma CA pública, o bundle pode ser o conjunto de raízes públicas aprovado pelo ambiente. O Secret é obrigatório e sua ausência impede a criação do pod.
 
-Nginx valida a cadeia e o hostname dos certificados, inclusive no OTLP. CA desconhecida, hostname divergente ou destino sem TLS falham com 502; não desative a verificação para contornar configuração incompleta. O Compose local continua usando HTTP em rede local, sem exigir gateway ou certificados. A [RFC-016](../docs/RFCs/RFC-016-correcao-apontamentos-sonar.md) registra a decisão e as verificações.
+Nginx valida a cadeia e o hostname dos certificados, inclusive no OTLP. CA desconhecida, hostname divergente ou destino sem TLS falham com 502; não desative a verificação para contornar configuração incompleta. O Compose local continua usando HTTP em rede local, sem exigir gateway ou certificados.
 
 ## Topologia preparada
 
