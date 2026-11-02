@@ -1,6 +1,6 @@
 # Migração do frontend para microsserviços
 
-Atualizado em 2026-11-02. O frontend foi adaptado para OS, Execution e Billing e incluído no Compose integrado. Não há fallback ao monólito. A implementação e a verificação local não representam implantação dos serviços na AWS ou retirada do legado.
+Atualizado em 2026-11-02. O frontend foi adaptado para OS, Execution e Billing e incluído no Compose integrado. Não há fallback ao monólito. A implementação e a verificação local não representam implantação dos serviços na AWS. A [retirada posterior do código do monólito](retirada-monolito.md) não apaga recursos ou dados legados.
 
 ## Distribuição das chamadas
 
@@ -51,4 +51,4 @@ Resultados e evidências da sessão: [verificação local do frontend](../operac
 - Verificação no navegador de login, lista e detalhes, incluindo orçamento público e entrega. A primeira inspeção detectou limite de página do Execution (100), corrigido nas consultas dos seletores.
 - O lint global tem erros anteriores em componentes UI, AuthContext e outras listagens; o lint dos serviços, tipos, páginas de ordens, observabilidade e Vite alterados passa.
 
-Pendências: provisionar/implantar os serviços e suas dependências na AWS, validar roteamento/JWT/privacidade na borda real, trocar pagamento mockado por gateway real e executar a retirada do legado quando os critérios de produção forem atendidos. Os fluxos de indisponibilidade prolongada/compensação por recusa continuam dependendo dos cenários distribuídos backend; o smoke frontend usa o mock de aprovação existente.
+Pendências: provisionar/implantar os serviços e suas dependências na AWS, validar roteamento/JWT/privacidade na borda real, trocar pagamento mockado por gateway real e executar a retirada dos recursos/dados legados quando os critérios de produção forem atendidos. O código e a automação exclusiva do monólito já foram retirados. Os fluxos de indisponibilidade prolongada/compensação por recusa continuam dependendo dos cenários distribuídos backend; o smoke frontend usa o mock de aprovação existente.

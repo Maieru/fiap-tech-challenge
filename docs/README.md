@@ -4,12 +4,15 @@ Para acompanhar a transição do monólito, consulte o [estado atual da migraç�
 
 | Área | Documentos |
 | --- | --- |
-| Migração e serviços | [Estado atual](arquitetura/estado-da-migracao.md), [roteiro do frontend](arquitetura/migracao-frontend.md), [OS Service](../src/Services/OrdensServico/README.md), [Execution](arquitetura/execution.md), [Billing e Saga](arquitetura/saga-pagamento.md), [chassi em repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis) |
-| Qualidade e dependências | [CI do monorepo, consumo NuGet e Sonar](operacao/monorepo-ci.md), [histórico de validação do Execution](operacao/validacao-execution.md), [revisão Billing/Saga](operacao/revisao-billing-saga.md), [validação ponta a ponta](operacao/validacao-ponta-a-ponta.md) |
+| Migração e serviços | [Estado atual](arquitetura/estado-da-migracao.md), [frontend migrado](arquitetura/migracao-frontend.md), [OS Service](operacao/os-service.md), [Execution](arquitetura/execution.md), [Billing e Saga](arquitetura/saga-pagamento.md), [chassi em repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis) |
+| Frontend local e nuvem | [Configuração e comandos](../src/FIAP.TechChallenge.Fase1.Frontend/README.md), [validação local](operacao/validacao-frontend.md), [pré-requisitos Kubernetes](../k8s/README.md), [ADR-020](ADRs/ADR-020-frontend-microsservicos-mesma-origem.md), [RFC-013](RFCs/RFC-013-proxy-frontend-microsservicos.md) |
+| Qualidade e dependências | [CI do monorepo, consumo NuGet e Sonar](operacao/monorepo-ci.md), [histórico de validação do Execution](operacao/validacao-execution.md), [revisão Billing/Saga](operacao/revisao-billing-saga.md), [validação backend ponta a ponta](operacao/validacao-ponta-a-ponta.md), [validação do frontend](operacao/validacao-frontend.md) |
 | Arquitetura e legado | [Componentes, coexistência e camadas](arquitetura/README.md), [sequências](arquitetura/sequencias.md), [banco de dados e ER](arquitetura/banco-de-dados.md) |
 | Operação do legado/AWS | [CI/CD e deploy](operacao/ci-cd.md), [observabilidade](operacao/observabilidade.md), [métricas de negócio](operacao/metricas-negocio.md), [configuração do dashboard New Relic](operacao/dashboard-new-relic.md) |
 | Decisões arquiteturais | [Índice de ADRs](ADRs/README.md) |
-| Mensageria e integração | [Padrão canônico](arquitetura/mensageria.md), [contratos OS](../src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging/README.md), [integração OS/Execution](RFCs/RFC-009-integracao-os-execution.md), [Saga de pagamento](arquitetura/saga-pagamento.md), [autenticação OS](arquitetura/autenticacao-os.md), [acompanhamento e entrega](arquitetura/acompanhamento-e-entrega.md) |
+| Mensageria e integração | [Padrão canônico](arquitetura/mensageria.md), [contratos OS](../src/FIAP.TechChallenge.OS.Application.Messaging/README.md), [integração OS/Execution](RFCs/RFC-009-integracao-os-execution.md), [Saga de pagamento](arquitetura/saga-pagamento.md), [autenticação OS](arquitetura/autenticacao-os.md), [acompanhamento e entrega](arquitetura/acompanhamento-e-entrega.md) |
+| Retirada do monólito | [Escopo e recuperação](arquitetura/retirada-monolito.md), [referência AWS antiga](../legacy/aws/README.md), [ADR-021](ADRs/ADR-021-retirada-codigo-monolito.md), [RFC-014](RFCs/RFC-014-solucoes-ci-sem-monolito.md) |
+| Organização dos projetos OS | [Guia de desenvolvimento](operacao/os-service.md), [projetos diretamente em src](RFCs/RFC-015-projetos-os-diretamente-src.md) |
 | Histórico da extração | [Inventário inicial](arquitetura/fase4-incremento1.md), [evidências iniciais](operacao/evidencias-fase4-incremento1.md) |
 | Escolhas técnicas | [Índice de RFCs](RFCs/README.md) |
 
@@ -22,6 +25,7 @@ docs/
 │   ├── README.md
 │   ├── estado-da-migracao.md
 │   ├── migracao-frontend.md
+│   ├── retirada-monolito.md
 │   ├── autenticacao-os.md
 │   ├── acompanhamento-e-entrega.md
 │   ├── sequencias.md
@@ -33,8 +37,10 @@ docs/
 ├── operacao/
 │   ├── ci-cd.md
 │   ├── monorepo-ci.md
+│   ├── os-service.md
 │   ├── evidencias-fase4-incremento1.md
 │   ├── validacao-ponta-a-ponta.md
+│   ├── validacao-frontend.md
 │   ├── revisao-billing-saga.md
 │   ├── validacao-billing.md
 │   ├── validacao-execution.md

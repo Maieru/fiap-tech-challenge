@@ -27,6 +27,6 @@ Dados inativos permanecem armazenados; exclusão física e reativação não sã
 
 ## Evidências
 
-- Migration e configuração em `src/Services/OrdensServico/FIAP.TechChallenge.OS.Infrastructure/Persistence`.
+- Migration e configuração em `src/FIAP.TechChallenge.OS.Infrastructure/Persistence`.
 - Testes HTTP, BDD e rollback em `FIAP.TechChallenge.OS.Integration.Tests`.
 - [Arquitetura](../arquitetura/fase4-incremento1.md).

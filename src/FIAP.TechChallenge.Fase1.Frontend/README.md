@@ -15,7 +15,7 @@ docker compose up -d --build
 
 Cadastre um usuário na tela de login. Os bancos novos não importam usuários do monólito. O JWT emitido pelo OS é aceito pelos três serviços, que precisam compartilhar issuer, audience e chave.
 
-O navegador acessa `/api/os/v1`, `/api/execution/v1` e `/api/billing/v1` na origem do frontend; Nginx encaminha as chamadas. Kong não é necessário. O Compose legado em `src/docker-compose.yml` não fornece os serviços exigidos pelo frontend migrado; use o Compose da raiz.
+O navegador acessa `/api/os/v1`, `/api/execution/v1` e `/api/billing/v1` na origem do frontend; Nginx encaminha as chamadas. Kong não é necessário. O Compose e o código do monólito foram retirados; use o Compose da raiz. Recursos e dados AWS antigos não foram apagados por essa retirada.
 
 ## Desenvolvimento com Vite
 
@@ -23,7 +23,7 @@ Requer Node 22.12+ (ou versão posterior compatível). Com as três APIs rodando
 
 ```powershell
 Copy-Item .env.example .env
-npm ci
+npm ci --ignore-scripts
 npm run dev
 ```
 
@@ -41,6 +41,9 @@ A mesma imagem Docker usa variáveis de execução:
 | `EXECUTION_UPSTREAM` | Origem HTTP(S) do Execution ou gateway separado |
 | `BILLING_UPSTREAM` | Origem HTTP(S) do Billing ou gateway separado |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Collector OTLP HTTP, por exemplo `http://collector:4318` |
+| `UPSTREAM_CA_CERTIFICATE` | Caminho do bundle PEM de CAs confiáveis; padrão: raízes do sistema |
+
+A imagem usa `npm ci --ignore-scripts` e Nginx sem root (UID/GID 101), ouvindo na porta interna **8080**. O Compose continua publicando 5173. Chamadas HTTPS validam cadeia e hostname do certificado. Na nuvem, use HTTPS para os upstreams e Collector; para CA privada, monte um bundle somente leitura e configure `UPSTREAM_CA_CERTIFICATE`. Os [pré-requisitos Kubernetes](../../k8s/README.md) incluem terminação TLS nos serviços e o Secret de CA. Alterar a URL não habilita TLS no backend.
 
 Há duas topologias possíveis:
 
@@ -87,6 +90,17 @@ npm run test:smoke
 ```
 
 Portas isoladas: frontend 15173, APIs 18081–18083. O nome de projeto separa rede e volumes. O smoke verifica o ciclo completo e grava credenciais/links temporários em `artifacts/frontend/smoke-browser.json` (ignorado pelo Git) para inspeção no navegador. Ao terminar, remova apenas a stack de teste com o mesmo comando de Compose substituindo `up -d --build` por `down -v`.
+
+## Teste de segurança da imagem
+
+Na raiz, com PowerShell 7 e Docker:
+
+```powershell
+docker build -t fiap-frontend:sonar-remediation src/FIAP.TechChallenge.Fase1.Frontend
+./scripts/Test-FrontendSecurity.ps1
+```
+
+O teste cria uma CA temporária apenas nos containers, verifica usuário sem root, proxy HTTPS, preservação de Authorization e rejeição de CA/hostname inválidos. Remove seus containers, rede e certificados ao terminar.
 
 ## Observabilidade
 

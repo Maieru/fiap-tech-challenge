@@ -38,8 +38,8 @@ Reconsiderar quando houver exigência de auditoria completa, retenção ou apaga
 ## Evidências e relações
 
 - [Modelo ER e justificativa das migrations](../arquitetura/banco-de-dados.md)
-- [Fluxo da ordem de serviço](../../src/FIAP.TechChallenge.Fase1.Domain/Entities/OrdemServico.cs)
-- [Snapshot de serviço](../../src/FIAP.TechChallenge.Fase1.Domain/Entities/ServicoDaOrdemDeServico.cs)
-- [Snapshot de peça ou insumo](../../src/FIAP.TechChallenge.Fase1.Domain/Entities/PecaOuInsumoDaOrdemDeServico.cs)
-- [Filtros globais](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/AppDbContext.cs)
-- [Testes de soft delete](../../src/FIAP.TechChallenge.Fase1.Infaestructure.Tests/Persistence/SoftDeleteQueryFilterTests.cs)
+- [Fluxo da ordem de serviço](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Domain/Entities/OrdemServico.cs)
+- [Snapshot de serviço](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Domain/Entities/ServicoDaOrdemDeServico.cs)
+- [Snapshot de peça ou insumo](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Domain/Entities/PecaOuInsumoDaOrdemDeServico.cs)
+- [Filtros globais](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/AppDbContext.cs)
+- [Testes de soft delete](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infaestructure.Tests/Persistence/SoftDeleteQueryFilterTests.cs)

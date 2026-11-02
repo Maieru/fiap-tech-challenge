@@ -36,10 +36,10 @@ Reconsiderar com múltiplos bancos ou quando uma unidade de trabalho explícita 
 
 ## Evidências e relações
 
-- [Contratos de domínio](../../src/FIAP.TechChallenge.Fase1.Domain/Interfaces)
-- [Repositórios EF Core](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/Repositories)
-- [Entidades de persistência](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/Entities)
-- [Mappers](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/Mappers)
-- [Caso de uso transacional composto](../../src/FIAP.TechChallenge.Fase1.Application/UseCases/OrdensServico/CriarOrdemServicoCompleta/CriarOrdemServicoCompletaUseCase.cs)
-- [Fluxo composto sem transação própria](../../src/FIAP.TechChallenge.Fase1.Application/UseCases/OrdensServico/CriarOrdemServicoComClienteEVeiculo/CriarOrdemServicoComClienteEVeiculoUseCase.cs)
+- [Contratos de domínio](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Domain/Interfaces)
+- [Repositórios EF Core](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/Repositories)
+- [Entidades de persistência](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/Entities)
+- [Mappers](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/Mappers)
+- [Caso de uso transacional composto](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Application/UseCases/OrdensServico/CriarOrdemServicoCompleta/CriarOrdemServicoCompletaUseCase.cs)
+- [Fluxo composto sem transação própria](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Application/UseCases/OrdensServico/CriarOrdemServicoComClienteEVeiculo/CriarOrdemServicoComClienteEVeiculoUseCase.cs)
 - [RFC-002 — PostgreSQL no Amazon RDS](../RFCs/RFC-002-postgresql-no-amazon-rds.md)

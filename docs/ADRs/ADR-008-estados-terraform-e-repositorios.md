@@ -49,7 +49,7 @@ Reconsiderar quando a coordenação entre repositórios impedir mudanças segura
 
 ## Evidências e relações
 
-- [Orquestrador principal](../../.github/workflows/initialize-and-deploy.yml)
+- [Orquestrador principal](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/.github/workflows/initialize-and-deploy.yml)
 - [Guia e ordem dos estados](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra)
 - [Backend do estado de banco](https://github.com/Maieru/fiap-tech-challenge-db/blob/main/infra/database/backend.tf)
 - [Workflows do banco](https://github.com/Maieru/fiap-tech-challenge-db/tree/main/.github/workflows)

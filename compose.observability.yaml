@@ -1,0 +1,13 @@
+# Collector opcional, independente dos serviços de negócio e dos bancos.
+name: fiap-observability
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    environment:
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY:?Defina NEW_RELIC_LICENSE_KEY no ambiente ou .env}
+      NEW_RELIC_OTLP_ENDPOINT: ${NEW_RELIC_OTLP_ENDPOINT:-https://otlp.nr-data.net}
+    volumes:
+      - ./src/ObservabilityConfig/otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"

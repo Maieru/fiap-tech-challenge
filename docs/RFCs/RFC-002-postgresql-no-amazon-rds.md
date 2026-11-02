@@ -41,8 +41,8 @@ Reconsiderar por requisitos de disponibilidade, distribuição ou padrões de ac
 ## Evidências e relações
 
 - [ER, relacionamentos e justificativa dos ajustes do modelo](../arquitetura/banco-de-dados.md)
-- [Registro do Npgsql](../../src/FIAP.TechChallenge.Fase1.Infrastructure/InfraestructureDependecyInjection.cs)
-- [Contexto EF Core](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/AppDbContext.cs)
+- [Registro do Npgsql](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/InfraestructureDependecyInjection.cs)
+- [Contexto EF Core](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/AppDbContext.cs)
 - [Infraestrutura do banco](https://github.com/Maieru/fiap-tech-challenge-db/tree/main/infra/database)
 - [ADR-003 — Persistência por repositórios](../ADRs/ADR-003-persistencia-por-repositorios.md)
 - [ADR-010 — Ambiente efêmero orientado a custo](../ADRs/ADR-010-ambiente-efemero-orientado-a-custo.md)

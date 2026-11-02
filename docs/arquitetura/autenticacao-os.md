@@ -12,13 +12,15 @@ OS agora cadastra usuários e emite JWT para OS, Execution e Billing. Execution 
 
 Cadastro e login recebem `{ "usuario": "admin", "senha": "uma-senha-escolhida-por-voce" }`. Isso é um exemplo de corpo, não uma conta pré-criada. Login é normalizado para minúsculas; senha preserva os espaços e deve ter pelo menos oito caracteres não vazios e até 72 bytes UTF-8. Senhas são armazenadas apenas como hash BCrypt e não são retornadas nas respostas.
 
-Cadastre o usuário pelo Scalar do OS em http://localhost:8081/scalar/v1, depois faça login. Use o token retornado como `Authorization: Bearer <token>` nos endpoints de negócio das três APIs. O cadastro foi mantido **anônimo por escolha do projeto**; qualquer usuário assim cadastrado recebe acesso administrativo, sem diferenciação de perfis.
+Cadastre o usuário na tela de login do frontend em http://localhost:5173 ou pelo Scalar do OS em http://localhost:8081/scalar/v1, depois faça login. O frontend usa o token retornado como `Authorization: Bearer <token>` nos endpoints de negócio das três APIs. O cadastro foi mantido **anônimo por escolha do projeto**; qualquer usuário assim cadastrado recebe acesso administrativo, sem diferenciação de perfis.
 
 ## Configuração e migração
 
 Na raiz do OS, `docker compose up -d --build` aplica a migration UsuariosAutenticacao e disponibiliza o novo login. `JWT_ISSUER`, `JWT_AUDIENCE` e `JWT_SIGNING_KEY` são comuns à stack; chave não tem fallback e deve ter pelo menos 32 bytes UTF-8. `JWT_ACCESS_TOKEN_MINUTES` controla a emissão pelo OS, com default 60 e intervalo 1–1440. Não há usuário ou senha padrão.
 
-Os usuários são novos no banco exclusivo do OS: contas do legado não são importadas automaticamente. O frontend continua usando o legado até ser adaptado. As rotas legadas foram preservadas para essa compatibilidade; a stack dos três serviços não depende delas. Tokens de outro emissor só funcionam se a configuração criptográfica e os metadados coincidirem.
+Os usuários são novos no banco exclusivo do OS: contas do legado não são importadas automaticamente. O frontend migrado autentica em `/api/os/v1/usuarios/login` e compartilha a sessão entre seus três clientes HTTP administrativos. As rotas legadas continuam disponíveis separadamente; a stack integrada não depende delas. Tokens de outro emissor só funcionam se a configuração criptográfica e os metadados coincidirem.
+
+Expiração ou 401 administrativo limpa a sessão e exige novo login. O cliente HTTP público de acompanhamento não envia o JWT e não dispara logout administrativo em 401; seu token privado tem escopo de uma ordem. Consulte o [guia da migração do frontend](migracao-frontend.md) e as [evidências locais](../operacao/validacao-frontend.md).
 
 A emissão é HS256 com sub, unique_name e jti. Assinatura, expiração, issuer e audience são validados, com clock skew zero. Não há refresh token, revogação ou autorização por perfis. Excluir um usuário impede novos logins, mas tokens já emitidos continuam válidos até expirar. Chaves compartilhadas também exigem rotação coordenada.
 

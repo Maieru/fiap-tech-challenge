@@ -43,8 +43,8 @@ Reconsiderar se CPU não acompanhar a demanda, os nós limitarem a escala ou hou
 
 ## Evidências e relações
 
-- [Manifest do HPA](../../k8s/backend/hpa.yaml)
-- [Recursos e probes do backend](../../k8s/backend/deployment.yaml)
-- [Teste de carga](../../src/LoadTests/jornada-usuario.js)
+- [Manifest do HPA](../../legacy/aws/k8s/backend/hpa.yaml)
+- [Recursos e probes do backend](../../legacy/aws/k8s/backend/deployment.yaml)
+- [Teste de carga](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/LoadTests/jornada-usuario.js)
 - [Metrics Server](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/infra/kubernetes-addons/metrics-server.tf)
 - [RFC-004 — Containers no EKS](../RFCs/RFC-004-containers-no-amazon-eks.md)

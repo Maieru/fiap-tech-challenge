@@ -2,6 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-02
+- **Última revisão:** 2026-11-02
 
 ## Contexto
 
@@ -19,7 +20,7 @@ Provedor de identidade ou quarto serviço de autenticação: adiados para manter
 
 ## Consequências
 
-A stack dos três serviços passa a autenticar por conta própria. O legado conserva suas rotas para compatibilidade com o frontend ainda não migrado, mas não é necessário ao fluxo novo. Não há refresh, revogação ou perfis; exclusão impede novos logins, sem invalidar JWT já emitido. Cadastro público administrativo deve ser reavaliado antes de exposição pública. Reconsiderar a localização da identidade quando o escopo ou a infraestrutura exigirem.
+A stack dos três serviços autentica por conta própria. O legado conserva suas rotas separadamente, mas o frontend migrado já usa o login OS, conforme a [ADR-020](ADR-020-frontend-microsservicos-mesma-origem.md). Não há refresh, revogação ou perfis; exclusão impede novos logins, sem invalidar JWT já emitido. Cadastro público administrativo deve ser reavaliado antes de exposição pública. Reconsiderar a localização da identidade quando o escopo ou a infraestrutura exigirem.
 
 ## Evidências
 

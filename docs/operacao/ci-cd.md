@@ -1,50 +1,40 @@
 # Repositórios e CI/CD
 
-Este guia descreve o deploy e a infraestrutura do legado. A validação do OS está no [guia de CI do monorepo](monorepo-ci.md); Execution tem automação própria. A implantação dos novos serviços e a migração de tráfego continuam pendentes, conforme o [estado da migração](../arquitetura/estado-da-migracao.md).
+O código e a automação exclusiva do monólito foram retirados. Este repositório verifica OS e frontend; os outros serviços e a infraestrutura possuem repositórios próprios. A configuração de nuvem do frontend está preparada, mas a implantação dos microsserviços e a troca de tráfego continuam pendentes.
 
-## Estrutura atual
+## Automação atual da aplicação
 
-| Repositório | Validação e entrega declaradas | Execução |
-| --- | --- | --- |
-| [Aplicação](https://github.com/Maieru/fiap-tech-challenge/tree/main/.github/workflows) | Build das imagens, deploy Kubernetes e orquestração da plataforma | Orquestrador manual; etapas reutilizáveis |
-| [Infraestrutura Kubernetes](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/.github/workflows) | Terraform fmt, validate, plan e apply dos estágios | Manual ou chamada por workflow |
-| [Banco](https://github.com/Maieru/fiap-tech-challenge-db/tree/main/.github/workflows) | Terraform fmt, validate, plan e apply do RDS | Manual ou chamada por workflow |
-| [Serverless](https://github.com/Maieru/fiap-tech-challenge-serverless/tree/main/.github/workflows) | Restore, build, testes, publicação ZIP e atualização da Lambda | Manual ou chamada por workflow |
+| Workflow | Responsabilidade |
+| --- | --- |
+| `monorepo-ci.yml` | PR/push/manual: testes frontend, build, lint do escopo migrado, imagem; testes/cobertura/imagem OS; análise Sonar e gate agregado. |
+| `sonarqube.yml` | Reutilizável: importa cobertura OS e analisa a solução backend atual, com quality gate. |
+| `publish-os-messaging.yml` | Valida e publica contratos OS por tag e política NuGet própria. |
+| `build-frontend-image.yaml` | Reutilizável: constrói/publica imagem frontend no ECR quando chamado por um workflow autorizado. Não provisiona os serviços. |
+| `destroy-expensive-infrastructure.yml` | Destruição agendada/manual já existente, preservada sem alteração nesta retirada. |
 
-A autenticação AWS usa OIDC. O apply usa o plano gerado, sem gate humano declarado. A existência desses workflows não comprova que foram executados com sucesso.
+`ci-required` exige `frontend`, `component` e `quality`. O CI não publica automaticamente os serviços nem aplica manifests. Resultados locais e existência dos arquivos não comprovam execução remota aprovada. Consulte o [guia de CI/dependências](monorepo-ci.md).
 
-## Ordem de entrega
+Os workflows `initialize-and-deploy.yml`, `build-backend-image.yml` e `deploy-applications.yml` foram removidos porque construíam e implantavam o monólito. A versão anterior está no commit de recuperação identificado no [guia de retirada](../arquitetura/retirada-monolito.md). Não há substituição automática desse orquestrador por um deploy incompleto dos microsserviços.
 
-```mermaid
-flowchart LR
-    Core["Bootstrap e recursos AWS"] --> DB["Banco"]
-    DB --> K8s["Add-ons e configurações"]
-    K8s --> Images["Build API e frontend"]
-    Images --> App["Deploy e Ingresses"]
-    App --> Gateway["API Gateway"]
-    Gateway --> Serverless["Infraestrutura serverless"]
-    Serverless --> Code["Código da Lambda"]
-```
+## Responsabilidades entre repositórios
 
-A [ADR-008](../ADRs/ADR-008-estados-terraform-e-repositorios.md) identifica responsáveis e estados. A destruição remove dependentes antes de gateway, banco e cluster.
+- Aplicação principal: OS, frontend, documentação e seus checks.
+- Execution e Billing: imagens, testes e contratos de cada produtor.
+- Chassi: biblioteca/adaptador técnico, testes e publicação próprios.
+- Infraestrutura: VPC, EKS, add-ons, configurações, Gateway e infraestrutura serverless.
+- Banco: RDS legado e credenciais existentes; novos bancos exigem provisionamento por responsabilidade.
+- Serverless: código/publicação do authorizer legado, cuja retirada é uma etapa operacional separada.
 
-## Melhorias pendentes de CI/CD
+A configuração AWS usa OIDC nos workflows existentes. Segredos, estados, proteção de branches e execução remota não foram alterados por remover arquivos deste checkout.
 
-Os arquivos revisados não contêm gatilhos `pull_request` ou `push` para homologação/produção. Nomes como `production` em grupos de concorrência não criam ambientes separados.
+## Próximo fluxo de deploy
 
-Para automatizar a promoção entre homologação e produção, a implementação precisa:
+O novo processo deve versionar imagens e coordenar provisionamento de OS/Execution/Billing, bancos exclusivos, Kafka, segredos e observabilidade antes de publicar o frontend e os caminhos de Gateway/ALB. Os [manifests frontend](../../k8s/README.md) não criam essas dependências. A topologia de entrada segue a [ADR-020](../ADRs/ADR-020-frontend-microsservicos-mesma-origem.md); a retirada do código segue a [ADR-021](../ADRs/ADR-021-retirada-codigo-monolito.md).
 
-- Definir as branches de homologação e produção e disparar deploy automaticamente após merge em cada uma.
-- Exigir PR e checks antes de merge, bloquear push direto em main/master e verificar eventuais exceções administrativas.
-- Executar validações de código ou Terraform no PR em cada repositório.
-- Separar estados, recursos, configurações e segredos dos ambientes, evitando que um deploy sobrescreva o outro.
-- Coordenar dependências entre repositórios e registrar a versão implantada.
-- Demonstrar uma mudança promovida de homologação para produção com os checks e deploys concluídos.
+O deploy deve registrar versões, validar saúde/autenticação/links privados e definir recuperação antes de migrar o tráfego. Promoção entre homologação e produção, isolamento de estados/recursos/segredos e validação remota continuam sendo trabalho de infraestrutura/entrega; o CI atual não equivale a essa promoção.
 
-Os nomes exatos das branches e a estratégia de isolamento ainda precisam ser definidos; esta lista descreve requisitos, não uma política já configurada.
+## Retirada operacional do legado
 
-## Evidências de validação
+Os manifests antigos foram arquivados em [legacy/aws](../../legacy/aws/README.md). Não foi executada remoção de Kubernetes, Lambda, RDS, imagens remotas, volumes, dados ou segredos. A política de retenção e o inventário dos recursos exclusivos/compartilhados precisam anteceder a retirada operacional. O workflow de destruição agendada foi preservado e não foi executado nesta sessão.
 
-Após implementar o fluxo, registrar por repositório: regras efetivas de proteção, PR aprovado, checks, execução do deploy de cada ambiente e versão resultante. O acesso às configurações remotas do GitHub não foi verificado nesta revisão.
-
-Referências: [RFC-005](../RFCs/RFC-005-terraform-e-github-actions-oidc.md) e [orquestrador](../../.github/workflows/initialize-and-deploy.yml).
+O [estado da migração](../arquitetura/estado-da-migracao.md) distingue esses trabalhos da retirada já concluída do código e da automação exclusiva do monólito.

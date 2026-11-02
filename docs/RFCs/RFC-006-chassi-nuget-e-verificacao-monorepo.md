@@ -7,6 +7,8 @@
 
 A organização atual do chassi é definida pela [ADR-013](../ADRs/ADR-013-chassi-em-repositorio-proprio.md): biblioteca e automação específicas ficam em repositório independente. A decisão de distribuir recursos técnicos por NuGet permanece vigente.
 
+A organização das soluções e do CI descrita neste incremento foi atualizada pela [RFC-014](RFC-014-solucoes-ci-sem-monolito.md): as soluções ativas contêm somente OS, e o gate agrega OS/frontend/Sonar. O texto abaixo preserva a evolução anterior.
+
 ## Contexto
 
 Os serviços precisam de observabilidade, correlação, tratamento de falhas e probes consistentes. A equipe escolheu distribuir esses recursos como pacote NuGet público, preservando a propriedade local das regras de negócio. A base anterior já tinha NUnit, Coverlet e testes HTTP, mas usava EF InMemory e não impunha cobertura mínima no CI.

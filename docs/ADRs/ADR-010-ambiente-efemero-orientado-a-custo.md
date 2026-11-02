@@ -40,7 +40,7 @@ Reconsiderar antes de uso contínuo ou com dados reais, definindo disponibilidad
 ## Evidências e relações
 
 - [Workflow agendado de destruição](../../.github/workflows/destroy-expensive-infrastructure.yml)
-- [Ordem de criação](../../.github/workflows/initialize-and-deploy.yml)
+- [Ordem de criação](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/.github/workflows/initialize-and-deploy.yml)
 - [Destruição da infraestrutura Kubernetes](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/.github/workflows/destroy-kubernetes-infrastructure.yml)
 - [Configuração atual do RDS](https://github.com/Maieru/fiap-tech-challenge-db/blob/main/infra/database/rds.tf)
 - [RFC-001 — Escolha da AWS](../RFCs/RFC-001-escolha-da-nuvem-aws.md)

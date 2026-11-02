@@ -4,11 +4,13 @@ Os ADRs preservam decisões arquiteturais vigentes e suas consequências. Use o 
 
 ## Catálogo
 
+- [ADR-021 — Retirada do código do monólito e separação da infraestrutura legada](ADR-021-retirada-codigo-monolito.md) — Aceita.
+
 - [ADR-020 — Frontend por microsserviços e mesma origem](ADR-020-frontend-microsservicos-mesma-origem.md) — Aceita.
 
 | ADR | Status | Decisão |
 | --- | --- | --- |
-| [ADR-001](ADR-001-monolito-em-camadas.md) | Aceita | Manter um monólito em camadas com domínio no centro. |
+| [ADR-001](ADR-001-monolito-em-camadas.md) | Aceita | Arquitetura histórica do monólito em camadas; retirada do código na ADR-021. |
 | [ADR-002](ADR-002-comunicacao-rest-json.md) | Aceita | Usar HTTP/JSON síncrono com REST pragmático e mapear `Result<T>` para HTTP. |
 | [ADR-003](ADR-003-persistencia-por-repositorios.md) | Aceita | Isolar EF Core por contratos, repositórios e mapeamento explícito. |
 | [ADR-004](ADR-004-preservacao-do-historico.md) | Aceita | Preservar histórico com snapshots de itens e exclusão lógica. |
@@ -18,7 +20,7 @@ Os ADRs preservam decisões arquiteturais vigentes e suas consequências. Use o 
 | [ADR-008](ADR-008-estados-terraform-e-repositorios.md) | Aceita | Separar responsabilidades em repositórios e estados Terraform dependentes. |
 | [ADR-009](ADR-009-observabilidade-com-opentelemetry.md) | Aceita | Exportar telemetria com OpenTelemetry Collector para New Relic. |
 | [ADR-010](ADR-010-ambiente-efemero-orientado-a-custo.md) | Aceita | Tratar a infraestrutura atual como ambiente descartável de demonstração. |
-| [ADR-011](ADR-011-extracao-incremental-os-monorepo.md) | Aceita | Extrair o OS por responsabilidade em monorepo temporário, preservando o legado. |
+| [ADR-011](ADR-011-extracao-incremental-os-monorepo.md) | Aceita | Extração inicial do OS com coexistência temporária; retirada do código legado na ADR-021. |
 | [ADR-012](ADR-012-dados-historico-os.md) | Aceita | PostgreSQL exclusivo, soft delete e histórico independente de cadastros ativos. |
 | [ADR-013](ADR-013-chassi-em-repositorio-proprio.md) | Aceita | Manter chassi técnico e publicação NuGet em repositório independente. |
 | [ADR-014](ADR-014-contratos-mensageria.md) | Aceita | Compartilhar interface técnica, separar adaptador Kafka e distribuir contratos por produtor. |

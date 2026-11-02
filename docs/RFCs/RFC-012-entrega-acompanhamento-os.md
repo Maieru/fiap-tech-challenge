@@ -2,6 +2,7 @@
 
 - Status: Aceita
 - Data: 2026-11-02
+- Última revisão: 2026-11-02
 
 ## Contexto e decisão
 
@@ -23,7 +24,7 @@ A migration adiciona `DataEntrega`, `OrcamentoJson`, tabela de acessos e status 
 
 Respostas do acompanhamento e emissão usam `Cache-Control: no-store` e `Referrer-Policy: no-referrer`. O log padrão de início/fim de requisição do ASP.NET Hosting foi reduzido a Warning, pois inclui query string. O middleware de correlação do chassi registra apenas o caminho. A infraestrutura que expuser essas APIs deve omitir query strings de logs e usar HTTPS. Links privados não devem ser copiados para logs, analytics ou documentação de evidências.
 
-Cadastro/login administrativos permanecem como definidos na ADR-018. Não há frontend, envio automático do link, integração AWS/Lambda ou alteração dos pacotes de mensageria.
+Cadastro/login administrativos permanecem como definidos na ADR-018. O escopo original deste incremento era a API, sem frontend, envio automático do link, integração AWS/Lambda ou alteração dos pacotes de mensageria. A adaptação posterior das telas está na [RFC-013](RFC-013-proxy-frontend-microsservicos.md); envio automático e implantação AWS continuam fora dessa entrega.
 
 ## Alternativas e validação
 

@@ -2,7 +2,7 @@
 
 Atualizado em 2026-11-02. Esta página consolida o estado atual; os relatórios de incrementos anteriores preservam o contexto e os resultados da época.
 
-OS, Execution e Billing estão implementados e integrados por Kafka, com bancos exclusivos. O fluxo de backend foi validado localmente até a entrega, com pagamento mockado e compensação por recusa. O frontend foi adaptado para os três serviços, com proxy local, contratos novos e acompanhamento privado. Build, smoke HTTP isolado e navegação local foram verificados; o tráfego AWS e a retirada do legado não foram migrados.
+OS, Execution e Billing estão implementados e integrados por Kafka, com bancos exclusivos. O fluxo de backend foi validado localmente até a entrega, com pagamento mockado e compensação por recusa. O frontend foi adaptado para os três serviços, com proxy local, contratos novos e acompanhamento privado. Build, smoke HTTP isolado e navegação local foram verificados; o código e a automação exclusiva do monólito foram retirados do checkout. Tráfego AWS, recursos antigos e retenção/migração de dados ainda exigem etapa operacional própria.
 
 ## Responsabilidades entregues
 
@@ -12,9 +12,9 @@ OS, Execution e Billing estão implementados e integrados por Kafka, com bancos 
 | Execution | Catálogo de serviços e peças/insumos, estoque, diagnóstico, snapshots do orçamento, execução, conclusão e devolução única de estoque no cancelamento. MongoDB exclusivo com transações. |
 | Billing | Uma cobrança por ordem, deduplicação, resultado do gateway e consultas administrativas. PostgreSQL exclusivo. `IPaymentGateway` permite substituir o mock, que aprova imediatamente sem rede ou credenciais. |
 | Contratos e chassi | Contratos por produtor em NuGet; chassi e adaptador Kafka em repositório próprio. Nenhum serviço referencia o código-fonte, domínio ou banco dos demais. |
-| Frontend e legado | Permanecem no repositório principal. O frontend integra a stack dos três serviços e não depende do monólito; o backend legado continua disponível separadamente. |
+| Frontend e retirada do monólito | Frontend e OS permanecem no repositório principal. Fonte/testes/Compose e deploy exclusivo do monólito foram removidos; manifests AWS antigos estão em `legacy/aws`, sem alteração de recursos ou dados remotos. |
 
-O OS permanece no repositório principal, junto do legado, frontend e documentação central. Execution e Billing possuem repositórios próprios. A dependência de checkouts vizinhos no Compose serve apenas para construir as imagens locais; as bibliotecas entre serviços são consumidas por pacote versionado.
+O OS permanece no repositório principal, junto do frontend e documentação central. O código do monólito só permanece no histórico Git. Execution e Billing possuem repositórios próprios. A dependência de checkouts vizinhos no Compose serve apenas para construir as imagens locais; as bibliotecas entre serviços são consumidas por pacote versionado.
 
 ## Fluxo implementado
 
@@ -69,12 +69,12 @@ Os candidatos locais são uma etapa explícita de desenvolvimento, sem referênc
 
 | Frente | Trabalho restante e critério de conclusão |
 | --- | --- |
-| Pacotes e CI | Publicar/confirmar Billing Messaging 0.1.0 e verificar restore limpo, build, testes, cobertura, imagem, OpenAPI e Sonar em cada repositório. |
+| Pacotes e CI | Publicar/confirmar Billing Messaging 0.1.0 e verificar restore limpo, build, testes, cobertura, imagem, OpenAPI e Sonar em cada repositório. O gate agregado `ci-required` já exige OS, frontend e Sonar; validar sua execução remota. |
 | Frontend | Validar o frontend na borda AWS após implantar as APIs e suas dependências. A integração local, contratos e smoke HTTP estão implementados. |
 | Gateway real | Implementar Mercado Pago no lugar do mock; novas tentativas após recusa, estornos e cancelamentos após aprovação ficam para incrementos posteriores. |
 | Infraestrutura e tráfego | Implantar APIs, bancos, Kafka, segredos, observabilidade e roteamento. A AWS/Lambda existente ainda atende ao legado. A adaptação local do frontend não comprova migração da borda. |
 | Dados | Usar bancos novos de demonstração. Não importar contas ou histórico automaticamente, reutilizar links legados ou inventar orçamento para ordens antigas. |
-| Retirada do legado | Só após validar o fluxo migrado, trocar o tráfego e confirmar as dependências restantes; remover então backend, banco e artefatos exclusivos do legado. Essa retirada não foi executada. |
+| Retirada operacional do legado | Fonte, testes e automação exclusiva já retirados. Ainda é necessário inventariar dados/recursos, validar substitutos na AWS, trocar tráfego e retirar somente recursos exclusivos antigos. Nenhum banco, volume ou recurso remoto foi excluído. |
 
 ## Consistência e recuperação
 
@@ -84,8 +84,10 @@ Banco, Kafka e gateway não têm atomicidade distribuída. Uma publicação entr
 
 ## Documentos relacionados
 
-- [Roteiro da migração do frontend](migracao-frontend.md).
-- [OS Service e execução local](../../src/Services/OrdensServico/README.md).
+- [Retirada do monólito: código, automação e limites](retirada-monolito.md).
+
+- [Frontend migrado: contratos e configuração](migracao-frontend.md) e [verificação local](../operacao/validacao-frontend.md).
+- [OS Service e execução local](../operacao/os-service.md).
 - [Execution e integração](execution.md).
 - [Autenticação administrativa no OS](autenticacao-os.md).
 - [Acompanhamento e entrega](acompanhamento-e-entrega.md).

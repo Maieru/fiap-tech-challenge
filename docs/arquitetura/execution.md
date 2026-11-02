@@ -70,8 +70,7 @@ Os testes não usam volumes de desenvolvimento, autenticação substituta ou moc
 Os nove cenários distribuídos registrados com as três APIs reais estão em Distributed.slnx no Execution, separados da solução padrão.
 O workflow distribuído é manual e recebe imagens publicadas; não faz parte da execução automática de toda validação isolada.
 O [histórico de validação](../operacao/validacao-execution.md) preserva as evidências de cada entrega.
-O Billing com mock e Saga no OS está implementado. Gateway real, adaptação do frontend, deploy dos novos serviços e retirada do legado permanecem pendentes,
-conforme o [estado da migração](estado-da-migracao.md). O [roteiro do frontend](migracao-frontend.md) mapeia as responsabilidades e diferenças de contratos; sua implementação ainda está pendente.
+Billing com mock e Saga no OS estão implementados. O frontend foi adaptado aos três serviços e verificado localmente, incluindo catálogo/estoque e operações do Execution. O código do monólito já foi retirado. Gateway de pagamento real, deploy dos novos serviços e retirada operacional dos recursos/dados legados permanecem pendentes, conforme o [estado da migração](estado-da-migracao.md). O [guia do frontend](migracao-frontend.md) descreve contratos, proxies e limites; a [verificação local](../operacao/validacao-frontend.md) registra os resultados.
 
 Decisões: [ADR-015](../ADRs/ADR-015-execution-mongodb.md), [RFC-008](../RFCs/RFC-008-execution-mongodb-kafka.md),
 [ADR-016](../ADRs/ADR-016-integracao-os-execution.md) e [RFC-009](../RFCs/RFC-009-integracao-os-execution.md).

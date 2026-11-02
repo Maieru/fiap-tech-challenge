@@ -1,16 +1,15 @@
 <Solution>
-  <Folder Name="/Tests/">
-    <Project Path="FIAP.TechChallenge.Fase1.API.Tests/FIAP.TechChallenge.Fase1.API.Tests.csproj" Id="c242b9ed-e3f0-403a-95e7-816efc428735" />
-    <Project Path="FIAP.TechChallenge.Fase1.Application.Tests/FIAP.TechChallenge.Fase1.Application.Tests.csproj" Id="fd91235f-79a6-4b70-8855-a4d5ec3b33a8" />
-    <Project Path="FIAP.TechChallenge.Fase1.Domain.Tests/FIAP.TechChallenge.Fase1.Domain.Tests.csproj" Id="2c4bfd3b-5fee-4fd7-ba31-0fbd525b2041" />
-    <Project Path="FIAP.TechChallenge.Fase1.Infaestructure.Tests/FIAP.TechChallenge.Fase1.Infaestructure.Tests.csproj" Id="fd51696d-f021-4b33-81f0-73f5b240bf45" />
-    <Project Path="FIAP.TechChallenge.Fase1.PostgreSQL.Tests/FIAP.TechChallenge.Fase1.PostgreSQL.Tests.csproj" />
+  <Folder Name="/OS/">
+    <Project Path="FIAP.TechChallenge.OS.Application.Messaging/FIAP.TechChallenge.OS.Application.Messaging.csproj" />
+    <Project Path="FIAP.TechChallenge.OS.API/FIAP.TechChallenge.OS.API.csproj" />
+    <Project Path="FIAP.TechChallenge.OS.Application/FIAP.TechChallenge.OS.Application.csproj" />
+    <Project Path="FIAP.TechChallenge.OS.Domain/FIAP.TechChallenge.OS.Domain.csproj" />
+    <Project Path="FIAP.TechChallenge.OS.Infrastructure/FIAP.TechChallenge.OS.Infrastructure.csproj" />
   </Folder>
-  <Project Path="docker-compose.dcproj">
-    <Build />
-  </Project>
-  <Project Path="FIAP.TechChallenge.Fase1.API/FIAP.TechChallenge.Fase1.API.csproj" />
-  <Project Path="FIAP.TechChallenge.Fase1.Application/FIAP.TechChallenge.Fase1.Application.csproj" Id="ad665f56-f667-4fd7-bf69-9defdb2f2546" />
-  <Project Path="FIAP.TechChallenge.Fase1.Infrastructure/FIAP.TechChallenge.Fase1.Infrastructure.csproj" Id="29a51a8e-c155-4d71-8cbb-045b497f1c75" />
-  <Project Path="FIAP.TechChallenge.Fase1.Domain/FIAP.TechChallenge.Fase1.Domain.csproj" Id="a65d3266-579d-4203-bd59-25c30227f081" />
+  <Folder Name="/Tests/">
+    <Project Path="FIAP.TechChallenge.OS.Application.Messaging.Tests/FIAP.TechChallenge.OS.Application.Messaging.Tests.csproj" />
+    <Project Path="FIAP.TechChallenge.OS.Application.Tests/FIAP.TechChallenge.OS.Application.Tests.csproj" />
+    <Project Path="FIAP.TechChallenge.OS.Domain.Tests/FIAP.TechChallenge.OS.Domain.Tests.csproj" />
+    <Project Path="FIAP.TechChallenge.OS.Integration.Tests/FIAP.TechChallenge.OS.Integration.Tests.csproj" />
+  </Folder>
 </Solution>

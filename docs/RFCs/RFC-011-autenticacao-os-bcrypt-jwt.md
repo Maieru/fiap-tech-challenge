@@ -2,6 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-02
+- **Última revisão:** 2026-11-02
 
 ## Implementação
 
@@ -15,7 +16,7 @@ A chave simétrica singleton é compartilhada por validação e emissão no OS. 
 
 ## Alternativas e compatibilidade
 
-Sem refresh, revogação, perfis, migração automática de usuários ou bootstrap. Cadastro anônimo foi mantido por decisão explícita. Endpoints legados permanecem para o frontend atual; a API nova usa prefixo versionado OS. Tokens existentes continuam compatíveis enquanto assinatura, issuer, audience e expiração forem válidos.
+Sem refresh, revogação, perfis, migração automática de usuários ou bootstrap. Cadastro anônimo foi mantido por decisão explícita. Endpoints legados permanecem disponíveis separadamente; o frontend migrado usa o prefixo versionado OS, conforme a [RFC-013](RFC-013-proxy-frontend-microsservicos.md). Tokens existentes continuam compatíveis enquanto assinatura, issuer, audience e expiração forem válidos.
 
 ## Verificação
 

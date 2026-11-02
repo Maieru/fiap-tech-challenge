@@ -7,6 +7,8 @@
 - **Natureza:** formalização retrospectiva
 - **Última revisão:** 2026-10-31
 
+A decisão descreve a arquitetura histórica do monólito. Sua fonte deixou o checkout ativo conforme a [ADR-021](ADR-021-retirada-codigo-monolito.md); a separação em camadas continua sendo aplicada dentro dos microsserviços.
+
 ## Contexto
 
 A gestão da oficina reúne regras relacionadas e usa um único banco transacional. O núcleo precisa permanecer independente de HTTP e persistência.
@@ -40,9 +42,9 @@ Reconsiderar quando um módulo precisar de escala, disponibilidade ou implantaç
 ## Evidências e relações
 
 - [Solução e projetos](../../src/TechChallengeFase1.slnx)
-- [Referências da Application](../../src/FIAP.TechChallenge.Fase1.Application/FIAP.TechChallenge.Fase1.Application.csproj)
-- [Referências da Infrastructure](../../src/FIAP.TechChallenge.Fase1.Infrastructure/FIAP.TechChallenge.Fase1.Infrastructure.csproj)
-- [Casos de uso](../../src/FIAP.TechChallenge.Fase1.Application/UseCases)
+- [Referências da Application](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Application/FIAP.TechChallenge.Fase1.Application.csproj)
+- [Referências da Infrastructure](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/FIAP.TechChallenge.Fase1.Infrastructure.csproj)
+- [Casos de uso](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Application/UseCases)
 - [Visão das camadas](../arquitetura/README.md#camadas-da-aplicação)
 
 ## Evolução na Fase 4

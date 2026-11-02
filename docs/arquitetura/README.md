@@ -1,6 +1,6 @@
 # Arquitetura da solução
 
-Esta página distingue os serviços extraídos da infraestrutura legada existente. O [estado atual da migração](estado-da-migracao.md) consolida entregas, pacotes e pendências; o [roteiro do frontend](migracao-frontend.md) descreve a adaptação ainda não implementada. O [primeiro incremento da Fase 4](fase4-incremento1.md) é um registro histórico da extração inicial.
+Esta página distingue a aplicação integrada da infraestrutura legada existente. O código e a automação exclusiva do monólito foram [retirados do checkout](retirada-monolito.md); os diagramas legados abaixo são referências históricas, não um backend ainda fornecido. O [estado atual da migração](estado-da-migracao.md) consolida entregas, pacotes e pendências; o [guia do frontend](migracao-frontend.md) descreve a migração implementada e verificada localmente. O [primeiro incremento da Fase 4](fase4-incremento1.md) é um registro histórico da extração inicial.
 
 O [padrão de mensageria entre serviços](mensageria.md) documenta os contratos Kafka, publicação, consumo e tratamento de falhas.
 O [guia do Execution](execution.md) descreve o serviço independente com MongoDB, catálogo, estoque, execução e integração com OS.
@@ -13,12 +13,12 @@ A [Saga de pagamento](saga-pagamento.md) descreve a coordenação OS/Billing/Exe
 
 ```mermaid
 flowchart LR
-    Frontend[Frontend atual] --> Legado[API legada]
-    Legado --> DBLegado[(PostgreSQL legado)]
-    Operador[Operador com JWT OS] --> OS[OS API: 8081]
-    Operador --> Execution[Execution API: 8082]
-    Operador --> Billing[Billing API: 8083]
-    Cliente[Cliente com token privado] --> OS
+    Operador[Operador com JWT OS] --> Frontend[Frontend React: 5173]
+    Cliente[Cliente com token privado] --> Frontend
+    Frontend --> Proxy[Proxy Vite ou Nginx]
+    Proxy -->|/api/os/v1| OS[OS API: 8081]
+    Proxy -->|/api/execution/v1| Execution[Execution API: 8082]
+    Proxy -->|/api/billing/v1| Billing[Billing API: 8083]
     OS --> DBOS[(PostgreSQL OS)]
     Execution --> Mongo[(MongoDB Execution)]
     Billing --> DBBilling[(PostgreSQL Billing)]
@@ -26,11 +26,29 @@ flowchart LR
     Execution <--> Kafka
     Billing <--> Kafka
     Billing --> Mock[Gateway mockado]
+    subgraph LegadoSeparado[Referência histórica: código retirado]
+        Legado[API legada] --> DBLegado[(PostgreSQL legado)]
+    end
 ```
 
-OS emite o JWT administrativo e valida o acesso privado do cliente; Execution e Billing validam o JWT localmente. O ciclo distribuído inclui pagamento e entrega. O frontend continua na API legada. `docker compose up -d --build` na raiz inicia as três APIs e suas dependências, preservando volumes por serviço; não implanta AWS. Não há banco compartilhado ou coordenação síncrona HTTP entre serviços.
+OS emite o JWT administrativo e valida o acesso privado do cliente; Execution e Billing validam o JWT localmente. O ciclo distribuído inclui pagamento e entrega. O frontend usa os três serviços e compõe os detalhes administrativos a partir de suas APIs. O acompanhamento usa somente o contrato público do OS, sem JWT administrativo. `docker compose up -d --build` na raiz inicia frontend, três APIs e suas dependências, preservando volumes por serviço; não implanta AWS. O ambiente local não exige Kong. Não há banco compartilhado ou coordenação síncrona HTTP entre serviços.
 
-O authorizer Lambda abaixo pertence ao fluxo legado. Os novos endpoints de acompanhamento validam seu próprio token no OS e não consultam o banco legado. A migração da borda e do frontend permanece pendente.
+O authorizer Lambda abaixo pertence ao fluxo legado. Os novos endpoints de acompanhamento validam seu próprio token no OS e não consultam o banco legado. A migração do frontend foi verificada localmente; a implantação dos serviços e a troca do tráfego na AWS permanecem pendentes.
+
+## Entrada em nuvem preparada para os microsserviços
+
+```mermaid
+flowchart LR
+    Navegador --> Gateway[API Gateway]
+    Gateway --> Link[VPC Link]
+    Link --> ALB[ALB interno]
+    ALB -->|Páginas e três prefixos versionados| Nginx[Frontend e proxy Nginx]
+    Nginx -->|/api/os/v1| OS[Service OS]
+    Nginx -->|/api/execution/v1| Execution[Service Execution]
+    Nginx -->|/api/billing/v1| Billing[Service Billing]
+```
+
+Este é o roteamento preparado nos manifests, não evidência de implantação. O Ingress específico tem prioridade 5, anterior ao `/api` legado de prioridade 10. Os upstreams do ConfigMap devem corresponder aos Services provisionados antes do rollout. Na mesma topologia, Nginx acessa os serviços internos; apontá-lo ao gateway que retorna ao próprio Nginx criaria um ciclo. Consulte os [pré-requisitos Kubernetes](../../k8s/README.md) e a [ADR-020](../ADRs/ADR-020-frontend-microsservicos-mesma-origem.md).
 
 ## Infraestrutura legada AWS
 
@@ -109,6 +127,8 @@ O ambiente é destruído diariamente para reduzir custos. HPA e probes não comp
 
 ## Camadas da aplicação
 
+O diagrama abaixo representa o backend legado. Cada serviço extraído mantém suas próprias camadas e persistência; o frontend atual acessa suas APIs pelos prefixos versionados.
+
 ```mermaid
 flowchart LR
     Frontend["SPA React"] -->|"HTTP/JSON"| API["API"]
@@ -119,13 +139,14 @@ flowchart LR
     Infrastructure --> DB[("PostgreSQL")]
 ```
 
-Domain concentra entidades e regras; Application coordena casos de uso; API traduz HTTP e compõe dependências; Infrastructure implementa persistência e integrações. O backend é uma unidade de implantação. A Lambda tem contexto EF de leitura próprio e compartilha o schema do banco.
+Domain concentra entidades e regras; Application coordena casos de uso; API traduz HTTP e compõe dependências; Infrastructure implementa persistência e integrações. No legado, o backend é uma unidade de implantação e a Lambda tem contexto EF de leitura próprio, compartilhando o schema do banco. OS, Execution e Billing são unidades de implantação independentes, com bancos exclusivos.
 
 ## Documentos relacionados
 
-- [Estado consolidado da migração](estado-da-migracao.md) e [roteiro do frontend](migracao-frontend.md).
+- [Estado consolidado da migração](estado-da-migracao.md) e [guia do frontend](migracao-frontend.md).
+- [Verificação local do frontend](../operacao/validacao-frontend.md).
 - [Autenticação no OS](autenticacao-os.md) e [acompanhamento/entrega](acompanhamento-e-entrega.md).
-- [Sequências legadas de autenticação e abertura de ordem](sequencias.md).
+- [Sequências do frontend migrado e dos fluxos legados](sequencias.md).
 - [Modelo ER, relacionamentos e evolução do banco](banco-de-dados.md).
 - [Observabilidade e validação](../operacao/observabilidade.md).
 - [Estados e repositórios](../ADRs/ADR-008-estados-terraform-e-repositorios.md).

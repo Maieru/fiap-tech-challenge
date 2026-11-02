@@ -1,17 +1,17 @@
 # Sistema de Gestão de Oficina Mecânica
 
-Aplicação para administrar o ciclo operacional de uma oficina mecânica. A solução está em migração de um monólito para serviços .NET, com frontend React, PostgreSQL, MongoDB e Kafka. Possui ambientes locais com Docker Compose e infraestrutura do legado definida para AWS com Terraform e Kubernetes.
+Aplicação para administrar o ciclo operacional de uma oficina mecânica. A solução usa microsserviços .NET, com frontend React, PostgreSQL, MongoDB e Kafka. Possui ambientes locais com Docker Compose e infraestrutura do legado definida para AWS com Terraform e Kubernetes.
 
 ## Migração para microsserviços
 
-O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo, gestão de clientes/veículos e ordens, integrado ao Execution por Kafka. O monólito e suas rotas continuam disponíveis; o frontend atual utiliza os três microsserviços. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório, testes e publicação NuGet próprios.
+O monorepo inclui um [OS Service independente](docs/operacao/os-service.md), com PostgreSQL exclusivo, gestão de clientes/veículos e ordens, integrado ao Execution por Kafka. O código do monólito foi retirado do checkout; o frontend utiliza os três microsserviços. Os recursos AWS antigos permanecem sujeitos a retirada operacional separada. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório, testes e publicação NuGet próprios.
 
-Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os nove projetos do OS, incluindo contratos de mensageria e seus testes. `Backend.slnx` mantém a visão integrada dos 18 projetos do legado e do OS. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
+Abra [Backend.slnx](Backend.slnx) para os nove projetos do OS, diretamente em `src`, incluindo contratos de mensageria e testes. `src/TechChallengeFase1.slnx` é um alias para Visual Studio com os mesmos projetos. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
 
-O legado usa `Maieru.FiapTechChallenge.Chassis` **0.1.0** e o OS usa **1.1.1**, com adaptador Kafka **0.1.1**, por `PackageReference`.
+O OS usa `Maieru.FiapTechChallenge.Chassis` **1.1.1**, com adaptador Kafka **0.1.1**, por `PackageReference`.
 Consulta ao feed em 2026-11-02: contratos OS **0.2.0** e Execution **0.1.0** disponíveis; contratos Billing **0.1.0**, consumidos pelo OS, ainda precisam de publicação ou restore local explícito. Consulte [dependências e publicação](docs/operacao/monorepo-ci.md).
 
-Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing com gateway mockado, Saga, acompanhamento privado e entrega administrativa estão implementados. O frontend foi migrado e verificado localmente. Gateway de pagamento real, implantação dos novos serviços e retirada do legado permanecem pendentes. O [guia do frontend](docs/arquitetura/migracao-frontend.md) detalha contratos, proxies e limites da validação. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
+Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing com gateway mockado, Saga, acompanhamento privado e entrega administrativa estão implementados. O frontend foi migrado e verificado localmente. O código, Compose e automação exclusiva do monólito foram retirados. Gateway de pagamento real, implantação dos novos serviços e retirada dos recursos/dados legados permanecem pendentes. Ver [escopo da retirada](docs/arquitetura/retirada-monolito.md). O [guia do frontend](docs/arquitetura/migracao-frontend.md) detalha contratos, proxies e limites da validação. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
 
 ## Subir OS, Execution e Billing
 
@@ -28,7 +28,7 @@ Na primeira configuração de um checkout novo, copie `.env.example` para `.env`
 Enquanto Billing Messaging 0.1.0 não estiver publicado no NuGet, prepare esse candidato com .NET SDK 10, nesta mesma pasta:
 
 ```powershell
-dotnet pack src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging -c Release -o ../FiapTechChallengeBilling/artifacts/packages
+dotnet pack src/FIAP.TechChallenge.OS.Application.Messaging -c Release -o ../FiapTechChallengeBilling/artifacts/packages
 dotnet pack ../FiapTechChallengeBilling/src/FIAP.TechChallenge.Billing.Application.Messaging -c Release -o artifacts/packages
 ```
 
@@ -40,7 +40,7 @@ docker compose logs -f    # Acompanhar logs
 docker compose down       # Parar preservando os volumes
 ```
 
-O projeto continua chamado `fiap-integrated`, com os mesmos volumes do comando anterior. O Compose da raiz reúne os três serviços; o Compose em `src/Services/OrdensServico` continua atendendo ao OS isolado. Pare outros ambientes que utilizem as mesmas portas antes de iniciar. O OS oferece cadastro/login próprios em `/api/os/v1/usuarios` e `/api/os/v1/usuarios/login`; o frontend migrado faz parte desta stack e usa proxy same-origin sem exigir Kong.
+O projeto continua chamado `fiap-integrated`, com os mesmos volumes do comando anterior. `compose.yaml` reúne os três serviços e o frontend; `compose.os.yaml`, na raiz, atende ao OS isolado com o projeto `fiap-os`. Pare outros ambientes que utilizem as mesmas portas antes de iniciar. O OS oferece cadastro/login próprios em `/api/os/v1/usuarios` e `/api/os/v1/usuarios/login`; o frontend migrado faz parte desta stack e usa proxy same-origin sem exigir Kong.
 
 ## Documentação HTTP com Scalar
 
@@ -52,7 +52,7 @@ As APIs já registram OpenAPI e Scalar. Com a stack integrada iniciada:
 | Execution | http://localhost:8082/scalar/v1 | http://localhost:8082/openapi/v1.json |
 | Billing | http://localhost:8083/scalar/v1 | http://localhost:8083/openapi/v1.json |
 
-Na API legada, quando executada pelo Compose do legado, o endereço é http://localhost:8080/scalar/v1. Ela não integra o Compose dos três novos serviços. O authorizer Lambda não hospeda uma API HTTP ASP.NET para receber uma interface Scalar.
+O endereço antigo na porta 8080 não faz parte da stack atual. O authorizer Lambda legado não integra o acesso privado novo, validado pelo próprio OS.
 
 Scalar/OpenAPI ficam habilitados em `Development`; OS, Execution e Billing também os habilitam em `Testing`. O Compose integrado usa `Development`. A autenticação JWT dos endpoints administrativos permanece exigida nas chamadas realizadas pela documentação.
 
@@ -66,7 +66,7 @@ O projeto está distribuído por responsabilidade entre os seguintes repositóri
 
 | Repositório | Responsabilidade |
 | --- | --- |
-| [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | OS Service, backend legado, frontend React e documentação central, com testes, imagens e workflows. |
+| [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | OS Service, frontend React e documentação central, com testes, imagens e workflows. |
 | [`fiap-tech-challenge-execution`](https://github.com/Maieru/fiap-tech-challenge-execution) | Execution, MongoDB, integração Kafka, contratos NuGet e testes próprios e distribuídos. |
 | [`fiap-tech-challenge-billing`](https://github.com/Maieru/fiap-tech-challenge-billing) | Billing, PostgreSQL exclusivo, gateway mockado, contratos NuGet e testes próprios. |
 | [`fiap-tech-challenge-chassis`](https://github.com/Maieru/fiap-tech-challenge-chassis) | Biblioteca técnica, testes, exemplo consumidor e publicação NuGet com CI/Sonar próprios. |
@@ -76,16 +76,16 @@ O projeto está distribuído por responsabilidade entre os seguintes repositóri
 
 ## Funcionalidades
 
-O fluxo existente do legado oferece as funcionalidades abaixo. A distribuição entre os novos serviços e as pendências estão no [estado da migração](docs/arquitetura/estado-da-migracao.md).
+O frontend integrado aos microsserviços oferece as funcionalidades abaixo. A distribuição entre os serviços e as pendências de implantação estão no [estado da migração](docs/arquitetura/estado-da-migracao.md).
 
 - autenticação de usuários com JWT;
 - cadastro e gestão de clientes e veículos;
 - catálogo de serviços, peças e insumos, com controle de estoque;
 - criação de ordens de serviço com cliente e veículo existentes ou cadastrados no próprio fluxo;
 - diagnóstico, orçamento, aprovação, execução, finalização, entrega e cancelamento de ordens de serviço;
-- acompanhamento público do andamento da ordem de serviço;
+- acompanhamento privado do andamento e decisões da ordem por link;
 - registro do tempo gasto e cálculo do tempo médio dos serviços;
-- exclusão lógica para preservação do histórico;
+- exclusão lógica de cadastros para preservação do histórico, sem ação de exclusão de ordens no frontend migrado;
 - interface administrativa responsiva para operação dos principais fluxos.
 
 ## Arquitetura e decisões técnicas
@@ -94,16 +94,20 @@ O catálogo em [`docs/README.md`](docs/README.md) reúne a visão visual da arqu
 
 Consulte os [diagramas de sequência](docs/arquitetura/sequencias.md), o [modelo ER e sua evolução](docs/arquitetura/banco-de-dados.md) e o [fluxo de CI/CD](docs/operacao/ci-cd.md). Cada guia distingue o comportamento atual das pendências de implementação.
 
-O backend legado é um monólito organizado em camadas, com as regras de negócio isoladas dos detalhes de persistência e entrega HTTP. O OS Service segue a mesma separação em projetos próprios; o diagrama abaixo representa o legado:
+OS, Execution e Billing preservam camadas próprias e dados exclusivos. O frontend acessa os três prefixos por um proxy local ou pela borda em nuvem. A comunicação entre serviços usa Kafka:
 
 ```mermaid
-graph LR
-    Frontend["Frontend React"] --> API["API ASP.NET Core"]
-    API --> Application["Application / casos de uso"]
-    API --> Infrastructure["Infrastructure"]
-    Application --> Domain["Domain"]
-    Infrastructure --> Domain
-    Infrastructure --> PostgreSQL[(PostgreSQL)]
+flowchart LR
+    Frontend[Frontend React] --> Proxy[Proxy Vite ou Nginx]
+    Proxy --> OS[OS]
+    Proxy --> Execution[Execution]
+    Proxy --> Billing[Billing]
+    OS --> PostgreSQL[(PostgreSQL OS)]
+    Execution --> MongoDB[(MongoDB Execution)]
+    Billing --> BillingDB[(PostgreSQL Billing)]
+    OS <--> Kafka
+    Execution <--> Kafka
+    Billing <--> Kafka
 ```
 
 - **API:** controllers, autenticação, OpenAPI e composição da aplicação;
@@ -112,7 +116,7 @@ graph LR
 - **Infrastructure:** Entity Framework Core, repositórios, migrations, JWT e serviços externos;
 - **Frontend:** aplicação React com rotas protegidas, consumo da API e telas administrativas.
 
-A API aplica automaticamente as migrations pendentes na inicialização, exceto no ambiente de testes.
+Os Composes dos serviços configuram a inicialização de bancos, tópicos e migrations conforme seus próprios contratos; consulte os guias de cada serviço.
 
 ## Tecnologias
 
@@ -126,48 +130,21 @@ A API aplica automaticamente as migrations pendentes na inicialização, exceto 
 - Scalar e OpenAPI;
 - NUnit, Moq, FluentAssertions, Testcontainers e Reqnroll.
 
-## Execução do backend legado com Docker Compose
+## Observabilidade local opcional
 
-### Pré-requisitos
+A stack de negócio não exige licença New Relic. Para iniciar somente o Collector, configure `NEW_RELIC_LICENSE_KEY` no ambiente ou no `.env` da raiz e execute:
 
-- Docker com Docker Compose;
-- portas `5173`, `8080`, `5050`, `5432`, `4317` e `4318` disponíveis.
-
-Copie `src/.env.example` para `src/.env` e preencha `NEW_RELIC_LICENSE_KEY`, conforme o [guia de observabilidade](docs/operacao/observabilidade.md). O Compose atual exige esse valor para iniciar. Depois, na raiz do repositório, execute:
-
-```bash
-docker compose -f src/docker-compose.yml up --build -d fiap.techchallenge.fase1.api pgadmin
+```powershell
+docker compose -f compose.observability.yaml up -d
 ```
 
-Serviços disponíveis:
-
-| Serviço | Endereço | Credenciais locais |
-| --- | --- | --- |
-| API | `http://localhost:8080` | — |
-| Scalar | [Interface da API](http://localhost:8080/scalar/v1) | — |
-| OpenAPI | [Contrato JSON](http://localhost:8080/openapi/v1.json) | — |
-| Liveness | `http://localhost:8080/api/health/live` | — |
-| Readiness | `http://localhost:8080/api/health/ready` | — |
-| PostgreSQL | `localhost:5432` | `postgres / postgres` |
-| PgAdmin | `http://localhost:5050` | `admin@admin.com / admin` |
-
-As credenciais e chaves presentes no Compose são destinadas apenas ao desenvolvimento local.
-
-Para encerrar os serviços:
-
-```bash
-docker compose -f src/docker-compose.yml down
-```
+O Collector usa as portas locais 4317/4318. Consulte o [guia de observabilidade](docs/operacao/observabilidade.md).
 
 ## Execução sem Docker
 
-### Backend
+### Backend OS
 
-Requer o SDK .NET 10 e uma instância PostgreSQL acessível. Configure `ConnectionStrings:DefaultConnection` e as opções `Jwt` por `appsettings`, variáveis de ambiente ou User Secrets e execute:
-
-```bash
-dotnet run --project src/FIAP.TechChallenge.Fase1.API --launch-profile http
-```
+Requer .NET SDK 10, PostgreSQL e Kafka acessíveis, além das configurações de conexão e JWT. Use os comandos do [OS Service](docs/operacao/os-service.md). O backend antigo e seu Compose não são mais fornecidos; a versão histórica está identificada no [guia de retirada](docs/arquitetura/retirada-monolito.md).
 
 ### Frontend
 
@@ -181,25 +158,15 @@ npm run dev
 
 O frontend usa os três microsserviços. Copie seu `.env.example` para `.env`; o Vite encaminha os prefixos para OS 8081, Execution 8082 e Billing 8083. Consulte o [README do frontend](src/FIAP.TechChallenge.Fase1.Frontend/README.md) para upstreams, gateway em nuvem e testes. A variável legada `VITE_API_BASE_URL` é ignorada.
 
-No Visual Studio, abra `src/TechChallengeFase1.slnx` para trabalhar com o legado e seu projeto Docker Compose. Selecione `docker-compose` como projeto de inicialização para subir esse ambiente. Para o backend integrado ou os componentes novos, escolha uma das soluções da tabela em [Estrutura do repositório](#estrutura-do-repositório).
+No Visual Studio, abra `Backend.slnx` ou `src/TechChallengeFase1.slnx`. Ambas incluem os nove projetos OS diretamente em `src`; a integração Docker legada foi retirada. Para subir a stack completa, use o Compose da raiz.
 
 ## Autenticação e documentação da API
 
 Em ambiente de desenvolvimento, a especificação OpenAPI e a interface Scalar ficam disponíveis nos endereços indicados acima.
 
-O fluxo de autenticação é:
+O fluxo administrativo usa `POST /api/os/v1/usuarios` para cadastro e `POST /api/os/v1/usuarios/login` para login. O JWT retornado é aceito pelas três APIs quando issuer, audience e chave coincidem. Não há conta padrão ou importação automática de usuários antigos.
 
-1. criar um usuário em `POST /api/usuarios`;
-2. autenticar em `POST /api/usuarios/login`;
-3. enviar o token retornado nas requisições protegidas:
-
-```http
-Authorization: Bearer <token>
-```
-
-Na API, cadastro, login, health checks, acompanhamento, aprovação e cancelamento permitem chamadas sem JWT. Na AWS, as três rotas declaradas de ordem exigem `token` na query string, validado pela Lambda Authorizer. A aprovação também valida esse token no caso de uso; acompanhamento e cancelamento dependem da proteção da borda. Os demais endpoints administrativos exigem JWT.
-
-Conforme o alinhamento do projeto, a Lambda valida requisições de clientes usando o token SHA-256 de acesso à ordem e devolve a decisão ao gateway. A API emite o JWT da autenticação administrativa. O contrato está na [RFC-003](docs/RFCs/RFC-003-autenticacao-jwt-e-bcrypt.md).
+O cliente consulta/aprova/cancela pelo link privado emitido no OS, sem JWT administrativo e sem Lambda Authorizer por CPF. Aprovação/cancelamento retornam 202 e aguardam confirmação dos serviços; entrega exige autenticação administrativa. Consulte [autenticação OS](docs/arquitetura/autenticacao-os.md) e [acompanhamento e entrega](docs/arquitetura/acompanhamento-e-entrega.md).
 
 ## Fluxo da ordem de serviço
 
@@ -214,7 +181,7 @@ Uma ordem também pode assumir o status `Cancelada`, conforme as regras do domí
 Regras importantes:
 
 - serviços e peças ou insumos só podem ser adicionados durante o diagnóstico;
-- a execução depende de um token gerado a partir do CPF do cliente e do código de aprovação mantido apenas no backend;
+- a execução depende da aprovação administrativa ou pelo link privado, pagamento confirmado no Billing e autorização por eventos;
 - serviços só podem ser concluídos enquanto a ordem está em execução;
 - a ordem só pode ser finalizada após a conclusão de todos os serviços;
 - a entrega só pode ocorrer depois da finalização;
@@ -222,80 +189,47 @@ Regras importantes:
 
 ## Infraestrutura e Kubernetes
 
-A infraestrutura remota de laboratório é declarada em Terraform nos repositórios [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) e [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db). Ela provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
+A configuração do frontend em `k8s/frontend` prepara API Gateway → VPC Link → ALB → Nginx → três serviços internos. Os Services, bancos, Kafka e segredos dos microsserviços ainda precisam ser provisionados antes do rollout; esta retirada não executa deploy ou migração de tráfego.
 
-Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui uma réplica inicial, probes de saúde, limites de recursos e HPA de 1 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. Os dois serviços são `ClusterIP` e participam do mesmo `IngressGroup`: o AWS Load Balancer Controller cria um ALB interno. Os manifests novos encaminham `/api/os/v1`, `/api/execution/v1` e `/api/billing/v1` ao proxy do frontend antes da regra `/api` legada. O ConfigMap exige os três Services internos provisionados; esta alteração não executa sua implantação. Um API Gateway HTTP API é a entrada pública e acessa esse ALB por um VPC Link.
+Os manifests do monólito foram arquivados em [legacy/aws](legacy/aws/README.md). Seus workflows de build/deploy e o orquestrador de criação foram removidos. O workflow de destruição agendada existente foi preservado. Recursos AWS, dados e segredos não foram alterados por esta mudança.
 
-Os módulos Terraform devem ser aplicados nesta ordem:
-
-```text
-bootstrap → aws-resources → database → kubernetes-addons → kubernetes-configs
-→ deploy das aplicações e Ingresses → api-gateway → serverless → código da Lambda
-```
-
-Os estágios `bootstrap`, `aws-resources`, `kubernetes-addons`, `kubernetes-configs`, `api-gateway` e `serverless` pertencem ao repositório de infraestrutura; `database` pertence ao repositório de banco. Ambos têm workflows Terraform reutilizáveis. A aplicação orquestra infraestrutura, imagens e manifests; o repositório serverless publica o código depois de a função existir.
-
-O fluxo completo executa:
-
-```text
-Infra/Core → Database → Infra/Kubernetes → Build → Deploy/ALB
-→ API Gateway → Infra/Serverless → Código da Lambda
-```
-
-Na destruição, o orquestrador preserva as dependências entre os estados:
-
-```text
-Serverless → API Gateway → Ingresses/ALB → Kubernetes Configs
-→ Kubernetes Add-ons → Database → EKS
-```
-
-O passo a passo operacional está no [`guia de infraestrutura`](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra) e no [`guia do banco`](https://github.com/Maieru/fiap-tech-challenge-db#readme). A organização dos manifests, o deploy manual e os comandos de diagnóstico estão em [`k8s/README.md`](k8s/README.md).
-
-Para a orquestração, configure os secrets `INFRA_ACTION_ROLE`, `DATABASE_ACTION_ROLE`, `ACTION_ROLE_ARN`, `AUTH_ACTION_ROLE`, `jwt_signing_key`, `db_username`, `db_password` e `NEW_RELIC_LICENSE_KEY`. Se os repositórios forem privados, configure também `REPOSITORIES_TOKEN` com acesso de leitura aos repositórios chamados.
-
-No GitHub Actions, inicie `Initialize Infrastructure And Deploy` para executar o fluxo completo. O orquestrador também responde a pushes em `main` que alterem as aplicações legadas, manifests ou workflows de deploy; mudanças exclusivas de chassi/OS não provisionam a AWS. O novo OS ainda não participa desse deploy. Consulte a [documentação de CI/CD](docs/operacao/ci-cd.md) e o [CI do monorepo](docs/operacao/monorepo-ci.md).
+Infraestrutura compartilhada, banco e serverless continuam nos respectivos repositórios. Consulte [Kubernetes](k8s/README.md), [CI/CD](docs/operacao/ci-cd.md) e [retirada do monólito](docs/arquitetura/retirada-monolito.md) para escopo e pendências.
 
 ## Testes
 
 Os componentes têm suítes independentes. Requer .NET 10, o pacote público do chassi disponível e Docker para os testes PostgreSQL/HTTP. Na raiz do repositório, escolha o escopo:
 
 ```bash
-# Todo o backend deste repositório: legado e OS
+# Backend atual: OS, contratos e testes
 dotnet test Backend.slnx -c Release --filter 'TestCategory!=ContainerImage'
-
-# Somente o legado, incluindo integração PostgreSQL e BDD
-dotnet test Legacy.slnx -c Release
 ```
 
-Os comandos específicos do [OS](src/Services/OrdensServico/README.md) estão em seu guia. O teste de imagem, categoria `ContainerImage`, exige construir a imagem e definir `OS_TEST_IMAGE`; consulte o [procedimento](src/Services/OrdensServico/README.md#testes-e-imagem). Os testes do chassi ficam em seu próprio repositório.
+Os comandos específicos do [OS](docs/operacao/os-service.md) estão em seu guia. O teste de imagem, categoria `ContainerImage`, exige construir a imagem e definir `OS_TEST_IMAGE`; consulte o [procedimento](docs/operacao/os-service.md#testes-e-imagem). Os testes do chassi ficam em seu próprio repositório.
 
 ## Estrutura do repositório
 
 ```text
 .
-├── Backend.slnx             # visão integrada, agrupada por componente
-├── Legacy.slnx              # backend legado e seus testes
-├── .github/
-│   ├── actions/             # gate de cobertura por componente
-│   └── workflows/           # CI, Sonar e orquestração AWS
-├── docs/                    # guias de arquitetura/operação, RFCs e ADRs
-├── k8s/                     # manifests das aplicações legadas
+├── Backend.slnx             # OS, contratos e testes: 9 projetos
+├── compose.yaml             # frontend + OS/Execution/Billing + dependências
+├── compose.os.yaml          # ambiente isolado do OS
+├── compose.observability.yaml # Collector opcional
+├── Dockerfile               # imagem OS; contexto na raiz
+├── .github/                 # CI, Sonar, publicação e destruição existente
+├── docs/                    # arquitetura/operação, RFCs e ADRs
+├── k8s/frontend/            # configuração do frontend para rollout futuro
+├── legacy/aws/              # referência dos manifests antigos, fora do deploy ativo
 └── src/
-    ├── Services/
-    │   └── OrdensServico/   # OS, testes, Dockerfile, Compose e solução própria
-    ├── FIAP.TechChallenge.Fase1.*/  # projetos legados e frontend
-    ├── LoadTests/           # cenários de carga do legado
-    ├── ObservabilityConfig/ # Collector do ambiente local legado
-    ├── TechChallengeFase1.slnx     # legado com integração Docker no Visual Studio
-    └── docker-compose.yml  # ambiente local legado
+    ├── FIAP.TechChallenge.OS.*/ # nove projetos OS, contratos e testes
+    ├── FIAP.TechChallenge.Fase1.Frontend/ # frontend React
+    ├── ObservabilityConfig/ # configuração compartilhada do Collector
+    └── TechChallengeFase1.slnx # alias do OS para Visual Studio
 ```
 
 | Escopo de trabalho | Solução | Projetos |
 | --- | --- | ---: |
-| Backend integrado | [Backend.slnx](Backend.slnx) | 16 |
-| Backend legado e testes | [Legacy.slnx](Legacy.slnx) | 9 |
-| OS Service e testes | [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) | 7 |
-| Legado com Docker no Visual Studio | [TechChallengeFase1.slnx](src/TechChallengeFase1.slnx) | 9 .NET + Docker Compose |
+| Backend atual | [Backend.slnx](Backend.slnx) | 9 |
+| Alias Visual Studio | [TechChallengeFase1.slnx](src/TechChallengeFase1.slnx) | 9 |
 
 Os agrupamentos das soluções são visuais; os diretórios físicos são preservados. `artifacts/`, `bin/`, `obj/` e resultados de testes são gerados e não devem ser versionados. `coverage.runsettings` na raiz padroniza a coleta dos componentes.
 
@@ -316,7 +250,7 @@ Este é meu primeiro projeto em que aplico esses conceitos de forma tão abrange
 
 ## Observabilidade
 
-A telemetria é enviada ao New Relic via OpenTelemetry Collector. Antes de iniciar o Docker Compose, configure a chave em `src/.env` conforme o [guia de observabilidade](docs/operacao/observabilidade.md).
+A telemetria é enviada ao New Relic via OpenTelemetry Collector. O Collector é opcional e usa `compose.observability.yaml`; configure a chave de ingestão no ambiente ou `.env` da raiz conforme o [guia de observabilidade](docs/operacao/observabilidade.md).
 
 ## Métricas de negócio
 

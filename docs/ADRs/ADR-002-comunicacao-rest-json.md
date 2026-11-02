@@ -38,8 +38,8 @@ Reconsiderar com consumidores externos, operações longas ou necessidade de eve
 
 ## Evidências e relações
 
-- [Controllers da API](../../src/FIAP.TechChallenge.Fase1.API/Controllers)
-- [Mapeamento de resultados para HTTP](../../src/FIAP.TechChallenge.Fase1.API/Extensions/ResultExtensions.cs)
+- [Controllers da API](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.API/Controllers)
+- [Mapeamento de resultados para HTTP](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.API/Extensions/ResultExtensions.cs)
 - [Cliente HTTP do frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/src/services/api.ts)
-- [Configuração da API](../../src/FIAP.TechChallenge.Fase1.API/Program.cs)
+- [Configuração da API](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.API/Program.cs)
 - [ADR-005 — Topologia de entrada na AWS](ADR-005-topologia-de-entrada-na-aws.md)

@@ -35,8 +35,8 @@ Os contratos não alteram as versões do chassi consumidas pelo OS e pelo legado
 
 ## Evidências e relações
 
-- [Contratos OS](../../src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging/README.md).
-- [Testes de compatibilidade](../../src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging.Tests/ContractTests.cs).
+- [Contratos OS](../../src/FIAP.TechChallenge.OS.Application.Messaging/README.md).
+- [Testes de compatibilidade](../../src/FIAP.TechChallenge.OS.Application.Messaging.Tests/ContractTests.cs).
 - [Publicação](../../.github/workflows/publish-os-messaging.yml).
 - [ADR-013](../ADRs/ADR-013-chassi-em-repositorio-proprio.md).
 - [ADR-014](../ADRs/ADR-014-contratos-mensageria.md).

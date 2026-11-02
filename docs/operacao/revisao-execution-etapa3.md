@@ -59,7 +59,7 @@ O Compose de verificação usou exclusivamente o projeto fiap-phase3-verificatio
 
 ## Reproduzir
 
-Consulte o [README OS](../../src/Services/OrdensServico/README.md) para restaurar contratos e construir a imagem OS.
+Consulte o [README OS](os-service.md) para restaurar contratos e construir a imagem OS.
 No Execution, consulte o README para restaurar o contrato OS, construir sua imagem e executar Distributed.slnx.
 O Compose integrado recebe OS_IMAGE e usa os mesmos parâmetros JWT nos dois serviços.
 Os testes distribuídos precisam apenas das imagens OS_TEST_IMAGE e EXECUTION_TEST_IMAGE e do Docker.

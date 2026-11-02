@@ -22,17 +22,21 @@ jobs:
       run:
         working-directory: src/FIAP.TechChallenge.Fase1.Frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: src/FIAP.TechChallenge.Fase1.Frontend/package-lock.json
-      - run: npm ci --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm test
-      - run: npx eslint src/services src/types/ordemServico.ts src/pages/ordens-servico src/observability vite.config.ts
+      - run: npx eslint src/services src/types/ordemServico.ts src/pages/ordens-servico src/observability src/components/ui/card.tsx src/layouts/AdminLayout.tsx vite.config.ts
       - run: npm run build
       - run: docker build -t fiap-frontend:ci .
+      - name: Verify unprivileged Nginx and upstream TLS
+        shell: pwsh
+        working-directory: .
+        run: ./scripts/Test-FrontendSecurity.ps1 -Image fiap-frontend:ci
   component:
     name: Test ${{ matrix.component }}
     runs-on: ubuntu-latest
@@ -41,15 +45,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - component: legacy
-            solution: Legacy.slnx
-            assemblies: '+FIAP.TechChallenge.Fase1.*;-*.Tests*'
           - component: os
-            solution: src/Services/OrdensServico/OrdensServico.slnx
+            solution: Backend.slnx
             assemblies: '+FIAP.TechChallenge.OS.*;-*.Tests*'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: 10.0.x
       - name: Build solution
@@ -79,7 +80,7 @@ jobs:
           output: artifacts/coverage/${{ matrix.component }}
       - name: Build OS image
         if: matrix.component == 'os'
-        run: docker build -f src/Services/OrdensServico/Dockerfile -t fiap-os:ci .
+        run: docker build -f Dockerfile -t fiap-os:ci .
       - name: Test OS image through NUnit and Testcontainers
         if: matrix.component == 'os'
         shell: pwsh
@@ -87,11 +88,11 @@ jobs:
           OS_TEST_IMAGE: fiap-os:ci
           OS_OPENAPI_OUTPUT: ${{ github.workspace }}/artifacts/os-openapi.json
         run: |
-          dotnet test src/Services/OrdensServico/FIAP.TechChallenge.OS.Integration.Tests/FIAP.TechChallenge.OS.Integration.Tests.csproj `
+          dotnet test src/FIAP.TechChallenge.OS.Integration.Tests/FIAP.TechChallenge.OS.Integration.Tests.csproj `
             --configuration Release --no-build --no-restore --filter 'TestCategory=ContainerImage' `
             --logger trx --results-directory artifacts/image-tests
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: verification-${{ matrix.component }}
@@ -111,11 +112,12 @@ jobs:
   ci-required:
     name: ci-required
     if: always()
-    needs: [component, quality]
+    needs: [frontend, component, quality]
     runs-on: ubuntu-latest
     steps:
-      - name: Require tests, coverage and quality success
+      - name: Require frontend, tests, coverage and quality success
         env:
           TEST_RESULT: ${{ needs.component.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
-        run: test "$TEST_RESULT" = success && test "$QUALITY_RESULT" = success
+          FRONTEND_RESULT: ${{ needs.frontend.result }}
+        run: test "$FRONTEND_RESULT" = success && test "$TEST_RESULT" = success && test "$QUALITY_RESULT" = success

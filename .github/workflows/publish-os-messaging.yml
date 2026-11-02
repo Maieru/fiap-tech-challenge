@@ -14,10 +14,10 @@ jobs:
     env:
       NUGET_USER: ${{ vars.NUGET_USER }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: 10.0.x
       - name: Validate release
@@ -35,11 +35,11 @@ jobs:
           fi
       - name: Test contracts and publisher
         run: |
-          dotnet restore src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging.Tests
-          dotnet test src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging.Tests -c Release --no-restore --filter 'TestCategory!=Kafka'
+          dotnet restore src/FIAP.TechChallenge.OS.Application.Messaging.Tests
+          dotnet test src/FIAP.TechChallenge.OS.Application.Messaging.Tests -c Release --no-restore --filter 'TestCategory!=Kafka'
       - name: Pack immutable release
-        run: dotnet pack src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging -c Release -o artifacts/packages -p:Version="$PACKAGE_VERSION"
-      - uses: NuGet/login@v1
+        run: dotnet pack src/FIAP.TechChallenge.OS.Application.Messaging -c Release -o artifacts/packages -p:Version="$PACKAGE_VERSION"
+      - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
         id: login
         with:
           user: ${{ env.NUGET_USER }}
@@ -47,7 +47,7 @@ jobs:
         env:
           NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: dotnet nuget push "artifacts/packages/*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: os-messaging-release

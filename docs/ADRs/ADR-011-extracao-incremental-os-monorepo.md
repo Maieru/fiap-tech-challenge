@@ -5,6 +5,8 @@
 - **Última revisão:** 2026-11-01
 - **Escopo:** primeiro incremento da Fase 4
 
+A coexistência descrita neste registro encerrou-se para o código e a automação exclusiva do monólito na [ADR-021](ADR-021-retirada-codigo-monolito.md). A retirada de recursos e dados remotos continua separada. O restante registra o contexto do incremento original.
+
 ## Contexto
 
 O monólito reúne cadastros, orçamento e execução. A fase 4 exige independência entre serviços, mas a primeira entrega precisa preservar o fluxo atual e aproveitar domínio, aplicação e testes. A equipe decidiu manter o monorepo temporariamente e executar o OS em paralelo, apenas localmente e no CI.
@@ -28,7 +30,7 @@ Há duplicação temporária de código de negócio, documentada no inventário 
 ## Evidências
 
 - [Arquitetura e inventário](../arquitetura/fase4-incremento1.md).
-- [OS Service](../../src/Services/OrdensServico/README.md).
+- [OS Service](../operacao/os-service.md).
 - [CI](../operacao/monorepo-ci.md).
 
 As ADRs 001 e 008 continuam descrevendo o legado e a infraestrutura existente.

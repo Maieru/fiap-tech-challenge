@@ -1,258 +1,73 @@
-# Kubernetes
+# Kubernetes — frontend e migração de infraestrutura
 
-Esta pasta contém apenas os manifests Kubernetes das aplicações backend e frontend. Namespaces, `SecretStore`, add-ons e observabilidade pertencem ao repositório [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra).
+Esta árvore ativa contém somente os manifests do frontend migrado. Namespaces, add-ons, observabilidade e infraestrutura compartilhada pertencem ao repositório de infraestrutura. OS, Execution e Billing ainda precisam de implantação própria na nuvem.
 
 ## Pré-requisito do frontend migrado
 
-A nova imagem não usa o backend legado. Antes do rollout, implante OS, Execution e Billing com seus bancos/Kafka/segredos e ajuste `OS_UPSTREAM`, `EXECUTION_UPSTREAM` e `BILLING_UPSTREAM` no ConfigMap do frontend. Os nomes padrão são `fiap-os-service.fiap-os.svc:8080`, `fiap-execution-service.fiap-execution.svc:8080` e `fiap-billing-service.fiap-billing.svc:8080`. Esses três Services não são provisionados pelos manifests desta pasta. Não publique a nova imagem antes de disponibilizar esses destinos.
+Antes do rollout, disponibilize OS, Execution e Billing com seus bancos/Kafka/segredos e ajuste os upstreams do ConfigMap aos Services reais. Os nomes padrão são:
 
-`microservices-ingress.yaml` encaminha os três prefixos versionados ao Nginx com prioridade 5, antes do `/api` legado de prioridade 10. O API Gateway existente preserva o caminho. O Nginx encaminha a cada serviço interno; não configure seu upstream para o próprio gateway público desta topologia, pois isso criaria um ciclo. Nenhum deploy foi executado por esta alteração. Ver [guia do frontend](../src/FIAP.TechChallenge.Fase1.Frontend/README.md).
+| Variável | Destino esperado |
+| --- | --- |
+| `OS_UPSTREAM` | `https://fiap-os-service.fiap-os.svc:8443` |
+| `EXECUTION_UPSTREAM` | `https://fiap-execution-service.fiap-execution.svc:8443` |
+| `BILLING_UPSTREAM` | `https://fiap-billing-service.fiap-billing.svc:8443` |
 
-## Arquitetura do deploy
+Esses Services não são provisionados por esta pasta. A nova imagem não usa o backend antigo. Não configure Nginx para chamar o próprio gateway que devolve a requisição ao mesmo Nginx, pois isso cria um ciclo.
+
+Os destinos da nuvem devem terminar TLS, diretamente na aplicação ou em proxy do serviço. A porta 8443 é o contrato preparado, não uma porta TLS habilitada automaticamente nos backends atuais. O Collector também deve aceitar OTLP sobre HTTPS na porta configurada (4318). Certificados precisam incluir os nomes DNS dos upstreams no SAN.
+
+Antes do rollout, crie no namespace `fiap-frontend` o Secret `fiap-upstream-ca`, com chave `ca.crt` contendo o bundle PEM das CAs confiáveis. Por exemplo: `kubectl create secret generic fiap-upstream-ca -n fiap-frontend --from-file=ca.crt=/caminho/ca-bundle.pem`. Use a CA real do ambiente; não versione chaves privadas. Se os destinos usarem uma CA pública, o bundle pode ser o conjunto de raízes públicas aprovado pelo ambiente. O Secret é obrigatório e sua ausência impede a criação do pod.
+
+Nginx valida a cadeia e o hostname dos certificados, inclusive no OTLP. CA desconhecida, hostname divergente ou destino sem TLS falham com 502; não desative a verificação para contornar configuração incompleta. O Compose local continua usando HTTP em rede local, sem exigir gateway ou certificados. A [RFC-016](../docs/RFCs/RFC-016-correcao-apontamentos-sonar.md) registra a decisão e as verificações.
+
+## Topologia preparada
 
 ```mermaid
-graph LR
-    Internet --> Gateway["API Gateway"]
-    Gateway --> Link["VPC Link"]
-    Link --> ALB["ALB interno"]
-    ALB -->|"/*"| FrontendService["Frontend Service<br/>ClusterIP porta 80"]
-    FrontendService --> Frontend["Frontend / Nginx<br/>1 réplica"]
-    ALB -->|"/api/*"| BackendService["Backend Service<br/>ClusterIP porta 8080"]
-    BackendService --> Backend["API .NET<br/>1 a 10 réplicas"]
-    Backend --> RDS[(Amazon RDS PostgreSQL)]
-    Backend -->|"OTLP"| Collector[OpenTelemetry Collector]
-    Collector -->|"OTLP/HTTPS: traces, metrics, logs"| NewRelic[New Relic]
-    Secrets["AWS Secrets Manager"] --> ExternalSecrets["External Secrets Operator"]
-    ExternalSecrets --> BackendSecret["Kubernetes Secret"]
-    BackendSecret --> Backend
+flowchart LR
+    Navegador --> Gateway[API Gateway]
+    Gateway --> Link[VPC Link]
+    Link --> ALB[ALB interno]
+    ALB -->|Páginas e prefixos versionados| Frontend[Frontend e Nginx]
+    Frontend -->|/api/os/v1| OS[Service OS]
+    Frontend -->|/api/execution/v1| Execution[Service Execution]
+    Frontend -->|/api/billing/v1| Billing[Service Billing]
+    Frontend -->|/otlp| Collector[Collector]
 ```
 
-O API Gateway é o ponto de entrada público destinado ao tráfego da aplicação. O AWS Load Balancer Controller combina os Ingresses dos dois namespaces em um ALB interno: os prefixos `/api/os/v1`, `/api/execution/v1` e `/api/billing/v1` seguem para o proxy do frontend. As demais rotas `/api/*` ainda seguem para o backend legado; páginas seguem para o frontend. Dentro do frontend, o Nginx encaminha `/otlp/*` ao Collector, portanto essa ingestão é indiretamente acessível pela mesma borda.
+Os Ingresses compartilham `fiap-edge`. `microservices-ingress.yaml` tem prioridade 5 para os três prefixos, anterior à regra `/api` legada de prioridade 10 caso ainda exista no cluster. O Ingress de páginas tem prioridade 20. A regra legada existente só deve ser retirada junto da migração de tráfego; excluir um arquivo local não a remove do cluster.
 
-## Estrutura
+Esta topologia é configuração versionada, não evidência de deploy. API Gateway deve preservar os caminhos e encaminhar acompanhamento/decisões novos para validação do token privado no OS, sem o authorizer legado por CPF. Queries não devem aparecer em logs da borda.
+
+## Recursos ativos
 
 ```text
 k8s/
-├── backend/
-│   ├── config-maps.yaml
-│   ├── deployment.yaml
-│   ├── hpa.yaml
-│   ├── ingress.yaml
-│   ├── secrets.yaml
-│   └── services.yaml
 └── frontend/
     ├── config-maps.yaml
     ├── deployment.yaml
     ├── ingress.yaml
+    ├── microservices-ingress.yaml
     └── services.yaml
 ```
 
-Os diretórios `backend` e `frontend` contêm somente os recursos que acompanham o ciclo de entrega da aplicação: configurações, segredos externos, deployments, serviços e escalabilidade.
+Frontend usa namespace `fiap-frontend`, uma réplica Nginx sem root (UID/GID 101), porta interna 8080 e Service `ClusterIP` porta 80. O pod não monta token de ServiceAccount; o container não eleva privilégios e tem CPU, memória e armazenamento efêmero delimitados. A imagem e o ECR contêm conta/região do laboratório e tag `latest`; ajuste aos artefatos do ambiente antes do rollout. Configure também o Collector indicado no ConfigMap caso queira exportar telemetria.
 
-A stack de observabilidade do ambiente remoto de laboratório é aplicada pelo módulo `infra/kubernetes-configs` do repositório de infraestrutura. `src/ObservabilityConfig` permanece neste repositório porque também é utilizado pelo ambiente local com Docker Compose.
+Depois de provisionar e validar as dependências, os manifests podem ser aplicados pelo novo processo de deploy. O workflow antigo `deploy-applications.yml` e o orquestrador `initialize-and-deploy.yml` foram retirados: não há mais fluxo neste repositório que recrie o monólito. A publicação reutilizável da imagem frontend não substitui esse provisionamento.
 
-## Recursos implantados
+## Referência legada e limites da retirada
 
-### Backend
+Os seis manifests antigos estão em [legacy/aws/k8s/backend](../legacy/aws/k8s/backend), fora da árvore ativa. Servem para inventário e diagnóstico de recursos existentes; não devem ser aplicados junto dos microsserviços. O código, testes e Compose antigos estão somente no histórico Git, indicado no [guia de retirada](../docs/arquitetura/retirada-monolito.md).
 
-O backend é executado no namespace `fiap-backend` e possui:
+Esta alteração não executou `kubectl`, Terraform, migração de dados, exclusão de bancos, volumes ou segredos. Recursos compartilhados, Lambda Authorizer e RDS exigem inventário e plano operacional antes de retirada. O workflow de destruição agendada existente permanece inalterado.
 
-- `Deployment` com uma réplica inicial;
-- imagem hospedada no Amazon ECR com `imagePullPolicy: Always`;
-- `ConfigMap` com configurações do ASP.NET Core e do JWT;
-- dois recursos `ExternalSecret`, que sincronizam as credenciais do banco e a chave JWT;
-- `Service` do tipo `ClusterIP`, disponível internamente na porta `8080`;
-- `Ingress` com a rota `/api`, target type `ip` e health check em `/api/health/ready`;
-- startup e liveness probes no endpoint `/api/health/live`;
-- readiness probe no endpoint `/api/health/ready`;
-- requests de `100m` de CPU e `128Mi` de memória;
-- limits de `500m` de CPU e `512Mi` de memória;
-- `HorizontalPodAutoscaler` entre 1 e 10 réplicas, com alvo de 70% de utilização de CPU.
-
-Os recursos `ExternalSecret` leem `fiap-secret-manager-database-credentials` e `fiap-secret-manager-jwt-signing-key` do AWS Secrets Manager. Os segredos são criados pelos repositórios Terraform correspondentes, e os valores sensíveis não ficam armazenados nos manifests.
-
-### Frontend
-
-O frontend é executado no namespace `fiap-frontend` e possui:
-
-- `Deployment` com uma réplica;
-- imagem hospedada no Amazon ECR com `imagePullPolicy: Always`;
-- `ConfigMap` com os upstreams internos dos três microsserviços;
-- requests de `100m` de CPU e `128Mi` de memória;
-- limits de `500m` de CPU e `512Mi` de memória;
-- `Service` do tipo `ClusterIP` na porta `80`;
-- `Ingress` com a rota `/`, compartilhando o ALB interno com o backend.
-
-## Pré-requisitos
-
-Antes de aplicar os manifests da aplicação, é necessário ter:
-
-- AWS CLI autenticada;
-- `kubectl` instalado;
-- cluster EKS `fiap-eks-cluster` criado;
-- imagens do backend e do frontend publicadas nos respectivos repositórios ECR;
-- External Secrets Operator, Metrics Server e AWS Load Balancer Controller instalados;
-- namespaces `fiap-backend` e `fiap-frontend` criados;
-- `SecretStore` `aws-secrets-store` disponível no namespace do backend;
-- segredos `fiap-secret-manager-database-credentials` e `fiap-secret-manager-jwt-signing-key` disponíveis no AWS Secrets Manager.
-
-Essas dependências são provisionadas pelos módulos Terraform nesta ordem:
-
-```text
-bootstrap → aws-resources → database → kubernetes-addons → kubernetes-configs
-→ deploy das aplicações e Ingresses → api-gateway → serverless → código da Lambda
-```
-
-Consulte o [`README` de infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra) para o procedimento completo de provisionamento.
-
-## Deploy manual
-
-Execute os comandos a partir da raiz do repositório.
-
-### 1. Configurar o acesso ao cluster
+## Diagnóstico após o rollout futuro
 
 ```bash
-aws eks update-kubeconfig --name fiap-eks-cluster --region us-east-1
-kubectl get nodes
-```
-
-Prossiga quando os nós estiverem com status `Ready`.
-
-### 2. Validar as dependências
-
-```bash
-kubectl get deployment external-secrets -n external-secrets
-kubectl get deployment metrics-server -n kube-system
-kubectl get namespaces fiap-backend fiap-frontend
-kubectl get secretstore aws-secrets-store -n fiap-backend
-```
-
-### 3. Aplicar os manifests
-
-```bash
-kubectl apply -f k8s/backend
-kubectl apply -f k8s/frontend
-```
-
-### 4. Aguardar o rollout
-
-```bash
-kubectl rollout status deployment/fiap-backend-deployment -n fiap-backend --timeout=5m
-kubectl rollout status deployment/fiap-frontend-deployment -n fiap-frontend --timeout=5m
-```
-
-## Validação
-
-Confira os principais recursos:
-
-```bash
-kubectl get pods,services -n fiap-backend
-kubectl get pods,services -n fiap-frontend
-kubectl get ingress -n fiap-backend
+kubectl get pods -n fiap-frontend
 kubectl get ingress -n fiap-frontend
-kubectl get hpa -n fiap-backend
-kubectl get externalsecret -n fiap-backend
-```
-
-O `ExternalSecret` deve estar sincronizado e o Secret de destino deve existir:
-
-```bash
-kubectl describe externalsecret fiap-secret-manager-database-credentials -n fiap-backend
-kubectl get secret fiap-secret-manager-database-credentials -n fiap-backend
-kubectl describe externalsecret fiap-secret-manager-jwt-signing-key -n fiap-backend
-kubectl get secret fiap-secret-manager-jwt-signing-key -n fiap-backend
-```
-
-Os dois Ingresses devem apresentar o mesmo hostname interno:
-
-```bash
-kubectl get ingress fiap-backend-ingress -n fiap-backend
-kubectl get ingress fiap-frontend-ingress -n fiap-frontend
-```
-
-Depois de aplicar o estado `infra/api-gateway`, consulte o endpoint público no repositório de infraestrutura:
-
-```bash
-terraform -chdir=infra/api-gateway output -raw api_endpoint
-```
-
-Também é possível validar os serviços por port-forward:
-
-```bash
-kubectl port-forward service/fiap-frontend-service 8081:80 -n fiap-frontend
-kubectl port-forward service/fiap-backend-service 8080:8080 -n fiap-backend
-```
-
-Com os comandos executados separadamente, o frontend fica disponível em `http://localhost:8081`, a liveness do backend em `http://localhost:8080/api/health/live` e a readiness em `http://localhost:8080/api/health/ready`.
-
-## Deploy pelo GitHub Actions
-
-O workflow `.github/workflows/deploy-applications.yml` realiza o deploy no EKS. Ele:
-
-1. autentica na AWS via OIDC;
-2. atualiza o `kubeconfig` do cluster;
-3. verifica as permissões no Kubernetes;
-4. reinicia e aguarda o External Secrets Operator;
-5. aplica os manifests de `k8s/backend` e `k8s/frontend`;
-6. reinicia os deployments para buscar as imagens marcadas como `latest`;
-7. aguarda a conclusão dos rollouts e a criação do ALB interno.
-
-O workflow `.github/workflows/initialize-and-deploy.yml` coordena infraestrutura, imagens e aplicações; após aguardar o ALB, aplica API Gateway e infraestrutura serverless e publica o código da Lambda. As rotas protegidas e as limitações de autenticação estão na [RFC-003](../docs/RFCs/RFC-003-autenticacao-jwt-e-bcrypt.md).
-
-## Configurações que exigem atenção
-
-- as imagens dos deployments contêm o ID da conta AWS e a região do ECR; ajuste os endereços se o ambiente mudar;
-- os manifests usam a tag `latest`, enquanto as pipelines também publicam uma tag imutável com o SHA do commit;
-- o backend está configurado com `ASPNETCORE_ENVIRONMENT=Development`; revise esse valor antes de utilizar os manifests em um ambiente de produção;
-- o HPA depende do Metrics Server para obter as métricas de CPU;
-- o ALB depende do AWS Load Balancer Controller, da Pod Identity e das sub-redes privadas marcadas para load balancers internos;
-- o External Secrets depende da associação de identidade do pod e das permissões IAM criadas pelo Terraform;
-- a criação do Secret pode levar alguns instantes após a aplicação do `ExternalSecret`.
-
-## Diagnóstico de problemas
-
-### Pods e eventos
-
-```bash
-kubectl get pods -A
-kubectl get events -n fiap-backend --sort-by=.metadata.creationTimestamp
 kubectl get events -n fiap-frontend --sort-by=.metadata.creationTimestamp
-```
-
-### Logs
-
-```bash
-kubectl logs deployment/fiap-backend-deployment -n fiap-backend --tail=200
 kubectl logs deployment/fiap-frontend-deployment -n fiap-frontend --tail=200
-kubectl logs deployment/external-secrets -n external-secrets --tail=200
 kubectl logs deployment/aws-load-balancer-controller -n kube-system --tail=200
 ```
 
-### Métricas e escalabilidade
-
-```bash
-kubectl top pods -n fiap-backend
-kubectl describe hpa fiap-backend-hpa -n fiap-backend
-```
-
-Se o backend não iniciar, verifique primeiro o `ExternalSecret`, o Secret gerado e a conectividade com o RDS. Se o API Gateway responder com erro de integração, valide o VPC Link, os eventos dos Ingresses, a saúde dos target groups e os logs do AWS Load Balancer Controller.
-
-## Remoção das aplicações
-
-Destrua primeiro `infra/serverless` e depois `infra/api-gateway`, a partir do repositório de infraestrutura. Então, na raiz do repositório da aplicação, remova os manifests, preservando o cluster:
-
-```bash
-terraform -chdir=infra/serverless destroy
-terraform -chdir=infra/api-gateway destroy
-```
-
-No repositório da aplicação:
-
-```bash
-kubectl delete -f k8s/frontend
-kubectl delete -f k8s/backend
-```
-
-Namespaces, add-ons, identidades AWS e demais recursos de infraestrutura devem ser removidos por meio dos respectivos módulos Terraform, conforme o procedimento descrito no [`README` de infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra).
-
-Consulte o [guia do New Relic](../docs/operacao/observabilidade.md) para configurar a chave de ingestão e validar os dados.
+Confira DNS e disponibilidade dos upstreams, saúde dos target groups, VPC Link e configuração dos Ingresses. Logs do acompanhamento precisam preservar o token privado. Ver [configuração frontend](../src/FIAP.TechChallenge.Fase1.Frontend/README.md), [observabilidade](../docs/operacao/observabilidade.md), [CI/CD](../docs/operacao/ci-cd.md) e [ADR-021](../docs/ADRs/ADR-021-retirada-codigo-monolito.md).

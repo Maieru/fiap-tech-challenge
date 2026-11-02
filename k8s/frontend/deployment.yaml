@@ -13,21 +13,42 @@ spec:
       labels:
         app: fiap-frontend
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: fiap-frontend
           image: 575638747623.dkr.ecr.us-east-1.amazonaws.com/fiap-ecr-frontend-repository:latest
           imagePullPolicy: Always
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
               protocol: TCP
           envFrom:
             - configMapRef:
                 name: fiap-frontend-config
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: upstream-ca
+              mountPath: /etc/nginx/upstream-ca
+              readOnly: true
           resources:
             requests:
               cpu: "100m"
               memory: "128Mi"
+              ephemeral-storage: "64Mi"
             limits:
               cpu: "500m"
               memory: "512Mi"
+              ephemeral-storage: "256Mi"
+      volumes:
+        - name: upstream-ca
+          secret:
+            secretName: fiap-upstream-ca

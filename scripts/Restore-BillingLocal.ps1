@@ -27,6 +27,6 @@ if ([IO.Path]::GetFullPath($taskPackage) -ne [IO.Path]::GetFullPath($taskDestina
 $taskConfig.configuration.packageSources.add[0].SetAttribute('value', $taskFeed)
 $taskConfigPath = Join-Path $taskRoot 'artifacts/NuGet.Local.Config'
 $taskConfig.Save($taskConfigPath)
-dotnet restore (Join-Path $taskRoot 'src/Services/OrdensServico/OrdensServico.slnx') --configfile $taskConfigPath
+dotnet restore (Join-Path $taskRoot 'Backend.slnx') --configfile $taskConfigPath
 
 if ($LASTEXITCODE -ne 0) { throw "Falha no restore dos pacotes candidatos." }
