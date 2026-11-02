@@ -15,6 +15,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  frontend:
+    name: Verify frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/FIAP.TechChallenge.Fase1.Frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/FIAP.TechChallenge.Fase1.Frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npx eslint src/services src/types/ordemServico.ts src/pages/ordens-servico src/observability vite.config.ts
+      - run: npm run build
+      - run: docker build -t fiap-frontend:ci .
   component:
     name: Test ${{ matrix.component }}
     runs-on: ubuntu-latest

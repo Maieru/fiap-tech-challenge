@@ -1,5 +1,19 @@
 name: fiap-integrated
 services:
+  frontend:
+    build:
+      context: ./src/FIAP.TechChallenge.Fase1.Frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_HTTP_PORT:-5173}:80"
+    environment:
+      OS_UPSTREAM: ${FRONTEND_OS_UPSTREAM:-http://os-api:8080}
+      EXECUTION_UPSTREAM: ${FRONTEND_EXECUTION_UPSTREAM:-http://api:8080}
+      BILLING_UPSTREAM: ${FRONTEND_BILLING_UPSTREAM:-http://billing-api:8080}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${FRONTEND_OTLP_UPSTREAM:-http://host.docker.internal:4318}
+    depends_on:
+      - os-api
+      - api
+      - billing-api
   mongo:
     image: mongo:8.0
     command: ["mongod", "--replSet", "execution-rs", "--bind_ip_all"]

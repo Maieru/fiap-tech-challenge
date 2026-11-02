@@ -4,5 +4,8 @@ metadata:
   name: fiap-frontend-config
   namespace: fiap-frontend
 data:
-  API_UPSTREAM: "http://fiap-backend-service.fiap-backend.svc:8080"
+  # Ajustar aos Services dos microsserviços antes do rollout da nova imagem.
+  OS_UPSTREAM: "http://fiap-os-service.fiap-os.svc:8080"
+  EXECUTION_UPSTREAM: "http://fiap-execution-service.fiap-execution.svc:8080"
+  BILLING_UPSTREAM: "http://fiap-billing-service.fiap-billing.svc:8080"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.fiap-observability.svc:4318"

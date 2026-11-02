@@ -4,6 +4,8 @@ Os ADRs preservam decisões arquiteturais vigentes e suas consequências. Use o 
 
 ## Catálogo
 
+- [ADR-020 — Frontend por microsserviços e mesma origem](ADR-020-frontend-microsservicos-mesma-origem.md) — Aceita.
+
 | ADR | Status | Decisão |
 | --- | --- | --- |
 | [ADR-001](ADR-001-monolito-em-camadas.md) | Aceita | Manter um monólito em camadas com domínio no centro. |

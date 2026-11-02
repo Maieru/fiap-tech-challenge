@@ -1,0 +1,38 @@
+# API Gateway -> VPC Link -> ALB -> Nginx -> microsserviços.
+# Prefixos específicos precedem o Ingress legado /api (group.order 10).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fiap-microservices-ingress
+  namespace: fiap-frontend
+  annotations:
+    alb.ingress.kubernetes.io/group.name: fiap-edge
+    alb.ingress.kubernetes.io/group.order: "5"
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /api/os/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: fiap-frontend-service
+                port:
+                  name: http
+          - path: /api/execution/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: fiap-frontend-service
+                port:
+                  name: http
+          - path: /api/billing/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: fiap-frontend-service
+                port:
+                  name: http

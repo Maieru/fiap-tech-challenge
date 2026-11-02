@@ -90,26 +90,18 @@ export function OrdemServicoFormPage() {
           return;
         }
 
-        const ordemCriada = await ordensServicoService.createWithClienteEVeiculo({
-          cliente: {
-            nome: novoCliente.nome,
-            telefone: novoCliente.telefone,
-            email: novoCliente.email || undefined,
-            cpf: documentoLimpo.length <= 11 ? documentoLimpo : undefined,
-            cnpj: documentoLimpo.length > 11 ? documentoLimpo : undefined,
-          },
-          veiculo: {
-            placa: novoVeiculo.placa.toUpperCase(),
-            marca: novoVeiculo.marca,
-            modelo: novoVeiculo.modelo,
-            ano: Number(novoVeiculo.ano),
-          },
-          descricaoProblema,
+        const clienteCriado = await clientesService.create({
+          nome: novoCliente.nome, telefone: novoCliente.telefone,
+          email: novoCliente.email || undefined,
+          cpf: documentoLimpo.length <= 11 ? documentoLimpo : undefined,
+          cnpj: documentoLimpo.length > 11 ? documentoLimpo : undefined,
         });
-
-        toast.success("Ordem de servico criada com sucesso.");
-        navigate(`/ordens-servico/${ordemCriada.id}`);
-        return;
+        finalClienteId = clienteCriado.id;
+        setClienteId(clienteCriado.id);
+        setClientes((current) => [...current, { ...novoCliente, id: clienteCriado.id }]);
+        setUsarNovoCliente(false);
+        setCadastrarNovoVeiculo(true);
+        toast.info("Cliente cadastrado. Se outra etapa falhar, o cadastro será reutilizado.");
       }
 
       if (!finalClienteId) {
@@ -134,6 +126,14 @@ export function OrdemServicoFormPage() {
           ano: Number(novoVeiculo.ano),
         });
         finalVeiculoId = veiculoCriado.id;
+        setVeiculoId(veiculoCriado.id);
+        setVeiculos((current) => [...current, {
+          id: veiculoCriado.id, clienteId: finalClienteId,
+          placa: novoVeiculo.placa.toUpperCase(), marca: novoVeiculo.marca,
+          modelo: novoVeiculo.modelo, ano: Number(novoVeiculo.ano),
+        }]);
+        setCadastrarNovoVeiculo(false);
+        toast.info("Veículo cadastrado. Se a abertura falhar, tente novamente com este veículo.");
       }
 
       if (!finalVeiculoId) {
@@ -168,7 +168,8 @@ export function OrdemServicoFormPage() {
           <CardContent className="pt-6 text-sm text-muted-foreground">Carregando dados...</CardContent>
         </Card>
       ) : (
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
+          <fieldset disabled={isSubmitting} className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Cliente e veículo</CardTitle>
@@ -378,6 +379,7 @@ export function OrdemServicoFormPage() {
               </div>
             </CardContent>
           </Card>
+          </fieldset>
         </form>
       )}
     </div>

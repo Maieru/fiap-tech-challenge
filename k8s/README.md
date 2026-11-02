@@ -2,6 +2,12 @@
 
 Esta pasta contém apenas os manifests Kubernetes das aplicações backend e frontend. Namespaces, `SecretStore`, add-ons e observabilidade pertencem ao repositório [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra).
 
+## Pré-requisito do frontend migrado
+
+A nova imagem não usa o backend legado. Antes do rollout, implante OS, Execution e Billing com seus bancos/Kafka/segredos e ajuste `OS_UPSTREAM`, `EXECUTION_UPSTREAM` e `BILLING_UPSTREAM` no ConfigMap do frontend. Os nomes padrão são `fiap-os-service.fiap-os.svc:8080`, `fiap-execution-service.fiap-execution.svc:8080` e `fiap-billing-service.fiap-billing.svc:8080`. Esses três Services não são provisionados pelos manifests desta pasta. Não publique a nova imagem antes de disponibilizar esses destinos.
+
+`microservices-ingress.yaml` encaminha os três prefixos versionados ao Nginx com prioridade 5, antes do `/api` legado de prioridade 10. O API Gateway existente preserva o caminho. O Nginx encaminha a cada serviço interno; não configure seu upstream para o próprio gateway público desta topologia, pois isso criaria um ciclo. Nenhum deploy foi executado por esta alteração. Ver [guia do frontend](../src/FIAP.TechChallenge.Fase1.Frontend/README.md).
+
 ## Arquitetura do deploy
 
 ```mermaid
@@ -21,7 +27,7 @@ graph LR
     BackendSecret --> Backend
 ```
 
-O API Gateway é o ponto de entrada público destinado ao tráfego da aplicação. O AWS Load Balancer Controller combina os Ingresses dos dois namespaces em um ALB interno: `/api/*` segue para o backend e as demais rotas seguem para o frontend. Dentro do frontend, o Nginx encaminha `/otlp/*` ao Collector, portanto essa ingestão é indiretamente acessível pela mesma borda.
+O API Gateway é o ponto de entrada público destinado ao tráfego da aplicação. O AWS Load Balancer Controller combina os Ingresses dos dois namespaces em um ALB interno: os prefixos `/api/os/v1`, `/api/execution/v1` e `/api/billing/v1` seguem para o proxy do frontend. As demais rotas `/api/*` ainda seguem para o backend legado; páginas seguem para o frontend. Dentro do frontend, o Nginx encaminha `/otlp/*` ao Collector, portanto essa ingestão é indiretamente acessível pela mesma borda.
 
 ## Estrutura
 
@@ -71,7 +77,7 @@ O frontend é executado no namespace `fiap-frontend` e possui:
 
 - `Deployment` com uma réplica;
 - imagem hospedada no Amazon ECR com `imagePullPolicy: Always`;
-- `ConfigMap` com o endereço interno do backend;
+- `ConfigMap` com os upstreams internos dos três microsserviços;
 - requests de `100m` de CPU e `128Mi` de memória;
 - limits de `500m` de CPU e `512Mi` de memória;
 - `Service` do tipo `ClusterIP` na porta `80`;

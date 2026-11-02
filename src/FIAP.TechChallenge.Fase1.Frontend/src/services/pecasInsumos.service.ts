@@ -1,4 +1,4 @@
-import { api } from "@/services/api";
+import { executionApi } from "@/services/api";
 import type {
   CreatePecaInsumoPayload,
   EntradaEstoquePayload,
@@ -14,7 +14,7 @@ interface ListPecasParams {
 
 export const pecasInsumosService = {
   async list(params: ListPecasParams = {}) {
-    const { data } = await api.get<ListPecasInsumosResponse>("/pecasinsumos", {
+    const { data } = await executionApi.get<ListPecasInsumosResponse>("/pecas-insumos", {
       params: {
         pageNumber: params.pageNumber ?? 1,
         pageSize: params.pageSize ?? 30,
@@ -25,26 +25,26 @@ export const pecasInsumosService = {
   },
 
   async getById(id: string) {
-    const { data } = await api.get<PecaInsumo>(`/pecasinsumos/${id}`);
+    const { data } = await executionApi.get<PecaInsumo>(`/pecas-insumos/${id}`);
     return data;
   },
 
   async create(payload: CreatePecaInsumoPayload) {
-    const { data } = await api.post<{ id: string }>("/pecasinsumos", payload);
+    const { data } = await executionApi.post<{ id: string }>("/pecas-insumos", payload);
     return data;
   },
 
   async update(id: string, payload: UpdatePecaInsumoPayload) {
-    const { data } = await api.put(`/pecasinsumos/${id}`, payload);
+    const { data } = await executionApi.put(`/pecas-insumos/${id}`, payload);
     return data;
   },
 
   async entradaEstoque(id: string, payload: EntradaEstoquePayload) {
-    const { data } = await api.put(`/pecasinsumos/${id}/entrada-estoque`, payload);
+    const { data } = await executionApi.put(`/pecas-insumos/${id}/entrada-estoque`, payload);
     return data;
   },
 
   async remove(id: string) {
-    await api.delete(`/pecasinsumos/${id}`);
+    await executionApi.delete(`/pecas-insumos/${id}`);
   },
 };

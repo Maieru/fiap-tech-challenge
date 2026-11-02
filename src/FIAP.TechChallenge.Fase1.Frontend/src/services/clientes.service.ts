@@ -1,4 +1,4 @@
-import { api } from "@/services/api";
+import { osApi } from "@/services/api";
 import type {
   Cliente,
   CreateClientePayload,
@@ -13,7 +13,7 @@ interface ListClientesParams {
 
 export const clientesService = {
   async list(params: ListClientesParams = {}) {
-    const { data } = await api.get<ListClientesResponse>("/clientes", {
+    const { data } = await osApi.get<ListClientesResponse>("/clientes", {
       params: {
         pageNumber: params.pageNumber ?? 1,
         pageSize: params.pageSize ?? 20,
@@ -24,21 +24,21 @@ export const clientesService = {
   },
 
   async getById(id: string) {
-    const { data } = await api.get<Cliente>(`/clientes/${id}`);
+    const { data } = await osApi.get<Cliente>(`/clientes/${id}`);
     return data;
   },
 
   async create(payload: CreateClientePayload) {
-    const { data } = await api.post<{ id: string }>("/clientes", payload);
+    const { data } = await osApi.post<{ id: string }>("/clientes", payload);
     return data;
   },
 
   async update(id: string, payload: UpdateClientePayload) {
-    const { data } = await api.put(`/clientes/${id}`, payload);
+    const { data } = await osApi.put(`/clientes/${id}`, payload);
     return data;
   },
 
   async remove(id: string) {
-    await api.delete(`/clientes/${id}`);
+    await osApi.delete(`/clientes/${id}`);
   },
 };

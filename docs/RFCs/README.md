@@ -4,6 +4,8 @@ As RFCs documentam escolhas técnicas relevantes já aceitas, suas alternativas 
 
 ## Catálogo
 
+- [RFC-013 — Proxy configurável e contratos do frontend](RFC-013-proxy-frontend-microsservicos.md) — Aceita.
+
 | RFC | Status | Decisão |
 | --- | --- | --- |
 | [RFC-001](RFC-001-escolha-da-nuvem-aws.md) | Aceita | Adotar AWS em `us-east-1` como nuvem principal. |

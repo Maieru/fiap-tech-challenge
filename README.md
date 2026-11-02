@@ -4,14 +4,14 @@ Aplicação para administrar o ciclo operacional de uma oficina mecânica. A sol
 
 ## Migração para microsserviços
 
-O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo, gestão de clientes/veículos e ordens, integrado ao Execution por Kafka. O monólito e suas rotas continuam disponíveis; o frontend ainda o utiliza. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório, testes e publicação NuGet próprios.
+O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README.md), com PostgreSQL exclusivo, gestão de clientes/veículos e ordens, integrado ao Execution por Kafka. O monólito e suas rotas continuam disponíveis; o frontend atual utiliza os três microsserviços. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui repositório, testes e publicação NuGet próprios.
 
 Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os nove projetos do OS, incluindo contratos de mensageria e seus testes. `Backend.slnx` mantém a visão integrada dos 18 projetos do legado e do OS. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
 
 O legado usa `Maieru.FiapTechChallenge.Chassis` **0.1.0** e o OS usa **1.1.1**, com adaptador Kafka **0.1.1**, por `PackageReference`.
 Consulta ao feed em 2026-11-02: contratos OS **0.2.0** e Execution **0.1.0** disponíveis; contratos Billing **0.1.0**, consumidos pelo OS, ainda precisam de publicação ou restore local explícito. Consulte [dependências e publicação](docs/operacao/monorepo-ci.md).
 
-Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing com gateway mockado, Saga, acompanhamento privado e entrega administrativa estão implementados. Adaptação do frontend, gateway real, implantação dos novos serviços e retirada do legado permanecem pendentes. O [roteiro do frontend](docs/arquitetura/migracao-frontend.md) detalha chamadas, contratos e critérios de aceite ainda pendentes. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
+Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing com gateway mockado, Saga, acompanhamento privado e entrega administrativa estão implementados. O frontend foi migrado e verificado localmente. Gateway de pagamento real, implantação dos novos serviços e retirada do legado permanecem pendentes. O [guia do frontend](docs/arquitetura/migracao-frontend.md) detalha contratos, proxies e limites da validação. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
 
 ## Subir OS, Execution e Billing
 
@@ -21,7 +21,7 @@ Na raiz deste repositório, com Docker Desktop em modo Linux e os checkouts `Fia
 docker compose up -d --build
 ```
 
-O `compose.yaml` da raiz constrói as três APIs e inicia seus dois PostgreSQL, MongoDB replica set e Kafka. Tópicos e migrations são inicializados pelas dependências. OS fica em http://localhost:8081/scalar/v1, Execution em http://localhost:8082/scalar/v1 e Billing em http://localhost:8083/scalar/v1. Os consumidores não reiniciam automaticamente após falha.
+O `compose.yaml` da raiz constrói frontend e três APIs e inicia seus dois PostgreSQL, MongoDB replica set e Kafka. Acesse o frontend em http://localhost:5173 e cadastre um usuário na tela de login. Tópicos e migrations são inicializados pelas dependências. OS fica em http://localhost:8081/scalar/v1, Execution em http://localhost:8082/scalar/v1 e Billing em http://localhost:8083/scalar/v1. Os consumidores não reiniciam automaticamente após falha.
 
 Na primeira configuração de um checkout novo, copie `.env.example` para `.env` e preencha as senhas e `JWT_SIGNING_KEY` (pelo menos 32 bytes). OS emite os tokens administrativos; issuer/audience/chave devem coincidir nos três serviços. O arquivo `.env` é ignorado pelo Git. Nesta migração do comando anterior, a configuração local existente foi reaproveitada, sem regenerar credenciais. Não troque senhas de bancos com volumes existentes sem atualizar os bancos correspondentes.
 
@@ -40,7 +40,7 @@ docker compose logs -f    # Acompanhar logs
 docker compose down       # Parar preservando os volumes
 ```
 
-O projeto continua chamado `fiap-integrated`, com os mesmos volumes do comando anterior. O Compose da raiz reúne os três serviços; o Compose em `src/Services/OrdensServico` continua atendendo ao OS isolado. Pare outros ambientes que utilizem as mesmas portas antes de iniciar. O OS oferece cadastro/login próprios em `/api/os/v1/usuarios` e `/api/os/v1/usuarios/login`; o frontend legado não faz parte desta stack.
+O projeto continua chamado `fiap-integrated`, com os mesmos volumes do comando anterior. O Compose da raiz reúne os três serviços; o Compose em `src/Services/OrdensServico` continua atendendo ao OS isolado. Pare outros ambientes que utilizem as mesmas portas antes de iniciar. O OS oferece cadastro/login próprios em `/api/os/v1/usuarios` e `/api/os/v1/usuarios/login`; o frontend migrado faz parte desta stack e usa proxy same-origin sem exigir Kong.
 
 ## Documentação HTTP com Scalar
 
@@ -126,7 +126,7 @@ A API aplica automaticamente as migrations pendentes na inicialização, exceto 
 - Scalar e OpenAPI;
 - NUnit, Moq, FluentAssertions, Testcontainers e Reqnroll.
 
-## Execução local com Docker Compose
+## Execução do backend legado com Docker Compose
 
 ### Pré-requisitos
 
@@ -136,14 +136,13 @@ A API aplica automaticamente as migrations pendentes na inicialização, exceto 
 Copie `src/.env.example` para `src/.env` e preencha `NEW_RELIC_LICENSE_KEY`, conforme o [guia de observabilidade](docs/operacao/observabilidade.md). O Compose atual exige esse valor para iniciar. Depois, na raiz do repositório, execute:
 
 ```bash
-docker compose -f src/docker-compose.yml up --build -d
+docker compose -f src/docker-compose.yml up --build -d fiap.techchallenge.fase1.api pgadmin
 ```
 
 Serviços disponíveis:
 
 | Serviço | Endereço | Credenciais locais |
 | --- | --- | --- |
-| Frontend | `http://localhost:5173` | — |
 | API | `http://localhost:8080` | — |
 | Scalar | [Interface da API](http://localhost:8080/scalar/v1) | — |
 | OpenAPI | [Contrato JSON](http://localhost:8080/openapi/v1.json) | — |
@@ -180,13 +179,7 @@ npm install
 npm run dev
 ```
 
-Para apontar o frontend para uma API executada separadamente, crie um arquivo `.env` no diretório do frontend:
-
-```env
-VITE_API_BASE_URL=http://localhost:5251/api
-```
-
-O perfil `http` do backend usa `http://localhost:5251`. Se executar a API pelo Compose, use `http://localhost:8080/api` no frontend local.
+O frontend usa os três microsserviços. Copie seu `.env.example` para `.env`; o Vite encaminha os prefixos para OS 8081, Execution 8082 e Billing 8083. Consulte o [README do frontend](src/FIAP.TechChallenge.Fase1.Frontend/README.md) para upstreams, gateway em nuvem e testes. A variável legada `VITE_API_BASE_URL` é ignorada.
 
 No Visual Studio, abra `src/TechChallengeFase1.slnx` para trabalhar com o legado e seu projeto Docker Compose. Selecione `docker-compose` como projeto de inicialização para subir esse ambiente. Para o backend integrado ou os componentes novos, escolha uma das soluções da tabela em [Estrutura do repositório](#estrutura-do-repositório).
 
@@ -231,7 +224,7 @@ Regras importantes:
 
 A infraestrutura remota de laboratório é declarada em Terraform nos repositórios [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) e [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db). Ela provisiona, na região `us-east-1`, uma VPC, um cluster Amazon EKS, PostgreSQL no Amazon RDS, repositórios Amazon ECR, Secrets Manager, backend remoto no S3 e autenticação OIDC para as pipelines do GitHub Actions.
 
-Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui uma réplica inicial, probes de saúde, limites de recursos e HPA de 1 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. Os dois serviços são `ClusterIP` e participam do mesmo `IngressGroup`: o AWS Load Balancer Controller cria um ALB interno que encaminha `/api/*` ao backend e as demais rotas ao frontend. Um API Gateway HTTP API é a entrada pública e acessa esse ALB por um VPC Link.
+Os manifests em `k8s` implantam backend e frontend em namespaces separados. O backend possui uma réplica inicial, probes de saúde, limites de recursos e HPA de 1 a 10 pods; seus segredos são sincronizados do AWS Secrets Manager pelo External Secrets. Os dois serviços são `ClusterIP` e participam do mesmo `IngressGroup`: o AWS Load Balancer Controller cria um ALB interno. Os manifests novos encaminham `/api/os/v1`, `/api/execution/v1` e `/api/billing/v1` ao proxy do frontend antes da regra `/api` legada. O ConfigMap exige os três Services internos provisionados; esta alteração não executa sua implantação. Um API Gateway HTTP API é a entrada pública e acessa esse ALB por um VPC Link.
 
 Os módulos Terraform devem ser aplicados nesta ordem:
 

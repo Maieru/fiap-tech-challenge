@@ -1,0 +1,15 @@
+# Usar junto do compose.yaml da raiz com -p fiap-frontend-verification.
+# !override requer Docker Compose >= 2.24.4.
+services:
+  mongo:
+    ports: !override []
+  kafka:
+    ports: !override []
+  os-api:
+    ports: !override ["127.0.0.1:18081:8080"]
+  api:
+    ports: !override ["127.0.0.1:18082:8080"]
+  billing-api:
+    ports: !override ["127.0.0.1:18083:8080"]
+  frontend:
+    ports: !override ["127.0.0.1:15173:80"]

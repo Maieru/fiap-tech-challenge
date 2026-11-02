@@ -1,128 +1,95 @@
-# Oficina Frontend (MVP)
+# Oficina Frontend — microsserviços
 
-Frontend administrativo para oficina mecânica, implementado com:
+React, TypeScript, Vite, Tailwind e Axios. O frontend usa OS para autenticação, clientes, veículos, ordens e acompanhamento; Execution para catálogo/estoque e execução; Billing para consulta da cobrança. Não depende do monólito.
 
-- React
-- Vite
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-- React Router
-- Axios
+## Ambiente local com Docker
 
-## Estrutura de pastas
+Na raiz de `FiapTechChallengeFase1`, mantenha os checkouts Execution e Billing ao lado, copie `.env.example` para `.env` e preencha as opções JWT e senhas conforme o README principal. Execute:
 
-```txt
-src/
-  components/
-    common/
-    ui/
-  contexts/
-  hooks/
-  layouts/
-  lib/
-  pages/
-    auth/
-    dashboard/
-    clientes/
-    veiculos/
-    servicos/
-    pecas-insumos/
-    ordens-servico/
-  routes/
-  services/
-  types/
+```powershell
+docker compose up -d --build
 ```
 
-## Funcionalidades implementadas
+- Frontend: [localhost:5173](http://localhost:5173)
+- OS: porta 8081; Execution: 8082; Billing: 8083.
 
-- Login administrativo com JWT.
-- Persistência de sessão em `localStorage`.
-- Interceptor Axios com `Authorization: Bearer <token>`.
-- Logout automático em `401`.
-- Rotas protegidas.
-- Layout administrativo com sidebar, header e conteúdo responsivo.
-- CRUD de:
-  - Clientes
-  - Veículos
-  - Serviços
-  - Peças/Insumos (com entrada de estoque)
-- Ordens de serviço:
-  - Listagem
-  - Criação (cliente/veículo existente ou novo + itens)
-  - Detalhes com orçamento e timeline
-  - Avanço de status (Recebida -> Entregue)
-- Feedback visual com toasts (sucesso/erro) e estados de carregamento.
+Cadastre um usuário na tela de login. Os bancos novos não importam usuários do monólito. O JWT emitido pelo OS é aceito pelos três serviços, que precisam compartilhar issuer, audience e chave.
 
-## Configuração
+O navegador acessa `/api/os/v1`, `/api/execution/v1` e `/api/billing/v1` na origem do frontend; Nginx encaminha as chamadas. Kong não é necessário. O Compose legado em `src/docker-compose.yml` não fornece os serviços exigidos pelo frontend migrado; use o Compose da raiz.
 
-1. Copie o arquivo de exemplo:
+## Desenvolvimento com Vite
+
+Requer Node 22.12+ (ou versão posterior compatível). Com as três APIs rodando:
 
 ```powershell
 Copy-Item .env.example .env
-```
-
-2. Ajuste a URL da API no `.env`:
-
-```env
-VITE_API_BASE_URL=http://localhost:5251/api
-```
-
-## Subindo tudo com Docker Compose
-
-Na raiz do repositório, copie `src/.env.example` para `src/.env` e preencha `NEW_RELIC_LICENSE_KEY`, conforme o [guia de observabilidade](../../docs/operacao/observabilidade.md). Esse arquivo é separado do `.env` do frontend. Depois execute:
-
-```bash
-docker compose -f src/docker-compose.yml up --build
-```
-
-Servicos disponiveis:
-
-- Frontend: `http://localhost:5173`
-- API: `http://localhost:8080`
-- PgAdmin: `http://localhost:5050`
-- Postgres: `localhost:5432`
-
-No build Docker padrão, sem `VITE_API_BASE_URL` definida, o frontend usa `/api` na mesma origem; o Nginx encaminha as chamadas ao backend configurado em `API_UPSTREAM`. O `.env` do frontend também entra no contexto de build: remova a definição local de `VITE_API_BASE_URL` ou use `/api` antes de construir a imagem. Essa é uma configuração de build, não uma variável de execução do contêiner.
-
-## Execucao local (sem Docker)
-
-Requer Node.js 22.12 ou superior na linha 22, ou uma versão posterior compatível com o Vite. Execute na pasta `src/FIAP.TechChallenge.Fase1.Frontend`, com a API disponível no endereço configurado no `.env`:
-
-```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Aplicação disponível em: `http://localhost:5173`
+O Vite usa por padrão OS `http://localhost:8081`, Execution `http://localhost:8082` e Billing `http://localhost:8083`. `OS_UPSTREAM`, `EXECUTION_UPSTREAM` e `BILLING_UPSTREAM` substituem esses destinos no `.env`. `API_GATEWAY_UPSTREAM` direciona os três prefixos a um gateway, inclusive Kong caso já exista. Upstreams têm protocolo, host e eventual stage, sem barra final ou `/api/.../v1`.
 
-## OpenTelemetry
+A antiga `VITE_API_BASE_URL` é ignorada. Não é necessário configurar CORS nas APIs para este modo same-origin. `npm run preview` serve o build estático e não fornece o proxy das APIs: para validar a distribuição, use a imagem Nginx.
 
-O frontend gera traces para carregamento da pagina, requisicoes HTTP (`fetch` e Axios/XHR) e erros nao tratados. Em desenvolvimento, o Vite encaminha `/otlp` para o Collector em `http://localhost:4318`; no Docker e no Kubernetes, esse encaminhamento e feito pelo Nginx.
+## Nuvem com API Gateway
 
-Configuracoes opcionais de build:
+A mesma imagem Docker usa variáveis de execução:
 
-```env
-VITE_OTEL_SERVICE_NAME=fiap-tech-challenge-frontend
-VITE_OTEL_EXPORTER_URL=/otlp/v1/traces
-VITE_OTEL_LOGS_EXPORTER_URL=/otlp/v1/logs
-VITE_APP_VERSION=1.0.0
-```
+| Variável | Conteúdo |
+| --- | --- |
+| `OS_UPSTREAM` | Origem HTTP(S) do OS ou gateway separado |
+| `EXECUTION_UPSTREAM` | Origem HTTP(S) do Execution ou gateway separado |
+| `BILLING_UPSTREAM` | Origem HTTP(S) do Billing ou gateway separado |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Collector OTLP HTTP, por exemplo `http://collector:4318` |
 
-Para visualizar traces e logs, configure o New Relic seguindo o [guia de observabilidade](../../docs/operacao/observabilidade.md) e procure o serviço `fiap-tech-challenge-frontend`.
+Há duas topologias possíveis:
 
-## Build de produção
+1. API Gateway serve a origem pública: Gateway → VPC Link → ALB → Nginx → três Services internos. O ConfigMap em `k8s/frontend` contém os nomes esperados; ajuste aos Services provisionados. O Ingress de microsserviços tem prioridade 5, antes do `/api` legado de prioridade 10. O caminho é preservado.
+2. Frontend tem origem própria e encaminha a um gateway separado: atribua a origem do gateway aos três upstreams. Não use esse modo se o gateway encaminha a mesma requisição de volta ao Nginx, pois isso cria um ciclo.
 
-```bash
+Para hospedagem puramente estática, o build pode usar `VITE_API_GATEWAY_URL=https://gateway.example.com` ou bases completas `VITE_OS_API_BASE_URL`, `VITE_EXECUTION_API_BASE_URL`, `VITE_BILLING_API_BASE_URL`. Esse modo exige CORS no gateway, permitindo a origem do frontend, os verbos usados e Authorization/Content-Type/traceparent. A imagem padrão usa bases relativas e exclui `.env*` do contexto; configurar `VITE_*` no ambiente de um contêiner já construído não altera o JavaScript.
+
+Os manifests preparam o roteamento, mas as APIs, seus Services/bancos/Kafka e segredos precisam ser implantados antes do rollout. Esta migração não executa deploy nem modifica o tráfego AWS existente. O gateway deve deixar consulta/decisões do cliente passarem com o token privado até o OS; o authorizer legado por CPF não se aplica a esses caminhos. Logs de API Gateway/ALB também devem omitir queries.
+
+## Fluxos adaptados
+
+- Cadastro de cliente, veículo e ordem é sequencial; IDs de etapas confirmadas são reutilizados após falha. Timeout após commit ainda exige conferir o cadastro, pois o backend não oferece chave de idempotência.
+- Lista/status/datas e entrega vêm do OS. Itens e totais administrativos vêm do Execution; cobrança vem do Billing. Execução ainda não criada é uma pendência, com valores indisponíveis.
+- Aprovação/cancelamento retornam 202. A tela mostra espera por pagamento, autorização ou compensação e atualiza a cada três segundos enquanto visível. A execução só é liberada quando confirmada.
+- Conclusão usa IDs da ordem e do item no Execution. Entrega muda o OS para Entregue; Execution permanece Finalizada.
+- Não há DELETE de ordens no OS; a ação foi retirada.
+- Emissão/troca de link é explícita e invalida o anterior. O link aparece para cópia manual caso a área de transferência não esteja disponível. O cliente consulta orçamento e aprova/cancela pelo token privado; um link inválido não encerra a sessão administrativa.
+- Acompanhamento não inicia telemetria; chamadas privadas são excluídas da instrumentação e o token é filtrado dos erros Vite. Nginx omite queries nos logs e envia `no-store`/`no-referrer`.
+
+## Verificação
+
+Resultados locais e limites conhecidos: [relatório de verificação](../../docs/operacao/validacao-frontend.md). O CI ganhou um job de frontend com testes, lint do escopo migrado, build e imagem; sua execução remota ainda não foi realizada nesta sessão.
+
+```powershell
+npm test
 npm run build
-npm run preview
+npm run lint
 ```
 
-## Pontos de adaptação rápida
+Os testes Node/Vite verificam configuração de gateway, DTOs, rotas, JWT compartilhado, expiração, 401 público/administrativo e ausência transitória da projeção. O lint global ainda tem falhas anteriores em componentes UI, AuthContext e telas de listagem; o conjunto alterado pode ser conferido com:
 
-- Cliente HTTP: `src/services/api.ts`
-- Serviços por módulo: `src/services/*.service.ts`
-- Tipos de dados: `src/types/*`
-- Rotas da app: `src/routes/AppRouter.tsx`
+```powershell
+npx eslint src/services src/types/ordemServico.ts src/pages/ordens-servico src/observability vite.config.ts
+```
 
-Se o backend mudar payloads/rotas, os ajustes ficam concentrados em `services` e `types`.
+Smoke HTTP cria somente dados sintéticos e exige stack isolada. Na raiz do repositório, com imagens backend disponíveis e Docker Compose 2.24.4+:
+
+```powershell
+docker compose -p fiap-frontend-verification -f compose.yaml -f src/FIAP.TechChallenge.Fase1.Frontend/tests/compose.smoke.yaml up -d --build
+cd src/FIAP.TechChallenge.Fase1.Frontend
+$env:FRONTEND_SMOKE_ISOLATED = 'true'
+npm run test:smoke
+```
+
+Portas isoladas: frontend 15173, APIs 18081–18083. O nome de projeto separa rede e volumes. O smoke verifica o ciclo completo e grava credenciais/links temporários em `artifacts/frontend/smoke-browser.json` (ignorado pelo Git) para inspeção no navegador. Ao terminar, remova apenas a stack de teste com o mesmo comando de Compose substituindo `up -d --build` por `down -v`.
+
+## Observabilidade
+
+Vite e Nginx encaminham `/otlp` ao Collector. O Compose integrado não exige New Relic: configure o Collector separadamente se quiser exportar traces/logs administrativos. Opções de build: `VITE_OTEL_SERVICE_NAME`, `VITE_OTEL_EXPORTER_URL`, `VITE_OTEL_LOGS_EXPORTER_URL`, `VITE_APP_VERSION`.
+
+Decisões e limites: [guia da migração](../../docs/arquitetura/migracao-frontend.md), [ADR-020](../../docs/ADRs/ADR-020-frontend-microsservicos-mesma-origem.md), [RFC-013](../../docs/RFCs/RFC-013-proxy-frontend-microsservicos.md). Referências do proxy: [Vite](https://vite.dev/config/server-options#server-proxy), [Nginx](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass) e [ordenação do ALB](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/ingress/annotations/#group.order).

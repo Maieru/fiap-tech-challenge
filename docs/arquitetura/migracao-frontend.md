@@ -1,76 +1,54 @@
-# Roteiro de migração do frontend
+# Migração do frontend para microsserviços
 
-Atualizado em 2026-11-02. Este documento descreve trabalho pendente, baseado nos contratos existentes. O frontend continua no legado; a migração anteriormente cancelada não foi executada. A atualização da documentação não altera telas, proxy ou chamadas.
-
-OS, Billing e Execution já atendem ao ciclo de backend até a entrega. Os nove cenários distribuídos registrados validam HTTP/Kafka entre os serviços, mas não substituem os testes do navegador. Veja o [estado consolidado](estado-da-migracao.md) para publicação, CI e deploy.
+Atualizado em 2026-11-02. O frontend foi adaptado para OS, Execution e Billing e incluído no Compose integrado. Não há fallback ao monólito. A implementação e a verificação local não representam implantação dos serviços na AWS ou retirada do legado.
 
 ## Distribuição das chamadas
 
-| Responsabilidade do frontend | Serviço e prefixo |
+| Responsabilidade | Serviço e prefixo |
 | --- | --- |
-| Cadastro/login administrativo, clientes e veículos | OS: `/api/os/v1` |
-| Abertura/lista/consulta de ordens, histórico, aprovação/cancelamento e entrega | OS: `/api/os/v1/ordens` |
-| Emissão do link e acompanhamento/decisões do cliente | OS: `/api/os/v1/ordens/{id}/acesso-cliente` e `/api/os/v1/ordens/acompanhamento/{id}` |
-| Catálogo de serviços e peças/insumos, estoque | Execution: `/api/execution/v1/servicos` e `/api/execution/v1/pecas-insumos` |
-| Diagnóstico, itens da execução, conclusão e finalização | Execution: `/api/execution/v1/ordens` |
-| Consultar cobrança da ordem | Billing: `/api/billing/v1/ordens/{id}/cobranca` |
+| Login/cadastro administrativo, clientes e veículos | OS: `/api/os/v1` |
+| Abertura/lista/consulta, aprovação/cancelamento administrativo, entrega | OS: `/api/os/v1/ordens` |
+| Emissão/troca de link | OS: `POST /api/os/v1/ordens/{id}/acesso-cliente` |
+| Acompanhamento/decisões pelo token privado | OS: `/api/os/v1/ordens/acompanhamento/{id}` |
+| Catálogo, estoque e execução | Execution: `/api/execution/v1` |
+| Cobrança por ordem | Billing: `/api/billing/v1/ordens/{id}/cobranca` |
 
-Não existe criação manual de cobrança pela UI: a aprovação solicita pagamento por Kafka. Os detalhes administrativos podem combinar consultas HTTP ao OS, Execution e Billing; as APIs não devem acessar bancos alheios para produzir uma resposta equivalente ao legado. O status operacional e a entrega exibidos na lista devem seguir o OS, incluindo durante divergências transitórias da projeção.
+`services/api.ts` fornece três clientes administrativos com JWT e um público sem JWT. Um 401 público não apaga a sessão administrativa. Login mantém o DTO `token`, `tipoToken`, `expiresInSeconds`. As três APIs compartilham issuer, audience e chave; usuários antigos não são importados.
 
-## Diferenças encontradas no frontend atual
+## Contratos e estados
 
-| Código ou comportamento atual | Adaptação necessária |
-| --- | --- |
-| `services/api.ts` tem uma única base e todas as chamadas usam as rotas legadas | Separar clientes/endpoints por serviço, preservando o contrato comum de erros e a sessão administrativa. |
-| Detalhes esperam uma ordem única com arrays e totais do legado | Mapear a ordem OS e a resposta Execution `{ execucao, valorTotal }`. Mostrar orçamento/pagamento a partir das fontes correspondentes; não inventar itens, valores ou total zero quando uma projeção ainda não chegou. |
-| Ações assumem que aprovação muda imediatamente para execução | Tratar 202, decisão registrada e etapa da Saga; consultar novamente até as confirmações. Distinguir espera por pagamento, autorização e compensação. |
-| O link é obtido de `detalhes.token` e depende de CPF | Emitir por `POST /ordens/{id}/acesso-cliente` com JWT. Montar a URL da página do frontend com o token retornado; `acompanhamentoUrl` do OS é uma rota relativa da API que retorna JSON. Nova emissão invalida o link anterior e deve ser apresentada como troca do link. |
-| Acompanhamento espera `id`, nome do cliente e dados do veículo | O novo DTO usa `ordemServicoId`, status/datas, orçamento e etapa do pagamento; não retorna nome, CPF, contatos ou dados do veículo. Ajustar a tela ao contrato mínimo. |
-| Aprovação/cancelamento administrativos usam o token legado da ordem | Usar JWT nas rotas administrativas. Nas rotas de acompanhamento, exigir o token privado e usar o DTO próprio da decisão do cliente. |
-| A página pública atual apenas consulta e atualiza o acompanhamento | Adicionar aprovação e cancelamento pelo link conforme os estados permitidos, com confirmação de decisão e tratamento de 202/409. |
-| Conclusão de serviço usa somente o ID do item na rota | Execution exige `PUT /ordens/{id}/servicos/{itemId}/concluir`; conservar os dois identificadores. |
-| Formulário cria cliente, veículo e ordem em uma chamada `/com-cliente-veiculo` | Não há endpoint conjunto no OS. Adaptar para etapas e tratar falhas parciais sem duplicar cadastros; um novo caso de uso conjunto exigiria implementação e contrato explícitos. |
-| Lista/detalhe oferecem exclusão da ordem por DELETE | Não há DELETE de ordens no OS. Retirar essa ação da integração atual; não trocar exclusão por cancelamento silenciosamente. Cancelamento tem regras próprias e preserva o histórico. |
-| Qualquer 401 no Axios apaga a sessão administrativa | Separar o cliente público: token privado inválido deve mostrar erro de acesso sem encerrar a sessão administrativa do operador. |
+Lista, status e datas vêm do OS, inclusive entrega. Detalhes compõem a ordem OS e `{ execucao, valorTotal }` do Execution. Snapshots dos itens não incluem seus totais, calculados para apresentação; o total geral continua vindo do Execution. Cobrança é consultada no Billing de forma independente.
 
-As divergências foram verificadas em `src/FIAP.TechChallenge.Fase1.Frontend/src/services`, `src/types/ordemServico.ts` e nas páginas de formulário, lista, detalhes e acompanhamento. Não são endpoints adicionais já entregues.
+404 do Execution significa execução ainda não criada: a tela aguarda e não apresenta total zero. 404 da cobrança significa ainda não emitida; erros técnicos são exibidos como indisponibilidade. Aprovação/cancelamento retornam 202 e não alteram visualmente o status para um destino ainda não confirmado. As páginas consultam a cada três segundos enquanto visíveis, sem sobrepor consultas periódicas. Exibem espera por pagamento, autorização, cancelamento ou compensação. As ações operacionais conferem o estado do OS e Execution.
 
-## Autenticação e acesso do cliente
+Conclusão de serviço inclui IDs da ordem e do item. Entrega é administrativa no OS, após Finalizada; OS fica Entregue (6) enquanto Execution mantém Finalizada (5). Não há criação manual de cobrança nem DELETE de ordens.
 
-O login é `POST /api/os/v1/usuarios/login`; a resposta mantém `token`, `tipoToken` e `expiresInSeconds`. O cadastro administrativo continua anônimo por decisão do projeto. OS, Execution e Billing validam o mesmo JWT, com issuer/audience/chave iguais; não são necessários três logins. Novos bancos não importam usuários legados. Veja [autenticação](autenticacao-os.md).
+Cliente, veículo e ordem são criados em etapas; IDs confirmados são guardados no formulário e selecionados para uma nova tentativa. Se uma etapa falhar, as anteriores não são recriadas. Se uma requisição terminar em timeout após commit, ainda é necessário conferir o cadastro: as APIs não possuem chave de idempotência.
 
-O acompanhamento usa token aleatório por ordem, separado do JWT. A validação ocorre no OS para consulta, aprovação e cancelamento. O token só é retornado na emissão, não fica disponível na consulta administrativa e vale até a troca. Links antigos não são convertidos. A UI não deve emitir um novo link automaticamente ao consultar detalhes, pois isso revogaria o anterior.
+## Acesso do cliente e privacidade
 
-O frontend atualmente registra `window.location.href` em `observability/telemetry.ts` e possui instrumentação automática HTTP. Antes de usar o link novo, remover o token de URLs registradas em logs, traces, analytics e erros; configurar também o access log do proxy para omitir a query. As respostas do OS usam `no-store` e `no-referrer`; a página de acompanhamento e sua telemetria precisam preservar esse tratamento do segredo.
+Emissão de link é explícita, autenticada e informa que substitui o anterior. A URL usa a rota da página React e o token retornado, não a rota JSON relativa do backend. Caso a área de transferência falhe, o endereço permanece visível para cópia. Consulta administrativa não emite nem recupera tokens.
 
-## Proxy e execução local
+O acompanhamento usa o DTO mínimo do OS: `ordemServicoId`, descrição, status/datas, orçamento e etapa de pagamento. Não consulta dados pessoais ou Execution/Billing com credenciais administrativas. Permite aprovar/cancelar antes da aprovação, confirma a decisão e trata 202/conflito sem prometer processamento concluído.
 
-A stack integrada publica OS 8081, Execution 8082 e Billing 8083. O frontend ainda não faz parte dela. O Nginx atual encaminha `/api/` a um único `API_UPSTREAM`; o Vite só possui proxy de OTLP, e as três APIs não configuram CORS para o navegador acessar suas portas diretamente.
+Páginas abertas por link não inicializam OpenTelemetry; requisições públicas são excluídas da instrumentação mesmo após navegação SPA. URL de logs administrativos omite query, erros são filtrados e o Vite remove tokens de mensagens do proxy. Nginx não registra queries e desliga logs das rotas de token. A página e APIs usam `no-store`/`no-referrer`. API Gateway/ALB e outros proxies implantados também precisam omitir queries; isso não foi configurado remotamente por esta mudança.
 
-O roteiro recomendado é expor os três prefixos por um proxy na mesma origem do frontend, tanto no desenvolvimento quanto no container. Isso exige ajustar Vite/Nginx e Compose; essa configuração ainda não existe. Não introduz um serviço de negócio ou BFF. Se houver acesso por origens diferentes, configurar CORS explicitamente nas APIs antes de testar no navegador.
+## Local e nuvem
 
-A infraestrutura API Gateway/ALB/Lambda continua legada. Adaptar o proxy local não migra as rotas AWS nem autoriza o authorizer a consultar os bancos dos novos serviços.
+Vite encaminha os três prefixos para portas 8081/8082/8083; Nginx usa upstreams configuráveis em execução. Kong não é obrigatório localmente. A mesma imagem atende à nuvem, atrás de API Gateway e ALB, com upstreams internos. Os manifests do frontend incluem um Ingress dos três prefixos com prioridade anterior ao `/api` legado. Os nomes dos Services no ConfigMap devem corresponder aos serviços provisionados antes do rollout.
 
-## Ordem de implementação
+Outra topologia pode encaminhar Nginx para um gateway separado; ele não pode devolver a mesma chamada ao Nginx. Hospedagem puramente estática pode definir gateway/bases públicas no build e exige CORS na borda. Os arquivos `.env*` locais são excluídos do build Docker. `VITE_API_BASE_URL` do legado é ignorada.
 
-1. Confirmar os pacotes e builds limpos; preparar proxy e configuração dos três serviços, sem depender do cache de candidatos locais no CI.
-2. Adaptar clientes HTTP, tipos, login e cadastros. Confirmar que um JWT do OS funciona nas três APIs.
-3. Adaptar abertura/lista/detalhe, juntando os dados necessários e tratando a execução ainda não projetada após a abertura.
-4. Adaptar diagnóstico, orçamento, catálogo, estoque e conclusão dos serviços no Execution.
-5. Integrar aprovação e estados do pagamento/compensação, leitura da cobrança e entrega no OS. Atualizar por consulta periódica controlada ou ação de atualizar; não exigir WebSocket inexistente.
-6. Adaptar emissão/rotação do link e tela do cliente, incluindo decisões e remoção do token da telemetria.
-7. Validar no navegador e no container do frontend com os três serviços. Só depois preparar migração de tráfego e desativação do legado.
+Comandos, variáveis e smoke isolado estão no [README do frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/README.md). Decisões: [ADR-020](../ADRs/ADR-020-frontend-microsservicos-mesma-origem.md) e [RFC-013](../RFCs/RFC-013-proxy-frontend-microsservicos.md).
 
-## Critérios de aceite da migração
+## Verificação e limites
 
-- Cadastro/login pelo OS; expiração do JWT e 401 administrativo tratados. Link inválido não apaga a sessão do operador.
-- Clientes, veículos, catálogo e estoque operam nas respectivas APIs, sem chamadas residuais às rotas legadas.
-- Abertura e diagnóstico chegam aos serviços sem tratar o atraso de Kafka como recurso permanentemente inexistente.
-- Aprovação mostra espera por pagamento/autorização. Com Billing parado, não libera visualmente a execução; ao voltar, a tela converge para o status confirmado.
-- Finalização e entrega ficam visíveis; OS `Entregue` e Execution `Finalizada` são apresentados sem contradição ao usuário.
-- Link válido consulta orçamento e permite decisões; link trocado ou de outra ordem é rejeitado. Nenhum token é registrado em telemetria ou logs do proxy.
-- Cancelamento antes da aprovação devolve estoque uma única vez. Recusa e compensação usam o gateway substituto dos testes, sem adicionar endpoints de simulação em produção.
-- Cadastro em etapas permite retomar falhas parciais; exclusão de ordens não chama endpoint inexistente.
-- Testes de build e navegação do frontend passam; os cenários distribuídos e os checks dos serviços continuam aprovados. Mercado Pago real e deploy AWS têm validação própria posterior.
+Resultados e evidências da sessão: [verificação local do frontend](../operacao/validacao-frontend.md).
 
-Referências: [estado da migração](estado-da-migracao.md), [Saga](saga-pagamento.md), [acompanhamento e entrega](acompanhamento-e-entrega.md), [CI/dependências](../operacao/monorepo-ci.md) e [evidências](../operacao/validacao-ponta-a-ponta.md).
+- Testes Node/Vite: bases same-origin/gateway, composição, estados ausentes, rotas, JWT, expiração e isolamento de 401 público/administrativo.
+- Build TypeScript/Vite e imagem Linux com `npm ci`; configuração Nginx verificada com `nginx -t`.
+- Smoke HTTP através do Nginx contra três APIs/Kafka/bancos em rede e volumes exclusivos: cadastro/login, catálogo/estoque, abertura, diagnóstico, orçamento, rotação de link, aprovação/pagamento mockado, conclusão, entrega e cancelamento idempotente com devolução de estoque.
+- Verificação no navegador de login, lista e detalhes, incluindo orçamento público e entrega. A primeira inspeção detectou limite de página do Execution (100), corrigido nas consultas dos seletores.
+- O lint global tem erros anteriores em componentes UI, AuthContext e outras listagens; o lint dos serviços, tipos, páginas de ordens, observabilidade e Vite alterados passa.
+
+Pendências: provisionar/implantar os serviços e suas dependências na AWS, validar roteamento/JWT/privacidade na borda real, trocar pagamento mockado por gateway real e executar a retirada do legado quando os critérios de produção forem atendidos. Os fluxos de indisponibilidade prolongada/compensação por recusa continuam dependendo dos cenários distribuídos backend; o smoke frontend usa o mock de aprovação existente.

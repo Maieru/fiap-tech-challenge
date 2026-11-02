@@ -1,15 +1,10 @@
-import { api } from "@/services/api";
+import axios from "axios";
+import { executionApi, osApi, publicOsApi } from "@/services/api";
+import { mapOrdemDetalhes } from "./ordemServico.mapper";
 import type {
-  AcompanhamentoOrdemServico,
-  AddPecaOrdemPayload,
-  AddServicoOrdemPayload,
-  ConcluirServicoOrdemPayload,
-  CreateOrdemServicoComClienteEVeiculoPayload,
-  CreateOrdemServicoPayload,
-  ListOrdensServicoResponse,
-  OrdemServicoDetalhes,
-  SortDirection,
-  StatusOrdemServico,
+  AcompanhamentoOrdemServico, AddPecaOrdemPayload, AddServicoOrdemPayload,
+  ConcluirServicoOrdemPayload, CreateOrdemServicoPayload, DecisaoClienteResponse,
+  ExecucaoResponse, ListOrdensServicoResponse, OrdemOs, SortDirection, StatusOrdemServico,
 } from "@/types/ordemServico";
 
 interface ListOrdensParams {
@@ -22,90 +17,59 @@ interface ListOrdensParams {
 
 export const ordensServicoService = {
   async list(params: ListOrdensParams = {}) {
-    const { data } = await api.get<ListOrdensServicoResponse>("/ordensservico", {
-      params: {
-        pageNumber: params.pageNumber ?? 1,
-        pageSize: params.pageSize ?? 30,
-        status: params.status,
-        statusSortDirection: params.statusSortDirection,
-        dataAberturaSortDirection: params.dataAberturaSortDirection,
-      },
-      paramsSerializer: {
-        indexes: null,
-      },
+    const { data } = await osApi.get<ListOrdensServicoResponse>("/ordens", {
+      params: { ...params, pageNumber: params.pageNumber ?? 1, pageSize: params.pageSize ?? 30 },
+      paramsSerializer: { indexes: null },
     });
-
     return data;
   },
-
   async getById(id: string) {
-    const { data } = await api.get<OrdemServicoDetalhes>(`/ordensservico/${id}`);
-    return data;
+    const { data: ordem } = await osApi.get<OrdemOs>(`/ordens/${id}`);
+    let execucao: ExecucaoResponse | null = null;
+    try {
+      execucao = (await executionApi.get<ExecucaoResponse>(`/ordens/${id}`)).data;
+    } catch (error) {
+      // A criação da execução é assíncrona. Só 404 representa projeção pendente.
+      if (!axios.isAxiosError(error) || error.response?.status !== 404) throw error;
+    }
+    return mapOrdemDetalhes(ordem, execucao);
   },
-
-  async getAcompanhamentoById(id: string, accessToken: string) {
-    const { data } = await api.get<AcompanhamentoOrdemServico>(`/ordensservico/acompanhamento/${id}`, {
-      params: { token: accessToken },
-    });
-    return data;
+  async emitirAcessoCliente(id: string) {
+    return (await osApi.post<{ token: string; acompanhamentoUrl: string }>(`/ordens/${id}/acesso-cliente`)).data;
   },
-
+  async getAcompanhamentoById(id: string, token: string) {
+    return (await publicOsApi.get<AcompanhamentoOrdemServico>(`/ordens/acompanhamento/${id}`, { params: { token } })).data;
+  },
   async create(payload: CreateOrdemServicoPayload) {
-    const { data } = await api.post<{ id: string }>("/ordensservico", payload);
-    return data;
+    return (await osApi.post<{ id: string }>("/ordens", payload)).data;
   },
-
-  async createWithClienteEVeiculo(payload: CreateOrdemServicoComClienteEVeiculoPayload) {
-    const { data } = await api.post<{ id: string }>("/ordensservico/com-cliente-veiculo", payload);
-    return data;
-  },
-
   async addServico(id: string, payload: AddServicoOrdemPayload) {
-    const { data } = await api.post(`/ordensservico/${id}/addservico`, payload);
-    return data;
+    return (await executionApi.post(`/ordens/${id}/addservico`, payload)).data;
   },
-
   async addPecaInsumo(id: string, payload: AddPecaOrdemPayload) {
-    const { data } = await api.post(`/ordensservico/${id}/addpecainsumo`, payload);
-    return data;
+    return (await executionApi.post(`/ordens/${id}/addpecainsumo`, payload)).data;
   },
-
   async iniciarDiagnostico(id: string) {
-    const { data } = await api.put(`/ordensservico/${id}/iniciar-diagnostico`);
-    return data;
+    return (await executionApi.put(`/ordens/${id}/iniciar-diagnostico`)).data;
   },
-
   async solicitarAprovacao(id: string) {
-    const { data } = await api.put(`/ordensservico/${id}/solicitar-aprovacao`);
-    return data;
+    return (await executionApi.put(`/ordens/${id}/solicitar-aprovacao`)).data;
   },
-
-  async aprovarExecucao(id: string, accessToken: string) {
-    const { data } = await api.put(`/ordensservico/${id}/aprovar-execucao`, undefined, { params: { token: accessToken } });
-    return data;
+  async aprovarExecucao(id: string, token?: string) {
+    if (token) return (await publicOsApi.put<DecisaoClienteResponse>(`/ordens/acompanhamento/${id}/aprovar-execucao`, undefined, { params: { token } })).data;
+    return (await osApi.put(`/ordens/${id}/aprovar-execucao`)).data;
   },
-
-  async cancelar(id: string, accessToken: string) {
-    const { data } = await api.put(`/ordensservico/${id}/cancelar`, undefined, { params: { token: accessToken } });
-    return data;
+  async cancelar(id: string, token?: string) {
+    if (token) return (await publicOsApi.put<DecisaoClienteResponse>(`/ordens/acompanhamento/${id}/cancelar`, undefined, { params: { token } })).data;
+    return (await osApi.put(`/ordens/${id}/cancelar`)).data;
   },
-
-  async concluirServico(servicoDaOrdemServicoId: string, payload: ConcluirServicoOrdemPayload) {
-    const { data } = await api.put(`/ordensservico/servicos/${servicoDaOrdemServicoId}/concluir`, payload);
-    return data;
+  async concluirServico(id: string, itemId: string, payload: ConcluirServicoOrdemPayload) {
+    return (await executionApi.put(`/ordens/${id}/servicos/${itemId}/concluir`, payload)).data;
   },
-
   async finalizar(id: string) {
-    const { data } = await api.put(`/ordensservico/${id}/finalizar`);
-    return data;
+    return (await executionApi.put(`/ordens/${id}/finalizar`)).data;
   },
-
   async entregar(id: string) {
-    const { data } = await api.put(`/ordensservico/${id}/entregar`);
-    return data;
-  },
-
-  async remove(id: string) {
-    await api.delete(`/ordensservico/${id}`);
+    return (await osApi.put(`/ordens/${id}/entregar`)).data;
   },
 };
