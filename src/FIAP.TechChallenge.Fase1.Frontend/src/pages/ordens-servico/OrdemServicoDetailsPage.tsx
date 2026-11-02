@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Trash2, XCircle } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { RefreshCw, XCircle } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { getApiErrorMessage } from "@/services/api";
+import { billingService, type Cobranca } from "@/services/billing.service";
+import { ETAPA_PAGAMENTO_LABELS } from "@/types/ordemServico";
 import { clientesService } from "@/services/clientes.service";
 import { ordensServicoService } from "@/services/ordensServico.service";
 import { pecasInsumosService } from "@/services/pecasInsumos.service";
@@ -25,7 +27,6 @@ import type { Veiculo } from "@/types/veiculo";
 
 export function OrdemServicoDetailsPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
 
   const [ordem, setOrdem] = useState<OrdemServicoDetalhes | null>(null);
   const [cliente, setCliente] = useState<Cliente | null>(null);
@@ -41,38 +42,46 @@ export function OrdemServicoDetailsPage() {
   const [addingItem, setAddingItem] = useState(false);
   const [tempoGastoPorServico, setTempoGastoPorServico] = useState<Record<string, string>>({});
   const [concludingServicoId, setConcludingServicoId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [cobranca, setCobranca] = useState<Cobranca | null>(null);
+  const [billingError, setBillingError] = useState(false);
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!id) return;
 
     setLoading(true);
+    setError(null);
     try {
       const ordemResponse = await ordensServicoService.getById(id);
       setOrdem(ordemResponse);
       setTempoGastoPorServico({});
+      try {
+        setCobranca(await billingService.getByOrdem(id));
+        setBillingError(false);
+      } catch { setBillingError(true); }
 
       const [clienteResponse, veiculoResponse, servicosResponse, pecasResponse] = await Promise.all([
         clientesService.getById(ordemResponse.clienteId),
         veiculosService.getById(ordemResponse.veiculoId),
-        servicosService.list({ pageSize: 300 }),
-        pecasInsumosService.list({ pageSize: 300 }),
+        servicosService.list({ pageSize: 100 }),
+        pecasInsumosService.list({ pageSize: 100 }),
       ]);
 
       setCliente(clienteResponse);
       setVeiculo(veiculoResponse);
       setServicosDisponiveis(servicosResponse.servicos);
       setPecasDisponiveis(pecasResponse.pecasInsumos.filter((item) => item.ativo));
-    } catch {
-      toast.error("Não foi possível carregar os detalhes da ordem.");
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, "Não foi possível carregar os detalhes da ordem. Tente atualizar."));
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
 
   useEffect(() => {
-    void loadData();
-  }, [id]);
+    const timer = window.setTimeout(() => void loadData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
 
   const nextAction = useMemo(() => {
     if (!ordem) return null;
@@ -80,24 +89,21 @@ export function OrdemServicoDetailsPage() {
     const actions: Record<StatusOrdemServico, { label: string; run: () => Promise<unknown> } | null> = {
       1: { label: "Iniciar diagnóstico", run: () => ordensServicoService.iniciarDiagnostico(ordem.id) },
       2: { label: "Solicitar aprovação", run: () => ordensServicoService.solicitarAprovacao(ordem.id) },
-      3: {
-        label: "Aprovar execução",
-        run: async () => {
-          if (!ordem.token) throw new Error("A ordem precisa pertencer a um cliente com CPF.");
-          return ordensServicoService.aprovarExecucao(ordem.id, ordem.token);
-        },
-      },
+      3: ordem.decisao === 0 ? {
+        label: "Aprovar execução", run: () => ordensServicoService.aprovarExecucao(ordem.id),
+      } : null,
       4: { label: "Finalizar OS", run: () => ordensServicoService.finalizar(ordem.id) },
       5: { label: "Marcar como entregue", run: () => ordensServicoService.entregar(ordem.id) },
       6: null,
       7: null,
     };
 
+    if (ordem.status !== 5 && ordem.statusExecucao !== ordem.status) return null;
     return actions[ordem.status];
   }, [ordem]);
 
-  const isEmDiagnostico = ordem?.status === 2;
-  const isEmExecucao = ordem?.status === 4;
+  const isEmDiagnostico = !error && ordem?.status === 2 && ordem.statusExecucao === 2;
+  const isEmExecucao = !error && ordem?.status === 4 && ordem.statusExecucao === 4;
 
   async function handleStatusAdvance() {
     if (!nextAction) return;
@@ -105,30 +111,12 @@ export function OrdemServicoDetailsPage() {
     setUpdatingStatus(true);
     try {
       await nextAction.run();
-      toast.success("Status atualizado com sucesso.");
+      toast.info("Solicitação recebida. Aguarde a confirmação do processamento.");
       await loadData();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Falha ao atualizar status."));
     } finally {
       setUpdatingStatus(false);
-    }
-  }
-
-  async function handleDelete() {
-    if (!ordem) return;
-
-    const confirmed = window.confirm(`Excluir a OS #${ordem.id.slice(0, 8).toUpperCase()}?`);
-    if (!confirmed) return;
-
-    setDeleting(true);
-    try {
-      await ordensServicoService.remove(ordem.id);
-      toast.success("Ordem de servico excluida com sucesso.");
-      navigate("/ordens-servico");
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Falha ao excluir ordem de servico."));
-    } finally {
-      setDeleting(false);
     }
   }
 
@@ -140,9 +128,8 @@ export function OrdemServicoDetailsPage() {
 
     setUpdatingStatus(true);
     try {
-      if (!ordem.token) throw new Error("A ordem precisa pertencer a um cliente com CPF.");
-      await ordensServicoService.cancelar(ordem.id, ordem.token);
-      toast.success("Ordem de servico cancelada e estoque devolvido.");
+      await ordensServicoService.cancelar(ordem.id);
+      toast.info("Cancelamento solicitado. Aguarde a confirmação e devolução do estoque.");
       await loadData();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Falha ao cancelar ordem de servico."));
@@ -152,6 +139,7 @@ export function OrdemServicoDetailsPage() {
   }
 
   async function handleConcluirServico(servicoDaOrdemServicoId: string) {
+    if (!ordem) return;
     const tempoGastoMinutos = Number(tempoGastoPorServico[servicoDaOrdemServicoId]);
 
     if (!Number.isInteger(tempoGastoMinutos) || tempoGastoMinutos <= 0) {
@@ -161,7 +149,7 @@ export function OrdemServicoDetailsPage() {
 
     setConcludingServicoId(servicoDaOrdemServicoId);
     try {
-      await ordensServicoService.concluirServico(servicoDaOrdemServicoId, { tempoGastoMinutos });
+      await ordensServicoService.concluirServico(ordem.id, servicoDaOrdemServicoId, { tempoGastoMinutos });
       toast.success("Serviço marcado como concluído.");
       await loadData();
     } catch (error) {
@@ -225,6 +213,27 @@ export function OrdemServicoDetailsPage() {
     }
   }
 
+  useEffect(() => {
+    if (!id) return;
+    let disposed = false;
+    let running = false;
+    const timer = window.setInterval(async () => {
+      if (running || document.hidden) return;
+      running = true;
+      try {
+        const response = await ordensServicoService.getById(id);
+        if (!disposed) { setOrdem(response); setError(null); }
+        try {
+          const charge = await billingService.getByOrdem(id);
+          if (!disposed) { setCobranca(charge); setBillingError(false); }
+        } catch { if (!disposed) setBillingError(true); }
+      } catch {
+        if (!disposed) setError("Não foi possível atualizar a ordem. Tente atualizar novamente.");
+      } finally { running = false; }
+    }, 3000);
+    return () => { disposed = true; window.clearInterval(timer); };
+  }, [id]);
+
   return (
     <div>
       <PageHeader
@@ -234,33 +243,36 @@ export function OrdemServicoDetailsPage() {
             <Button variant="outline" asChild>
               <Link to="/ordens-servico">Voltar</Link>
             </Button>
-            {nextAction && (
+            {nextAction && !error && (
               <Button onClick={handleStatusAdvance} disabled={updatingStatus}>
                 {updatingStatus ? "Atualizando..." : nextAction.label}
               </Button>
             )}
-            {ordem?.status === 3 && (
+            {!error && ordem?.status === 3 && ordem.decisao === 0 && (
               <Button variant="destructive" type="button" onClick={handleCancel} disabled={updatingStatus}>
                 <XCircle className="h-4 w-4" />
                 {updatingStatus ? "Cancelando..." : "Cancelar"}
               </Button>
             )}
-            {ordem && (
-              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-                <Trash2 className="h-4 w-4" />
-                {deleting ? "Excluindo..." : "Excluir"}
-              </Button>
-            )}
+            <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
+              <RefreshCw className="h-4 w-4" /> Atualizar
+            </Button>
           </div>
         }
       />
 
+      {error && <p role="alert" className="mb-4 text-sm text-destructive">{error}</p>}
       {loading || !ordem ? (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">Carregando...</CardContent>
+          <CardContent className="pt-6 text-sm text-muted-foreground">{error ? "Detalhes indisponíveis. Use Atualizar para tentar novamente." : "Carregando..."}</CardContent>
         </Card>
       ) : (
         <div className="space-y-6">
+          {!ordem.execucaoDisponivel && <p role="status">Aguardando a criação da execução. Os detalhes serão atualizados automaticamente.</p>}
+          {ordem.status === 3 && ordem.decisao !== 0 && (
+            <p role="status">{ordem.decisao === 2 ? "Cancelamento em processamento. Aguardando devolução do estoque." : "Aprovação registrada. Aguardando pagamento e autorização da execução."}</p>
+          )}
+          {ordem.etapaPagamento !== null && <p role="status">{ETAPA_PAGAMENTO_LABELS[ordem.etapaPagamento]}</p>}
           <div className="grid gap-4 xl:grid-cols-3">
             <Card className="xl:col-span-2">
               <CardHeader>
@@ -283,6 +295,9 @@ export function OrdemServicoDetailsPage() {
                 <CardTitle>Orçamento</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
+                <p>Cobrança: {billingError ? "Indisponível; tente atualizar" : cobranca ? ["Pendente", "Confirmada", "Recusada"][cobranca.situacao] : "Ainda não emitida"}</p>
+                {cobranca && <p>Valor cobrado: {formatCurrency(cobranca.valor)}</p>}
+                {cobranca?.motivo && <p>{cobranca.motivo}</p>}
                 <p>Serviços: {formatCurrency(ordem.valorTotalServicos)}</p>
                 <p>Peças/Insumos: {formatCurrency(ordem.valorTotalPecasInsumos)}</p>
                 <p className="text-base font-semibold">Total: {formatCurrency(ordem.valorTotalOrdemServico)}</p>

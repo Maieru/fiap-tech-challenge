@@ -1,12 +1,14 @@
 # Banco de dados e modelo relacional
 
+Este guia descreve o banco do legado. OS possui PostgreSQL exclusivo e Execution usa MongoDB exclusivo, conforme a [integração OS/Execution](execution.md). Consulte o [estado da migração](estado-da-migracao.md) para as entregas e pendências.
+
 ## Escolha do banco
 
 PostgreSQL atende aos relacionamentos, chaves estrangeiras e transações da oficina. EF Core/Npgsql mantém o acesso e as migrations junto da aplicação; Amazon RDS reduz a operação do servidor na AWS. A [RFC-002](../RFCs/RFC-002-postgresql-no-amazon-rds.md) registra alternativas e consequências.
 
 ## Diagrama ER físico
 
-O diagrama apresenta as oito tabelas e as chaves estrangeiras do snapshot EF atual. Atributos descritivos foram abreviados; o [snapshot completo](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/AppDbContextModelSnapshot.cs) é a referência dos tipos e nulabilidade.
+O diagrama apresenta as oito tabelas e as chaves estrangeiras do snapshot EF atual. Atributos descritivos foram abreviados; o [snapshot completo](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/AppDbContextModelSnapshot.cs) é a referência dos tipos e nulabilidade.
 
 ```mermaid
 erDiagram
@@ -102,11 +104,11 @@ A justificativa abaixo é retrospectiva, baseada nas migrations e no uso atual; 
 
 | Ajuste existente | Justificativa e consequência | Evidência |
 | --- | --- | --- |
-| Itens separados da ordem com snapshots | Permite vários itens e conserva descrição/preço contratados mesmo após alteração do catálogo. Duplica dados intencionalmente. | [AddEntidadesDeOrdemServico](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/20260412144027_AddEntidadesDeOrdemServico.cs), [ADR-004](../ADRs/ADR-004-preservacao-do-historico.md) |
-| FKs de cliente/veículo e índices associados | Garante existência dos registros referenciados e oferece índices para joins e buscas por vínculo. Não comprova ganho medido de performance. | [FixForeignKeys](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/20260412145312_FixForeignKeys.cs) |
-| Concluido e TempoGastoMinutos no serviço executado | Separa execução da ordem do cadastro do serviço e permite registrar conclusão e esforço por item. | [AddCampoTempoGastoEmServico](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/20260419150541_AddCampoTempoGastoEmServico.cs) |
-| Ativo com padrão true | Preserva registros por exclusão lógica; filtros ocultam inativos nas consultas normais. | [AddSoftDelete](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/20260425135900_AddSoftDelete.cs), [AppDbContext](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/AppDbContext.cs) |
-| CodigoAprovacao UUID com índice único | Individualiza o código da ordem e impede duplicação no banco; hoje participa do token SHA-256. Não é JWT. | [AddCodigoAprovacaoOrdemServico](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/20260705170631_AddCodigoAprovacaoOrdemServico.cs) |
+| Itens separados da ordem com snapshots | Permite vários itens e conserva descrição/preço contratados mesmo após alteração do catálogo. Duplica dados intencionalmente. | [AddEntidadesDeOrdemServico](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/20260412144027_AddEntidadesDeOrdemServico.cs), [ADR-004](../ADRs/ADR-004-preservacao-do-historico.md) |
+| FKs de cliente/veículo e índices associados | Garante existência dos registros referenciados e oferece índices para joins e buscas por vínculo. Não comprova ganho medido de performance. | [FixForeignKeys](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/20260412145312_FixForeignKeys.cs) |
+| Concluido e TempoGastoMinutos no serviço executado | Separa execução da ordem do cadastro do serviço e permite registrar conclusão e esforço por item. | [AddCampoTempoGastoEmServico](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/20260419150541_AddCampoTempoGastoEmServico.cs) |
+| Ativo com padrão true | Preserva registros por exclusão lógica; filtros ocultam inativos nas consultas normais. | [AddSoftDelete](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/20260425135900_AddSoftDelete.cs), [AppDbContext](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/AppDbContext.cs) |
+| CodigoAprovacao UUID com índice único | Individualiza o código da ordem e impede duplicação no banco; hoje participa do token SHA-256. Não é JWT. | [AddCodigoAprovacaoOrdemServico](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Migrations/20260705170631_AddCodigoAprovacaoOrdemServico.cs) |
 
 ## Índices e limites atuais
 

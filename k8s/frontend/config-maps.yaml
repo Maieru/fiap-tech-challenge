@@ -4,5 +4,9 @@ metadata:
   name: fiap-frontend-config
   namespace: fiap-frontend
 data:
-  API_UPSTREAM: "http://fiap-backend-service.fiap-backend.svc:8080"
-  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.fiap-observability.svc:4318"
+  # Contrato de rollout: endpoints TLS e certificados com estes nomes DNS (ver k8s/README.md).
+  OS_UPSTREAM: "https://fiap-os-service.fiap-os.svc:8443"
+  EXECUTION_UPSTREAM: "https://fiap-execution-service.fiap-execution.svc:8443"
+  BILLING_UPSTREAM: "https://fiap-billing-service.fiap-billing.svc:8443"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "https://otel-collector.fiap-observability.svc:4318"
+  UPSTREAM_CA_CERTIFICATE: "/etc/nginx/upstream-ca/ca.crt"

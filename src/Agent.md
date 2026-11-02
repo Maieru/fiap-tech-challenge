@@ -95,7 +95,9 @@ Criar suite `<Entidade>RepositoryTests` com, no minimo:
 - Consulta positiva (`true`/item encontrado).
 - Consulta negativa (`false`/item nao encontrado).
 - Persistencia (`Add`/`Update`/`Delete`, conforme contrato), verificando campos chave.
-- Usar `AppDbContext` com `UseInMemoryDatabase`.
+- Preservar testes existentes com `UseInMemoryDatabase`, identificando-os como testes com provedor substituto.
+- Novos testes de integração de persistência/API devem usar PostgreSQL real via Testcontainers, aplicar migrations e isolar dados entre cenários.
+- Nos testes de repositório, validar constraints, rollback e retenção física dos registros inativados. Nos testes de API, preparar dados pelo contrato HTTP e manter autenticação real.
 
 ### 4.3 API.Tests (integracao)
 Criar/ajustar suite de integracao em `FIAP.TechChallenge.Fase1.API.Tests`, com:

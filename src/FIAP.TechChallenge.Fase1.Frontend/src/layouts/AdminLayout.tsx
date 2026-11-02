@@ -76,9 +76,11 @@ export function AdminLayout() {
       </aside>
 
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+        <button type="button" aria-label="Fechar menu de navegação" className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
       )}
       <aside
+        id="mobile-navigation"
+        inert={!isMobileMenuOpen}
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 border-r bg-white p-4 shadow-xl transition-transform lg:hidden",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full",
@@ -86,7 +88,7 @@ export function AdminLayout() {
       >
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Mecânica Pro</h2>
-          <Button size="icon" variant="ghost" onClick={() => setIsMobileMenuOpen(false)}>
+          <Button size="icon" variant="ghost" aria-label="Fechar menu" onClick={() => setIsMobileMenuOpen(false)}>
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -118,7 +120,7 @@ export function AdminLayout() {
         <header className="sticky top-0 z-20 border-b bg-white/90 backdrop-blur">
           <div className="flex items-center justify-between px-4 py-3 lg:px-8">
             <div className="flex items-center gap-2">
-              <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setIsMobileMenuOpen(true)}>
+              <Button size="icon" variant="ghost" className="lg:hidden" aria-label="Abrir menu" aria-expanded={isMobileMenuOpen} aria-controls="mobile-navigation" onClick={() => setIsMobileMenuOpen(true)}>
                 <Menu className="h-5 w-5" />
               </Button>
               <div>

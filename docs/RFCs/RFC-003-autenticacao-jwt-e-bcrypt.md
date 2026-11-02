@@ -48,12 +48,12 @@ Reconsiderar antes de uso público durável ou quando houver necessidade de perf
 
 - [Sequências de autenticação e validação das requisições](../arquitetura/sequencias.md)
 
-- [Configuração JWT Bearer](../../src/FIAP.TechChallenge.Fase1.Infrastructure/InfraestructureDependecyInjection.cs)
-- [Emissão do JWT](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Security/JwtTokenService.cs)
-- [Hash de senha](../../src/FIAP.TechChallenge.Fase1.Infrastructure/Security/BCryptPasswordHasher.cs)
+- [Configuração JWT Bearer](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/InfraestructureDependecyInjection.cs)
+- [Emissão do JWT](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Security/JwtTokenService.cs)
+- [Hash de senha](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Security/BCryptPasswordHasher.cs)
 - [Persistência da sessão no frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/src/services/storage.ts)
 - [ADR-007 — Gestão de segredos](../ADRs/ADR-007-gestao-centralizada-de-segredos.md)
-- [Rotas anônimas na API](../../src/FIAP.TechChallenge.Fase1.API/Controllers/OrdensServicoController.cs)
-- [Validação na aprovação](../../src/FIAP.TechChallenge.Fase1.Application/UseCases/OrdensServico/AprovarExecucaoOrdemServico/AprovarExecucaoOrdemServicoUseCase.cs)
+- [Rotas anônimas na API](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.API/Controllers/OrdensServicoController.cs)
+- [Validação na aprovação](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Application/UseCases/OrdensServico/AprovarExecucaoOrdemServico/AprovarExecucaoOrdemServicoUseCase.cs)
 - [Rotas com autorizador](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/infra/serverless/api-gateway.tf)
 - [Código do autorizador](https://github.com/Maieru/fiap-tech-challenge-serverless/tree/main/src/FIAP.TechChallenge.Serverless.OrdemServicoAuthorizer)

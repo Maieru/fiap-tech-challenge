@@ -42,7 +42,7 @@ Reconsiderar se custo e operação superarem o benefício ou surgirem requisitos
 
 ## Evidências e relações
 
-- [Dockerfile do backend](../../src/FIAP.TechChallenge.Fase1.API/Dockerfile)
+- [Dockerfile do backend](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.API/Dockerfile)
 - [Dockerfile do frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/Dockerfile)
 - [Guia Kubernetes](../../k8s/README.md)
 - [Configuração do EKS](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/infra/aws-resources/eks.tf)

@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-31",
+  "branch": "inicio-segregacao-servicos",
+  "components": {
+    "legacy": {
+      "component": "legacy",
+      "covered": 4121,
+      "total": 4585,
+      "percent": 89.88,
+      "reports": 10,
+      "tests": 703,
+      "passed": 703,
+      "failed": 0,
+      "results": "artifacts/verification/legacy/ad559480e8704527bc914b170ef95ac9"
+    },
+    "chassis": {
+      "component": "chassis",
+      "covered": 83,
+      "total": 83,
+      "percent": 100.0,
+      "reports": 2,
+      "tests": 11,
+      "passed": 11,
+      "failed": 0,
+      "results": "artifacts/verification/chassis/0c0a55c9ec43417cb4118d8ec00d6b87"
+    },
+    "os": {
+      "component": "os",
+      "covered": 1552,
+      "total": 1836,
+      "percent": 84.53,
+      "reports": 6,
+      "tests": 208,
+      "passed": 208,
+      "failed": 0,
+      "results": "artifacts/verification/os/c062ae045d3246bdbcd5102c14adc187"
+    }
+  },
+  "public_nuget_publication": "pending-account-configuration",
+  "sonarqube_cloud_analysis": "pending-account-configuration",
+  "main_protection": "PR + ci-required + admins (verified through GitHub API)",
+  "nuget_id_lookup": "No public registration on 2026-10-31"
+}

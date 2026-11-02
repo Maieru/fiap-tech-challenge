@@ -5,7 +5,7 @@
 - **Responsáveis:** equipe do Tech Challenge
 - **Escopo:** organização da plataforma e infraestrutura como código
 - **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-09-07
+- **Última revisão:** 2026-10-31
 
 ## Contexto
 
@@ -49,10 +49,14 @@ Reconsiderar quando a coordenação entre repositórios impedir mudanças segura
 
 ## Evidências e relações
 
-- [Orquestrador principal](../../.github/workflows/initialize-and-deploy.yml)
+- [Orquestrador principal](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/.github/workflows/initialize-and-deploy.yml)
 - [Guia e ordem dos estados](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra)
 - [Backend do estado de banco](https://github.com/Maieru/fiap-tech-challenge-db/blob/main/infra/database/backend.tf)
 - [Workflows do banco](https://github.com/Maieru/fiap-tech-challenge-db/tree/main/.github/workflows)
 - [RFC-005 — Terraform e GitHub Actions com OIDC](../RFCs/RFC-005-terraform-e-github-actions-oidc.md)
 - [ADR-010 — Ambiente efêmero orientado a custo](ADR-010-ambiente-efemero-orientado-a-custo.md)
 - [Criação de gateway e serverless](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/.github/workflows/apply-edge-infrastructure.yml)
+
+## Evolução na Fase 4
+
+Esta decisão continua descrevendo o legado e a infraestrutura existente. A [ADR-011](ADR-011-extracao-incremental-os-monorepo.md) registra a introdução paralela do OS Service e o monorepo temporário, sem migrar o tráfego atual.

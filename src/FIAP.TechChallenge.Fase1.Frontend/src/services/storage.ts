@@ -23,5 +23,6 @@ export function clearAuthSession() {
 }
 
 export function isTokenExpired(expiresAt: string) {
-  return new Date(expiresAt).getTime() <= Date.now();
+  const expiresAtMs = new Date(expiresAt).getTime();
+  return !Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now();
 }

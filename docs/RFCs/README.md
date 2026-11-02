@@ -4,6 +4,12 @@ As RFCs documentam escolhas técnicas relevantes já aceitas, suas alternativas 
 
 ## Catálogo
 
+- [RFC-015 — Projetos OS diretamente em src](RFC-015-projetos-os-diretamente-src.md) — Aceita.
+
+- [RFC-014 — Soluções e verificação sem o monólito](RFC-014-solucoes-ci-sem-monolito.md) — Aceita.
+
+- [RFC-013 — Proxy configurável e contratos do frontend](RFC-013-proxy-frontend-microsservicos.md) — Aceita.
+
 | RFC | Status | Decisão |
 | --- | --- | --- |
 | [RFC-001](RFC-001-escolha-da-nuvem-aws.md) | Aceita | Adotar AWS em `us-east-1` como nuvem principal. |
@@ -11,9 +17,19 @@ As RFCs documentam escolhas técnicas relevantes já aceitas, suas alternativas 
 | [RFC-003](RFC-003-autenticacao-jwt-e-bcrypt.md) | Aceita | Autenticar credenciais locais com BCrypt e access token JWT. |
 | [RFC-004](RFC-004-containers-no-amazon-eks.md) | Aceita | Executar os containers de aplicação no Amazon EKS. |
 | [RFC-005](RFC-005-terraform-e-github-actions-oidc.md) | Aceita | Provisionar com Terraform e operar pipelines AWS por OIDC. |
+| [RFC-006](RFC-006-chassi-nuget-e-verificacao-monorepo.md) | Aceita | Distribuir chassi técnico por NuGet e verificar os componentes separadamente. |
+| [RFC-007](RFC-007-contratos-mensageria-kafka.md) | Aceita | Distribuir contratos de mensagens do OS em pacote próprio para a integração Kafka. |
+| [RFC-008](RFC-008-execution-mongodb-kafka.md) | Aceita | Implementar Execution com driver MongoDB, consumidor Kafka explícito e testes reais. |
+| [RFC-009](RFC-009-integracao-os-execution.md) | Aceita | Integrar OS por Kafka, persistir decisões pendentes e verificar as duas APIs por BDD. |
 
 ## Regra para RFCs aceitas
 
 As RFCs `001` a `005` formalizam retrospectivamente escolhas já presentes no código e na infraestrutura. Novas RFCs entram neste catálogo somente depois da aprovação da decisão.
 
 As alternativas são avaliações retrospectivas, não atas de discussões históricas. A data original identifica o registro; a última revisão indica a atualização do texto e das evidências. O template usa **Decisão**, pois o catálogo contém escolhas aceitas, não recomendações pendentes.
+
+- [Billing e Saga de pagamento](RFC-010-billing-mock-kafka.md).
+
+- [Autenticação administrativa no OS](RFC-011-autenticacao-os-bcrypt-jwt.md).
+
+- [APIs de entrega e acompanhamento privado no OS](RFC-012-entrega-acompanhamento-os.md).

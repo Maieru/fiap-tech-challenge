@@ -1,4 +1,4 @@
-import { api } from "@/services/api";
+import { osApi } from "@/services/api";
 import type {
   CreateVeiculoPayload,
   ListVeiculosResponse,
@@ -14,7 +14,7 @@ interface ListVeiculosParams {
 
 export const veiculosService = {
   async list(params: ListVeiculosParams = {}) {
-    const { data } = await api.get<ListVeiculosResponse>("/veiculos", {
+    const { data } = await osApi.get<ListVeiculosResponse>("/veiculos", {
       params: {
         pageNumber: params.pageNumber ?? 1,
         pageSize: params.pageSize ?? 30,
@@ -26,21 +26,21 @@ export const veiculosService = {
   },
 
   async getById(id: string) {
-    const { data } = await api.get<Veiculo>(`/veiculos/${id}`);
+    const { data } = await osApi.get<Veiculo>(`/veiculos/${id}`);
     return data;
   },
 
   async create(payload: CreateVeiculoPayload) {
-    const { data } = await api.post<{ id: string }>("/veiculos", payload);
+    const { data } = await osApi.post<{ id: string }>("/veiculos", payload);
     return data;
   },
 
   async update(id: string, payload: UpdateVeiculoPayload) {
-    const { data } = await api.put(`/veiculos/${id}`, payload);
+    const { data } = await osApi.put(`/veiculos/${id}`, payload);
     return data;
   },
 
   async remove(id: string) {
-    await api.delete(`/veiculos/${id}`);
+    await osApi.delete(`/veiculos/${id}`);
   },
 };

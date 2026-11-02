@@ -40,9 +40,9 @@ Reconsiderar quando houver necessidade de rotação sem restart ou outro modelo 
 
 ## Evidências e relações
 
-- [ExternalSecrets da aplicação](../../k8s/backend/secrets.yaml)
-- [Consumo no deployment](../../k8s/backend/deployment.yaml)
-- [ConfigMap não sensível](../../k8s/backend/config-maps.yaml)
+- [ExternalSecrets da aplicação](../../legacy/aws/k8s/backend/secrets.yaml)
+- [Consumo no deployment](../../legacy/aws/k8s/backend/deployment.yaml)
+- [ConfigMap não sensível](../../legacy/aws/k8s/backend/config-maps.yaml)
 - [External Secrets e Pod Identity](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/infra/kubernetes-addons/external-secrets.tf)
 - [Segredo do banco](https://github.com/Maieru/fiap-tech-challenge-db/blob/main/infra/database/secret-manager.tf)
 - [RFC-003 — Autenticação JWT e BCrypt](../RFCs/RFC-003-autenticacao-jwt-e-bcrypt.md)

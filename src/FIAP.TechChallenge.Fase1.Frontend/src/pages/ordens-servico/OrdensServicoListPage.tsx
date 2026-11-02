@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown, Check, Copy, ExternalLink, Filter, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, Copy, ExternalLink, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { EntityTable } from "@/components/common/EntityTable";
@@ -8,7 +8,6 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/utils";
-import { getApiErrorMessage } from "@/services/api";
 import { clientesService } from "@/services/clientes.service";
 import { ordensServicoService } from "@/services/ordensServico.service";
 import { veiculosService } from "@/services/veiculos.service";
@@ -37,7 +36,8 @@ export function OrdensServicoListPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [generatingLinkId, setGeneratingLinkId] = useState<string | null>(null);
+  const [trackingLink, setTrackingLink] = useState("");
   const [sortState, setSortState] = useState<SortState>({});
   const [statusFilter, setStatusFilter] = useState<StatusOrdemServico[]>([]);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
@@ -70,7 +70,8 @@ export function OrdensServicoListPage() {
   }, [sortState, statusFilter]);
 
   useEffect(() => {
-    void loadData();
+    const timer = window.setTimeout(() => void loadData(), 0);
+    return () => window.clearTimeout(timer);
   }, [loadData]);
 
   useEffect(() => {
@@ -128,36 +129,23 @@ export function OrdensServicoListPage() {
   );
 
   async function handleGenerateTrackingLink(ordem: OrdemServico) {
+    if (!window.confirm("Emitir um novo link privado? O link anterior desta ordem deixará de funcionar.")) return;
+    setGeneratingLinkId(ordem.id);
     try {
-      const detalhes = await ordensServicoService.getById(ordem.id);
-      if (!detalhes.token) {
-        toast.error("A ordem precisa pertencer a um cliente com CPF.");
-        return;
-      }
-
+      const acesso = await ordensServicoService.emitirAcessoCliente(ordem.id);
       const url = new URL(`/acompanhar-ordem/${ordem.id}`, window.location.origin);
-      url.searchParams.set("token", detalhes.token);
-
-      await navigator.clipboard.writeText(url.toString());
-      toast.success("Link de acompanhamento copiado.");
+      url.searchParams.set("token", acesso.token);
+      setTrackingLink(url.toString());
+      try {
+        await navigator.clipboard.writeText(url.toString());
+        toast.success("Novo link copiado. O link anterior foi invalidado.");
+      } catch {
+        toast.info("Novo link emitido. Copie o endereço exibido abaixo.");
+      }
     } catch {
-      toast.error("Nao foi possivel copiar o link de acompanhamento.");
-    }
-  }
-
-  async function handleDelete(ordem: OrdemServico) {
-    const confirmed = window.confirm(`Excluir a OS #${ordem.id.slice(0, 8).toUpperCase()}?`);
-    if (!confirmed) return;
-
-    setDeletingId(ordem.id);
-    try {
-      await ordensServicoService.remove(ordem.id);
-      toast.success("Ordem de servico excluida com sucesso.");
-      await loadData();
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Falha ao excluir ordem de servico."));
+      toast.error("Não foi possível emitir o link de acompanhamento.");
     } finally {
-      setDeletingId(null);
+      setGeneratingLinkId(null);
     }
   }
 
@@ -306,6 +294,12 @@ export function OrdensServicoListPage() {
         }
       />
 
+      {trackingLink && (
+        <div className="mb-4 space-y-2" role="status">
+          <label htmlFor="tracking-link" className="text-sm">Link privado recém-emitido (o anterior foi invalidado)</label>
+          <input id="tracking-link" readOnly value={trackingLink} onFocus={(event) => event.target.select()} className="w-full rounded-md border bg-background p-2 text-sm" />
+        </div>
+      )}
       {loading ? (
         <LoadingState />
       ) : (
@@ -330,9 +324,9 @@ export function OrdensServicoListPage() {
                 className: "sticky right-0 z-10 w-[330px] bg-card",
                 render: (ordem) => (
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" type="button" onClick={() => handleGenerateTrackingLink(ordem)}>
+                    <Button variant="outline" size="sm" type="button" onClick={() => handleGenerateTrackingLink(ordem)} disabled={generatingLinkId !== null}>
                       <Copy className="h-3.5 w-3.5" />
-                      Gerar link
+                      {generatingLinkId === ordem.id ? "Emitindo..." : "Emitir/trocar link"}
                     </Button>
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/ordens-servico/${ordem.id}`}>
@@ -340,10 +334,7 @@ export function OrdensServicoListPage() {
                         Detalhes
                       </Link>
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(ordem)} disabled={deletingId === ordem.id}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Excluir
-                    </Button>
+
                   </div>
                 ),
               },
