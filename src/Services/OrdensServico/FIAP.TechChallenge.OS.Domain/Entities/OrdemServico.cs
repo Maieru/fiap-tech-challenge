@@ -19,6 +19,9 @@ public sealed class OrdemServico
     public DateTime? DataCancelamento { get; private set; }
     public DecisaoExecucao Decisao { get; private set; }
     public DateTime? DataDecisaoUtc { get; private set; }
+    public Guid? OrcamentoId { get; private set; }
+    public decimal? ValorOrcamento { get; private set; }
+    public PagamentoOrdem? Pagamento { get; private set; }
     public long Version { get; private set; }
 
     public static Result<OrdemServico> Create(Guid clienteId, Guid veiculoId, string descricaoProblema) =>
@@ -64,7 +67,7 @@ public sealed class OrdemServico
             || (snapshot.Status is StatusOrdemServico.AguardandoAprovacao or StatusOrdemServico.EmExecucao or StatusOrdemServico.Finalizada or StatusOrdemServico.Cancelada && snapshot.DataEnvioAprovacao is null)
             || (snapshot.Status is StatusOrdemServico.EmExecucao or StatusOrdemServico.Finalizada && (snapshot.DataInicioExecucao is null || snapshot.Decisao != DecisaoExecucao.Autorizada))
             || (snapshot.Status == StatusOrdemServico.Finalizada && snapshot.DataFinalizacao is null)
-            || (snapshot.Status == StatusOrdemServico.Cancelada && (snapshot.DataCancelamento is null || snapshot.Decisao != DecisaoExecucao.CancelamentoSolicitado)))
+            || (snapshot.Status == StatusOrdemServico.Cancelada && (snapshot.DataCancelamento is null || snapshot.Decisao != DecisaoExecucao.CancelamentoSolicitado && snapshot.Pagamento?.Etapa != EtapaPagamento.Compensada)))
             return Result<OrdemServico>.Failure(new Error("Estado e datas da ordem inconsistentes."));
         var ordem = result.Value!;
         ordem.Status = snapshot.Status;
@@ -76,12 +79,13 @@ public sealed class OrdemServico
         ordem.DataFinalizacao = snapshot.DataFinalizacao;
         ordem.DataCancelamento = snapshot.DataCancelamento;
         ordem.Version = snapshot.Version;
+        ordem.OrcamentoId = snapshot.OrcamentoId; ordem.ValorOrcamento = snapshot.ValorOrcamento; ordem.Pagamento = snapshot.Pagamento;
         return result;
     }
 
     public OrdemServicoSnapshot Snapshot() => new(Id, ClienteId, VeiculoId, DescricaoProblema, DataCriacao,
         Status, Decisao, DataDecisaoUtc, DataInicioDiagnostico, DataEnvioAprovacao, DataInicioExecucao,
-        DataFinalizacao, DataCancelamento, Version);
+        DataFinalizacao, DataCancelamento, Version, OrcamentoId, ValorOrcamento, Pagamento);
 
     public Result<bool> DecidirExecucao(DecisaoExecucao decisao, DateTime ocorridoEmUtc)
     {
@@ -93,6 +97,11 @@ public sealed class OrdemServico
             return Result<bool>.Failure(Error.Conflict("A ordem já possui uma decisão diferente."));
         if (Status != StatusOrdemServico.AguardandoAprovacao)
             return Result<bool>.Failure(new Error("A ordem precisa estar aguardando aprovação."));
+        if (decisao == DecisaoExecucao.Autorizada)
+        {
+            if (OrcamentoId is null || ValorOrcamento is null) return Result<bool>.Failure(new Error("Orçamento não disponível para pagamento."));
+            Pagamento = new(OrcamentoId.Value, ValorOrcamento.Value, "BRL", EtapaPagamento.AguardandoPagamento);
+        }
         Decisao = decisao;
         DataDecisaoUtc = ocorridoEmUtc;
         return Result<bool>.Success(true);
@@ -109,14 +118,16 @@ public sealed class OrdemServico
         DataInicioDiagnostico = ocorridoEmUtc;
         return Result<bool>.Success(true);
     }
-    public Result<bool> RegistrarDiagnosticoConcluido(DateTime ocorridoEmUtc)
+    public Result<bool> RegistrarDiagnosticoConcluido(DateTime ocorridoEmUtc, Guid? orcamentoId = null, decimal? valor = null)
     {
         if (ocorridoEmUtc == default || ocorridoEmUtc.Kind != DateTimeKind.Utc)
             return Result<bool>.Failure(new Error("Data da transição inválida."));
         if (DataEnvioAprovacao.HasValue)
-            return Result<bool>.Success(false);
+            return valor.HasValue && ValorOrcamento.HasValue && valor != ValorOrcamento ? Result<bool>.Failure(Error.Conflict("Orçamento conflitante.")) : Result<bool>.Success(false);
         if (Status != StatusOrdemServico.EmDiagnostico)
             return Result<bool>.Failure(new Error("Transição DiagnosticoConcluido incompatível com o estado ou decisão atual."));
+        if (valor < 0 || orcamentoId == Guid.Empty) return Result<bool>.Failure(new Error("Orçamento inválido."));
+        OrcamentoId = orcamentoId; ValorOrcamento = valor;
         Status = StatusOrdemServico.AguardandoAprovacao;
         DataEnvioAprovacao = ocorridoEmUtc;
         return Result<bool>.Success(true);
@@ -129,6 +140,8 @@ public sealed class OrdemServico
             return Result<bool>.Success(false);
         if (Status != StatusOrdemServico.AguardandoAprovacao || Decisao != DecisaoExecucao.Autorizada)
             return Result<bool>.Failure(new Error("Transição ExecucaoIniciada incompatível com o estado ou decisão atual."));
+        if (Pagamento is not null && Pagamento.Etapa != EtapaPagamento.AutorizacaoSolicitada) return Result<bool>.Failure(new Error("Pagamento não confirmado."));
+        if (Pagamento is not null) Pagamento = Pagamento with { Etapa = EtapaPagamento.ExecucaoIniciada };
         Status = StatusOrdemServico.EmExecucao;
         DataInicioExecucao = ocorridoEmUtc;
         return Result<bool>.Success(true);
@@ -141,6 +154,7 @@ public sealed class OrdemServico
             return Result<bool>.Success(false);
         if (Status != StatusOrdemServico.EmExecucao || Decisao != DecisaoExecucao.Autorizada)
             return Result<bool>.Failure(new Error("Transição ExecucaoConcluida incompatível com o estado ou decisão atual."));
+        if (Pagamento is not null) Pagamento = Pagamento with { Etapa = EtapaPagamento.Concluida };
         Status = StatusOrdemServico.Finalizada;
         DataFinalizacao = ocorridoEmUtc;
         return Result<bool>.Success(true);
@@ -151,10 +165,22 @@ public sealed class OrdemServico
             return Result<bool>.Failure(new Error("Data da transição inválida."));
         if (DataCancelamento.HasValue)
             return Result<bool>.Success(false);
-        if (Status != StatusOrdemServico.AguardandoAprovacao || Decisao != DecisaoExecucao.CancelamentoSolicitado)
+        if (Status != StatusOrdemServico.AguardandoAprovacao || Decisao != DecisaoExecucao.CancelamentoSolicitado && Pagamento?.Etapa != EtapaPagamento.CompensacaoSolicitada)
             return Result<bool>.Failure(new Error("Transição ExecucaoCancelada incompatível com o estado ou decisão atual."));
+        if (Pagamento is not null) Pagamento = Pagamento with { Etapa = EtapaPagamento.Compensada };
         Status = StatusOrdemServico.Cancelada;
         DataCancelamento = ocorridoEmUtc;
+        return Result<bool>.Success(true);
+    }
+    public Result<bool> RegistrarPagamento(Guid orcamento, Guid cobranca, decimal valor, string moeda, bool confirmado, string detalhe)
+    {
+        if (Pagamento is null || orcamento != Pagamento.OrcamentoId || valor != Pagamento.Valor || moeda != Pagamento.Moeda || cobranca == Guid.Empty || string.IsNullOrWhiteSpace(detalhe)) return Result<bool>.Failure(Error.Conflict("Resultado incompatível com a solicitação de pagamento."));
+        if (Pagamento.Etapa != EtapaPagamento.AguardandoPagamento)
+        {
+            bool same = Pagamento.CobrancaId == cobranca && (confirmado ? Pagamento.GatewayPaymentId == detalhe : Pagamento.Motivo == detalhe);
+            return same ? Result<bool>.Success(false) : Result<bool>.Failure(Error.Conflict("Resultado de pagamento conflitante."));
+        }
+        Pagamento = Pagamento with { CobrancaId = cobranca, Etapa = confirmado ? EtapaPagamento.AutorizacaoSolicitada : EtapaPagamento.CompensacaoSolicitada, GatewayPaymentId = confirmado ? detalhe : null, Motivo = confirmado ? null : detalhe };
         return Result<bool>.Success(true);
     }
 }

@@ -35,7 +35,7 @@ O agregado novo usa as regras e snapshots de itens extraídos do legado; catálo
 2. O operador inicia diagnóstico pela API; Execution publica DiagnosticoIniciado.
 3. O operador adiciona serviços e peças do catálogo. A inclusão da peça e sua baixa de estoque são atômicas.
 4. Solicitar aprovação encerra o diagnóstico e publica DiagnosticoConcluido, com snapshots e valores.
-5. ExecucaoAutorizada inicia a execução e publica ExecucaoIniciada.
+5. A aprovação no OS solicita pagamento ao Billing. Somente PagamentoConfirmado faz OS publicar ExecucaoAutorizada, que inicia a execução e publica ExecucaoIniciada.
 6. Cada serviço concluído exige tempo positivo. Finalizar exige todos os serviços concluídos e publica ExecucaoConcluida.
 7. CancelamentoSolicitado só é aceito enquanto aguarda aprovação. A devolução de estoque e a mudança para Cancelada
    são gravadas juntas, com publicação de ExecucaoCancelada.
@@ -69,7 +69,7 @@ Os testes não usam volumes de desenvolvimento, autenticação substituta ou moc
 Os cenários distribuídos com as duas APIs reais estão em Distributed.slnx no Execution, separados da solução padrão.
 O workflow distribuído é manual e recebe imagens publicadas; não faz parte da execução automática de toda validação isolada.
 O [histórico de validação](../operacao/validacao-execution.md) preserva as evidências de cada entrega.
-Billing, pagamentos, adaptação do frontend, deploy dos novos serviços e retirada do legado permanecem pendentes,
+O Billing com mock e Saga no OS está implementado. Gateway real, adaptação do frontend, deploy dos novos serviços e retirada do legado permanecem pendentes,
 conforme o [estado da migração](estado-da-migracao.md).
 
 Decisões: [ADR-015](../ADRs/ADR-015-execution-mongodb.md), [RFC-008](../RFCs/RFC-008-execution-mongodb-kafka.md),

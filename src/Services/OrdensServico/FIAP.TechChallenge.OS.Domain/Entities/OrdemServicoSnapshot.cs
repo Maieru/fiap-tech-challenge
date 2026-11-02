@@ -6,4 +6,4 @@ public sealed record OrdemServicoSnapshot(
     Guid Id, Guid ClienteId, Guid VeiculoId, string DescricaoProblema, DateTime DataCriacao,
     StatusOrdemServico Status, DecisaoExecucao Decisao, DateTime? DataDecisaoUtc,
     DateTime? DataInicioDiagnostico, DateTime? DataEnvioAprovacao, DateTime? DataInicioExecucao,
-    DateTime? DataFinalizacao, DateTime? DataCancelamento, long Version);
+    DateTime? DataFinalizacao, DateTime? DataCancelamento, long Version, Guid? OrcamentoId = null, decimal? ValorOrcamento = null, PagamentoOrdem? Pagamento = null);

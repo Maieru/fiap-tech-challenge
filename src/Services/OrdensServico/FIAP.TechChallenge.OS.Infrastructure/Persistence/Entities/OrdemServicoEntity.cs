@@ -17,6 +17,9 @@ public sealed class OrdemServicoEntity
     public DateTime? DataInicioExecucao { get; set; }
     public DateTime? DataFinalizacao { get; set; }
     public DateTime? DataCancelamento { get; set; }
+    public Guid? OrcamentoId { get; set; }
+    public decimal? ValorOrcamento { get; set; }
+    public string? PagamentoJson { get; set; }
     public long Version { get; set; }
 }
 

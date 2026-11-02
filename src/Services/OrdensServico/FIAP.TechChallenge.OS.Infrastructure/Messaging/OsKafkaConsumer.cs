@@ -37,7 +37,7 @@ public sealed class OsKafkaConsumer(IConfiguration configuration, IServiceScopeF
         string? correlationId = null;
         try
         {
-            consumer.Subscribe(configuration["Kafka:InputTopic"] ?? ExecutionMessaging.Topic);
+            consumer.Subscribe(new[] { configuration["Kafka:InputTopic"] ?? ExecutionMessaging.Topic, configuration["Kafka:BillingInputTopic"] ?? FIAP.TechChallenge.Billing.Application.Messaging.BillingMessaging.Topic });
             state.Running = true;
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -89,6 +89,7 @@ public sealed class OsKafkaConsumer(IConfiguration configuration, IServiceScopeF
                         }
                     case (DiagnosticoConcluido.Type, ExecutionMessaging.Version):
                         {
+                            MonetaryPayloadValidation.RequireDecimal(envelope.Payload, "valorTotal");
                             var payload = envelope.Payload.Deserialize<DiagnosticoConcluido>(JsonOptions)
                                 ?? throw new InvalidOperationException("Payload ausente.");
                             if (payload.OrdemServicoId != key)
@@ -96,7 +97,7 @@ public sealed class OsKafkaConsumer(IConfiguration configuration, IServiceScopeF
                             if (payload.Servicos is null || payload.PecasInsumos is null)
                                 throw new InvalidOperationException("Itens do diagnóstico ausentes.");
                             result = await scope.ServiceProvider.GetRequiredService<IRegistrarDiagnosticoConcluidoUseCase>()
-                                .ExecuteAsync(new(payload.OrdemServicoId, envelope.OccurredAtUtc), stoppingToken);
+                                .ExecuteAsync(new(payload.OrdemServicoId, envelope.OccurredAtUtc, envelope.MessageId, payload.ValorTotal), stoppingToken);
                             break;
                         }
                     case (ExecucaoIniciada.Type, ExecutionMessaging.Version):
@@ -129,6 +130,18 @@ public sealed class OsKafkaConsumer(IConfiguration configuration, IServiceScopeF
                                 .ExecuteAsync(new(payload.OrdemServicoId, envelope.OccurredAtUtc), stoppingToken);
                             break;
                         }
+                    case (FIAP.TechChallenge.Billing.Application.Messaging.PagamentoConfirmado.Type, 1):
+                        MonetaryPayloadValidation.RequireDecimal(envelope.Payload, "valor");
+                        var paid = envelope.Payload.Deserialize<FIAP.TechChallenge.Billing.Application.Messaging.PagamentoConfirmado>(JsonOptions) ?? throw new InvalidOperationException("Payload ausente.");
+                        if (paid.OrdemServicoId != key) throw new InvalidOperationException("Chave inválida.");
+                        result = await scope.ServiceProvider.GetRequiredService<FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.RegistrarPagamento.RegistrarPagamentoUseCase>().ExecuteAsync(paid.OrdemServicoId, paid.OrcamentoId, paid.CobrancaId, paid.Valor, paid.Moeda, true, paid.GatewayPaymentId, envelope.OccurredAtUtc, stoppingToken);
+                        break;
+                    case (FIAP.TechChallenge.Billing.Application.Messaging.PagamentoRecusado.Type, 1):
+                        MonetaryPayloadValidation.RequireDecimal(envelope.Payload, "valor");
+                        var rejected = envelope.Payload.Deserialize<FIAP.TechChallenge.Billing.Application.Messaging.PagamentoRecusado>(JsonOptions) ?? throw new InvalidOperationException("Payload ausente.");
+                        if (rejected.OrdemServicoId != key) throw new InvalidOperationException("Chave inválida.");
+                        result = await scope.ServiceProvider.GetRequiredService<FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.RegistrarPagamento.RegistrarPagamentoUseCase>().ExecuteAsync(rejected.OrdemServicoId, rejected.OrcamentoId, rejected.CobrancaId, rejected.Valor, rejected.Moeda, false, rejected.Motivo, envelope.OccurredAtUtc, stoppingToken);
+                        break;
                     default:
                         throw new InvalidOperationException("Tipo ou versão de mensagem não suportado.");
                 }

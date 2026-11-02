@@ -5,6 +5,8 @@ Publica as entradas do Execution e projeta suas confirmações por Kafka. O mon�
 
 ## Executar
 
+Para subir **OS, Execution, Billing e dependências**, execute `docker compose up -d --build` na raiz do repositório OS. Consulte o [roteiro integrado](../../../README.md#subir-os-execution-e-billing). O Compose desta pasta continua sendo o ambiente isolado do OS.
+
 A solução `OrdensServico.slnx`, nesta pasta, reúne os nove projetos do serviço, contratos e testes.
 
 ## Contratos de mensageria
@@ -148,3 +150,7 @@ A integração Kafka, o Execution/MongoDB e o BDD distribuído estão implementa
 [evidências](../../../docs/operacao/revisao-execution-etapa3.md).
 O [estado da migração](../../../docs/arquitetura/estado-da-migracao.md) reúne as pendências de Billing/pagamentos,
 autenticação, frontend, infraestrutura e retirada do legado. Não há requisito de importar o histórico legado para os novos bancos de demonstração.
+
+## Billing e Saga de pagamento
+
+A aprovação agora publica PagamentoSolicitado no tópico oficina.os.billing.requests.v1 e só a confirmação do Billing autoriza Execution. Consultas e resposta 202 incluem Pagamento/Etapa. Recusa solicita cancelamento com devolução de estoque, preservando a aprovação administrativa; cancelamento administrativo após aprovação continua vedado. Aplicar a migration BillingSaga e provisionar oficina.billing.events.v1 antes de iniciar OS. Durante revisão use scripts/Restore-BillingLocal.ps1 com o pacote Billing.Application.Messaging 0.1.0 candidato; o build independente depende de sua publicação. Ordens sem orçamento não iniciam cobrança. Ver ADR-017/RFC-010 e relatório validacao-billing.

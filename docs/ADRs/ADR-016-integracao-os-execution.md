@@ -12,7 +12,7 @@ sem coordenador de transações distribuídas.
 
 ## Decisão
 
-OS publica OrdemServicoCriada, ExecucaoAutorizada e CancelamentoSolicitado.
+OS publica OrdemServicoCriada, ExecucaoAutorizada e CancelamentoSolicitado. A ADR-017 acrescenta pagamento antes da autorização: o endpoint de aprovação solicita pagamento, e PagamentoConfirmado passa a disparar ExecucaoAutorizada.
 Os endpoints administrativos de aprovação e cancelamento retornam 202 e persistem a decisão;
 o status continua AguardandoAprovacao até chegar ExecucaoIniciada ou ExecucaoCancelada.
 A mesma decisão pode ser repetida sem republicação, inclusive após sua confirmação. A decisão oposta retorna 409.

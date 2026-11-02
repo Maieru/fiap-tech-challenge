@@ -138,8 +138,17 @@ namespace FIAP.TechChallenge.OS.Infrastructure.Persistence.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<Guid?>("OrcamentoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PagamentoJson")
+                        .HasColumnType("text");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<decimal?>("ValorOrcamento")
+                        .HasColumnType("numeric");
 
                     b.Property<Guid>("VeiculoId")
                         .HasColumnType("uuid");

@@ -31,9 +31,9 @@ public sealed class AutorizarExecucaoUseCase(IOrdemServicoRepository repository,
 
         if (changed.Value)
         {
-            await repository.UpdateAsync(order, new HistoricoOrdem(Guid.NewGuid(), order.Id, "ExecucaoAutorizada", now.UtcDateTime, context.CorrelationId), cancellationToken);
-            await messaging.PublishAsync(OSMessaging.Topic, order.Id.ToString("D"),
-                context.Create(ExecucaoAutorizada.Type, new ExecucaoAutorizada(order.Id), now), cancellationToken);
+            await repository.UpdateAsync(order, new HistoricoOrdem(Guid.NewGuid(), order.Id, "PagamentoSolicitado", now.UtcDateTime, context.CorrelationId), cancellationToken);
+            await messaging.PublishAsync(OSMessaging.BillingTopic, order.Id.ToString("D"),
+                context.Create(PagamentoSolicitado.Type, new PagamentoSolicitado(order.Id, order.ClienteId, order.OrcamentoId!.Value, order.ValorOrcamento!.Value, "BRL"), now), cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);

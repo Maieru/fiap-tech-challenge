@@ -184,3 +184,7 @@ docker compose -f tests/kafka.compose.yaml down
 Sem KAFKA_TEST_BOOTSTRAP_SERVERS, somente o teste real do broker é ignorado; os testes de unidade continuam executando.
 O CI define essa variável e exige o teste real, além do exemplo que consome o pacote por PackageReference.
 Validação local não significa publicação NuGet, execução remota do CI ou aprovação Sonar.
+
+## Billing e Saga no OS
+
+PagamentoSolicitado usa oficina.os.billing.requests.v1; PagamentoConfirmado e PagamentoRecusado usam oficina.billing.events.v1. Grupo oficina-billing-v1. OS assina os eventos Billing além do Execution; o tópico dedicado evita expor novos tipos ao consumidor Execution. A publicação permanece direta, sem atomicidade distribuída. Consulte ADR-017/RFC-010 e README Billing para operação e pacotes candidatos.

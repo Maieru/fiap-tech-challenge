@@ -5,11 +5,11 @@ Para acompanhar a transição do monólito, consulte o [estado atual da migraç�
 | Área | Documentos |
 | --- | --- |
 | Migração e serviços | [Estado atual](arquitetura/estado-da-migracao.md), [OS Service](../src/Services/OrdensServico/README.md), [Execution](arquitetura/execution.md), [chassi em repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis) |
-| Qualidade e dependências | [CI do monorepo, consumo NuGet e Sonar](operacao/monorepo-ci.md), [histórico de validação do Execution](operacao/validacao-execution.md) |
+| Qualidade e dependências | [CI do monorepo, consumo NuGet e Sonar](operacao/monorepo-ci.md), [histórico de validação do Execution](operacao/validacao-execution.md), [revisão Billing/Saga](operacao/revisao-billing-saga.md), [validação ponta a ponta](operacao/validacao-ponta-a-ponta.md) |
 | Arquitetura do legado | [Componentes e camadas](arquitetura/README.md), [sequências](arquitetura/sequencias.md), [banco de dados e ER](arquitetura/banco-de-dados.md) |
 | Operação do legado/AWS | [CI/CD e deploy](operacao/ci-cd.md), [observabilidade](operacao/observabilidade.md), [métricas de negócio](operacao/metricas-negocio.md), [configuração do dashboard New Relic](operacao/dashboard-new-relic.md) |
 | Decisões arquiteturais | [Índice de ADRs](ADRs/README.md) |
-| Mensageria e integração | [Padrão canônico](arquitetura/mensageria.md), [contratos OS](../src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging/README.md), [integração OS/Execution](RFCs/RFC-009-integracao-os-execution.md) |
+| Mensageria e integração | [Padrão canônico](arquitetura/mensageria.md), [contratos OS](../src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging/README.md), [integração OS/Execution](RFCs/RFC-009-integracao-os-execution.md), [Saga de pagamento](arquitetura/saga-pagamento.md) |
 | Histórico da extração | [Inventário inicial](arquitetura/fase4-incremento1.md), [evidências iniciais](operacao/evidencias-fase4-incremento1.md) |
 | Escolhas técnicas | [Índice de RFCs](RFCs/README.md) |
 
@@ -24,12 +24,15 @@ docs/
 │   ├── sequencias.md
 │   ├── banco-de-dados.md
 │   ├── mensageria.md
+│   ├── saga-pagamento.md
 │   ├── execution.md
 │   └── fase4-incremento1.md
 ├── operacao/
 │   ├── ci-cd.md
 │   ├── monorepo-ci.md
 │   ├── evidencias-fase4-incremento1.md
+│   ├── validacao-ponta-a-ponta.md
+│   ├── revisao-billing-saga.md
 │   ├── validacao-execution.md
 │   ├── revisao-execution-etapa1.md
 │   ├── revisao-execution-etapa2.md

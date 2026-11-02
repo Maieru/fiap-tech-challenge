@@ -13,6 +13,35 @@ Os contratos OS e Execution estão publicados no NuGet na versão **0.1.0** e s�
 
 Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing, pagamentos, adaptação do frontend, implantação dos novos serviços e retirada do legado ainda precisam ser realizados. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
 
+## Subir OS, Execution e Billing
+
+Na raiz deste repositório, com Docker Desktop em modo Linux e os checkouts `FiapTechChallengeExecution` e `FiapTechChallengeBilling` ao lado de `FiapTechChallengeFase1`:
+
+```powershell
+docker compose up -d --build
+```
+
+O `compose.yaml` da raiz constrói as três APIs e inicia seus dois PostgreSQL, MongoDB replica set e Kafka. Tópicos e migrations são inicializados pelas dependências. OS fica em http://localhost:8081/scalar/v1, Execution em http://localhost:8082/scalar/v1 e Billing em http://localhost:8083/scalar/v1. Os consumidores não reiniciam automaticamente após falha.
+
+Na primeira configuração de um checkout novo, copie `.env.example` para `.env` e preencha as senhas e `JWT_SIGNING_KEY` (pelo menos 32 bytes). Issuer/audience/chave devem coincidir com o emissor dos tokens administrativos. O arquivo `.env` é ignorado pelo Git. Nesta migração do comando anterior, a configuração local existente foi reaproveitada, sem regenerar credenciais. Não troque senhas de bancos com volumes existentes sem atualizar os bancos correspondentes.
+
+Enquanto os contratos candidatos ainda não estiverem publicados no NuGet, prepare-os uma vez com .NET SDK 10, nesta mesma pasta:
+
+```powershell
+dotnet pack src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging -c Release -o ../FiapTechChallengeBilling/artifacts/packages
+dotnet pack ../FiapTechChallengeBilling/src/FIAP.TechChallenge.Billing.Application.Messaging -c Release -o artifacts/packages
+```
+
+Os Dockerfiles consomem esses feeds locais. Os contratos já foram preparados no ambiente atual. Depois da publicação das versões esperadas, o restore público atende aos builds sem essa preparação.
+
+```powershell
+docker compose ps -a       # Estado dos serviços
+docker compose logs -f    # Acompanhar logs
+docker compose down       # Parar preservando os volumes
+```
+
+O projeto continua chamado `fiap-integrated`, com os mesmos volumes do comando anterior. O Compose da raiz reúne os três serviços; o Compose em `src/Services/OrdensServico` continua atendendo ao OS isolado. Pare outros ambientes que utilizem as mesmas portas antes de iniciar. O frontend e o emissor de JWT do legado não fazem parte desta stack.
+
 ## Ecossistema de repositórios
 
 O [Execution](docs/arquitetura/execution.md) possui repositório próprio, com MongoDB, catálogo, estoque, diagnóstico e execução. A integração Kafka com o OS e os testes distribuídos das duas APIs estão implementados. Isso não representa migração do tráfego nem implantação dos novos serviços na AWS.

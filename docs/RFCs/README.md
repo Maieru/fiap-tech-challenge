@@ -21,3 +21,5 @@ As RFCs documentam escolhas técnicas relevantes já aceitas, suas alternativas 
 As RFCs `001` a `005` formalizam retrospectivamente escolhas já presentes no código e na infraestrutura. Novas RFCs entram neste catálogo somente depois da aprovação da decisão.
 
 As alternativas são avaliações retrospectivas, não atas de discussões históricas. A data original identifica o registro; a última revisão indica a atualização do texto e das evidências. O template usa **Decisão**, pois o catálogo contém escolhas aceitas, não recomendações pendentes.
+
+- [Billing e Saga de pagamento](RFC-010-billing-mock-kafka.md).

@@ -41,6 +41,8 @@ public sealed class OsTestHost : IAsyncDisposable
         using var admin = new AdminClientBuilder(new AdminClientConfig { BootstrapServers = BootstrapServers }).Build();
         await admin.CreateTopicsAsync([
             new TopicSpecification { Name = "oficina.os.events.v1", NumPartitions = 1, ReplicationFactor = 1 },
+            new TopicSpecification { Name = "oficina.billing.events.v1", NumPartitions = 1, ReplicationFactor = 1 },
+            new TopicSpecification { Name = "oficina.os.billing.requests.v1", NumPartitions = 1, ReplicationFactor = 1 },
             new TopicSpecification { Name = "oficina.execution.events.v1", NumPartitions = 1, ReplicationFactor = 1 }
         ]);
         await using (var db = CreateDbContext()) await db.Database.MigrateAsync();

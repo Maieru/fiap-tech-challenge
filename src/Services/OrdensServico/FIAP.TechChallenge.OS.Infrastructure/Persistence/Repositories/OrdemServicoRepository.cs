@@ -96,6 +96,7 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
             DataInicioExecucao = ordem.DataInicioExecucao,
             DataFinalizacao = ordem.DataFinalizacao,
             DataCancelamento = ordem.DataCancelamento,
+            OrcamentoId = ordem.OrcamentoId, ValorOrcamento = ordem.ValorOrcamento, PagamentoJson = ordem.Pagamento is null ? null : System.Text.Json.JsonSerializer.Serialize(ordem.Pagamento),
             Version = ordem.Version
         };
         _ = context.Attach(row);
@@ -117,5 +118,5 @@ public sealed class OrdemServicoRepository(AppDbContext context) : IOrdemServico
     private static Result<OrdemServico> Map(OrdemServicoEntity row) =>
         OrdemServico.Rehydrate(new OrdemServicoSnapshot(row.Id, row.ClienteId, row.VeiculoId, row.DescricaoProblema,
             row.DataCriacao, row.Status, row.Decisao, row.DataDecisaoUtc, row.DataInicioDiagnostico,
-            row.DataEnvioAprovacao, row.DataInicioExecucao, row.DataFinalizacao, row.DataCancelamento, row.Version));
+            row.DataEnvioAprovacao, row.DataInicioExecucao, row.DataFinalizacao, row.DataCancelamento, row.Version, row.OrcamentoId, row.ValorOrcamento, row.PagamentoJson is null ? null : System.Text.Json.JsonSerializer.Deserialize<PagamentoOrdem>(row.PagamentoJson)));
 }

@@ -7,6 +7,8 @@ O [guia do Execution](execution.md) descreve o serviço independente com MongoDB
 
 A aplicação usa AWS, Kubernetes e PostgreSQL, com telemetria no New Relic. Esta visão descreve o código e a infraestrutura declarada; não comprova um deploy ativo. As limitações estão descritas junto de cada componente.
 
+A [Saga de pagamento](saga-pagamento.md) descreve a coordenação OS/Billing/Execution, estados persistidos, compensação e limites de recuperação.
+
 ## Diagrama de componentes
 
 ```mermaid

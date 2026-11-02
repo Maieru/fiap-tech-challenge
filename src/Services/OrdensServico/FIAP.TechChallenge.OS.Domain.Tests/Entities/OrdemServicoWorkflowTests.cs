@@ -10,7 +10,7 @@ public sealed class OrdemServicoWorkflowTests
     {
         var order = Order();
         _ = order.RegistrarDiagnosticoIniciado(DateTime.UtcNow);
-        _ = order.RegistrarDiagnosticoConcluido(DateTime.UtcNow);
+        _ = order.RegistrarDiagnosticoConcluido(DateTime.UtcNow, Guid.NewGuid(), 0);
         return order;
     }
 
@@ -30,6 +30,7 @@ public sealed class OrdemServicoWorkflowTests
             Assert.That(order.Status, Is.EqualTo(StatusOrdemServico.AguardandoAprovacao));
             Assert.That(order.DataDecisaoUtc, Is.EqualTo(now));
         });
+        _ = order.RegistrarPagamento(order.OrcamentoId!.Value, Guid.NewGuid(), 0, "BRL", true, "mock");
         _ = order.RegistrarExecucaoIniciada(now.AddSeconds(2));
         _ = order.RegistrarExecucaoConcluida(now.AddSeconds(3));
         var recovered = OrdemServico.Rehydrate(order.Snapshot()).Value!;

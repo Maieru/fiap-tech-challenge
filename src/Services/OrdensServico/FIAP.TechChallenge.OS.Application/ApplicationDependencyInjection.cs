@@ -16,6 +16,7 @@ public static class ApplicationDependencyInjection
             foreach (var contract in type.GetInterfaces())
                 _ = services.AddScoped(contract, type);
         }
+        services.AddScoped<FIAP.TechChallenge.OS.Application.UseCases.OrdensServico.RegistrarPagamento.RegistrarPagamentoUseCase>();
         return services;
     }
 }

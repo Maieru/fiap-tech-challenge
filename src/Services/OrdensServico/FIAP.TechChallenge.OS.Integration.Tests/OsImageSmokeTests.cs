@@ -14,8 +14,9 @@ namespace FIAP.TechChallenge.OS.Integration.Tests;
 [NonParallelizable]
 public sealed class OsImageSmokeTests
 {
-    [Test]
-    public async Task Image_ShouldPreserveOrderAfterSoftDeleteAndRestart()
+    [TestCase("invalid-json")]
+    [TestCase("missing-valorTotal")]
+    public async Task Image_ShouldPreserveOrderAfterSoftDeleteAndRestart(string invalidKind)
     {
         var image = Environment.GetEnvironmentVariable("OS_TEST_IMAGE");
         if (string.IsNullOrWhiteSpace(image))
@@ -36,6 +37,8 @@ public sealed class OsImageSmokeTests
         await kafka.StartAsync(timeout.Token);
         using var admin = new AdminClientBuilder(new AdminClientConfig { BootstrapServers = kafka.GetBootstrapAddress() }).Build();
         await admin.CreateTopicsAsync([
+            new TopicSpecification { Name = "oficina.billing.events.v1", NumPartitions = 1, ReplicationFactor = 1 },
+            new TopicSpecification { Name = "oficina.os.billing.requests.v1", NumPartitions = 1, ReplicationFactor = 1 },
             new TopicSpecification { Name = "oficina.os.events.v1", NumPartitions = 1, ReplicationFactor = 1 },
             new TopicSpecification { Name = "oficina.execution.events.v1", NumPartitions = 1, ReplicationFactor = 1 }
         ]);
@@ -106,8 +109,28 @@ public sealed class OsImageSmokeTests
         // A malformed record must stop the real process and remain pending for reconciliation.
         using var producer = new ProducerBuilder<string, string>(new ProducerConfig
             { BootstrapServers = kafka.GetBootstrapAddress(), Acks = Acks.All }).Build();
+        // Prove an explicit zero budget is accepted, then reject a missing total even on redelivery.
+        async Task Publish(string type, object payload)
+        {
+            var envelope = new { messageId = Guid.NewGuid(), type, version = 1, occurredAtUtc = DateTimeOffset.UtcNow, correlationId = "image-smoke", payload };
+            await producer.ProduceAsync("oficina.execution.events.v1", new Message<string, string> { Key = orderId.ToString("D"), Value = JsonSerializer.Serialize(envelope) }, timeout.Token);
+        }
+        await Publish("execution.diagnostico-iniciado", new { ordemServicoId = orderId });
+        await Publish("execution.diagnostico-concluido", new { ordemServicoId = orderId, servicos = Array.Empty<object>(), pecasInsumos = Array.Empty<object>(), valorTotal = 0 });
+        JsonElement projected;
+        do
+        {
+            projected = await restarted.GetFromJsonAsync<JsonElement>($"{OsTestHost.Root}/ordens/{orderId}", timeout.Token);
+            if (projected.GetProperty("status").GetInt32() != 3) await Task.Delay(100, timeout.Token);
+        } while (projected.GetProperty("status").GetInt32() != 3);
+        Assert.That(projected.GetProperty("valorOrcamento").GetDecimal(), Is.Zero);
+        var badJson = invalidKind == "invalid-json" ? "invalid-json" : JsonSerializer.Serialize(new
+        {
+            messageId = Guid.NewGuid(), type = "execution.diagnostico-concluido", version = 1, occurredAtUtc = DateTimeOffset.UtcNow, correlationId = "image-smoke",
+            payload = new { ordemServicoId = orderId, servicos = Array.Empty<object>(), pecasInsumos = Array.Empty<object>() }
+        });
         var invalid = await producer.ProduceAsync("oficina.execution.events.v1",
-            new Message<string, string> { Key = orderId.ToString("D"), Value = "invalid-json" }, timeout.Token);
+            new Message<string, string> { Key = orderId.ToString("D"), Value = badJson }, timeout.Token);
         while (await api.GetExitCodeAsync(timeout.Token) == 0) await Task.Delay(100, timeout.Token);
         using var probe = new ConsumerBuilder<string, string>(new ConsumerConfig
             { BootstrapServers = kafka.GetBootstrapAddress(), GroupId = "oficina-os-v1", EnableAutoCommit = false }).Build();
@@ -116,7 +139,7 @@ public sealed class OsImageSmokeTests
         Assert.Multiple(() =>
         {
             Assert.That(api.GetExitCodeAsync(timeout.Token).GetAwaiter().GetResult(), Is.EqualTo(1));
-            Assert.That(committed.Value, Is.LessThanOrEqualTo(invalid.Offset.Value));
+            Assert.That(committed.Value, Is.EqualTo(invalid.Offset.Value));
             Assert.That(logs.Stdout + logs.Stderr, Does.Contain("Consumo interrompido"));
         });
     }

@@ -19,7 +19,7 @@ public sealed class AutorizarExecucaoUseCaseTests
     {
         var order = OrdemServico.Create(Guid.NewGuid(), Guid.NewGuid(), "Motor com falha").Value!;
         _ = order.RegistrarDiagnosticoIniciado(DateTime.UtcNow);
-        _ = order.RegistrarDiagnosticoConcluido(DateTime.UtcNow);
+        _ = order.RegistrarDiagnosticoConcluido(DateTime.UtcNow, Guid.NewGuid(), 0);
         var calls = new List<string>();
         var repository = new Mock<IOrdemServicoRepository>();
         _ = repository.Setup(x => x.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(Result<OrdemServico>.Success(order));
@@ -32,8 +32,8 @@ public sealed class AutorizarExecucaoUseCaseTests
         var work = new Mock<IUnitOfWork>();
         _ = work.Setup(x => x.BeginAsync(It.IsAny<CancellationToken>())).ReturnsAsync(transaction.Object);
         var messaging = new Mock<IMessagingService>();
-        _ = messaging.Setup(x => x.PublishAsync(OSMessaging.Topic, order.Id.ToString("D"),
-            It.IsAny<MessageEnvelope<ExecucaoAutorizada>>(), It.IsAny<CancellationToken>())).Returns(() => Step("publish"));
+        _ = messaging.Setup(x => x.PublishAsync(OSMessaging.BillingTopic, order.Id.ToString("D"),
+            It.IsAny<MessageEnvelope<PagamentoSolicitado>>(), It.IsAny<CancellationToken>())).Returns(() => Step("publish"));
         var useCase = new AutorizarExecucaoUseCase(repository.Object, work.Object, messaging.Object, new MessageContext(), TimeProvider.System);
         if (failure == "none")
         {

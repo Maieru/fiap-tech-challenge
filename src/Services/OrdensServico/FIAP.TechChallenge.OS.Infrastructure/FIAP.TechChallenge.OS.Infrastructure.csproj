@@ -14,7 +14,7 @@
     <PackageReference Include="Maieru.FiapTechChallenge.Messaging.Kafka" Version="0.1.1" />
     <PackageReference Include="FIAP.TechChallenge.Execution.Application.Messaging" Version="0.1.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
-  </ItemGroup>
+  <PackageReference Include="FIAP.TechChallenge.Billing.Application.Messaging" Version="0.1.0" /></ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.5" />

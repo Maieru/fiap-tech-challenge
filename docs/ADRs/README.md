@@ -26,3 +26,5 @@ Os ADRs preservam decisões arquiteturais vigentes e suas consequências. Use o 
 Os ADRs iniciais formalizam decisões predominantes comprovadas pela implementação. Desvios conhecidos são explicitados no próprio registro como limitações ou dívidas de conformidade, sem serem apresentados como capacidades já atendidas.
 
 A data original identifica o registro; a última revisão indica a atualização do texto e das evidências. As alternativas são avaliações retrospectivas, não atas de discussões históricas.
+
+- [Billing e Saga de pagamento](ADR-017-billing-saga-pagamento.md).
