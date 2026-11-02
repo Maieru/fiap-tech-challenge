@@ -1,44 +1,93 @@
 # Estado da migração para microsserviços
 
-Atualizado em 2026-11-02.
+Atualizado em 2026-11-02. Esta página consolida o estado atual; os relatórios de incrementos anteriores preservam o contexto e os resultados da época.
 
-OS e Execution estão implementados e integrados por Kafka, com bancos exclusivos e execução local independente ou conjunta. O legado continua necessário para o fluxo existente. Billing está implementado com gateway mockado e Saga no OS; a retirada do legado ainda não foi iniciada.
+OS, Execution e Billing estão implementados e integrados por Kafka, com bancos exclusivos. O fluxo de backend foi validado localmente até a entrega, com pagamento mockado e compensação por recusa. O frontend ainda consome o monólito; o tráfego AWS e a retirada do legado não foram migrados. Há base funcional para iniciar a adaptação do frontend, mas ela ainda não foi implementada nem validada no navegador contra os três serviços.
 
-## O que já foi feito
+## Responsabilidades entregues
 
-| Componente | Entregue |
+| Componente | Responsabilidade e dados próprios |
 | --- | --- |
-| OS | API própria para clientes, veículos, abertura e consulta de ordens, histórico, aprovação/cancelamento administrativos ou pelo link privado do cliente e entrega administrativa. Usa PostgreSQL exclusivo e projeta as confirmações do Execution. |
-| Execution | Serviço em repositório próprio, com MongoDB exclusivo, catálogo de serviços e peças/insumos, estoque, diagnóstico, orçamento por snapshots, execução e devolução de estoque no cancelamento. |
-| Billing | Serviço próprio PostgreSQL, consultas JWT, cobrança por Kafka e gateway mockado que aprova imediatamente. OS coordena pagamento antes da execução e cancelamento com devolução de estoque por recusa. |
-| Integração | Comunicação Kafka nos dois sentidos. Os casos de uso publicam por `IMessagingService`; os `BackgroundService` recebem com switch explícito e chamam casos de uso da Application. Há deduplicação transacional e confirmação do offset após o commit local. |
-| Pacotes compartilhados | Chassi técnico e adaptador Kafka em repositório próprio. Os contratos de cada produtor ficam em seu pacote `Application.Messaging`. Execution.Application.Messaging 0.1.0 está publicado; OS 0.2.0 e Billing 0.1.0 usam pacotes candidatos locais até publicação explícita. |
-| Autenticação das APIs | OS mantém usuários, cadastro/login e emissão JWT; OS, Execution e Billing validam o token administrativo. Issuer e audience são configuráveis; a chave vem de `Jwt__SigningKey`. Cadastro permanece anônimo por decisão do projeto. |
-| Execução e verificação | Soluções, imagens e testes próprios. Composes independentes e ambiente integrado com Kafka compartilhado. Testes HTTP com bancos e broker reais e cenários distribuídos com as três imagens verificam pagamento, execução, acompanhamento, entrega e compensação. |
+| OS | Clientes, veículos, abertura/consulta de ordens, histórico, usuários administrativos e emissão JWT. Coordena a Saga, projeta status e orçamento, valida acesso privado do cliente e registra entrega administrativa. PostgreSQL exclusivo. |
+| Execution | Catálogo de serviços e peças/insumos, estoque, diagnóstico, snapshots do orçamento, execução, conclusão e devolução única de estoque no cancelamento. MongoDB exclusivo com transações. |
+| Billing | Uma cobrança por ordem, deduplicação, resultado do gateway e consultas administrativas. PostgreSQL exclusivo. `IPaymentGateway` permite substituir o mock, que aprova imediatamente sem rede ou credenciais. |
+| Contratos e chassi | Contratos por produtor em NuGet; chassi e adaptador Kafka em repositório próprio. Nenhum serviço referencia o código-fonte, domínio ou banco dos demais. |
+| Frontend e legado | Permanecem no repositório principal e no fluxo legado. A stack integrada das três APIs não depende do monólito para autenticar ou processar ordens. |
 
-O OS permanece no repositório principal, junto do legado e do frontend. Execution e chassi possuem repositórios separados. Não há compartilhamento de bancos nem referência ao código-fonte de outro serviço.
+O OS permanece no repositório principal, junto do legado, frontend e documentação central. Execution e Billing possuem repositórios próprios. A dependência de checkouts vizinhos no Compose serve apenas para construir as imagens locais; as bibliotecas entre serviços são consumidas por pacote versionado.
 
-## O que permanece pendente
+## Fluxo implementado
 
-- **Gateway real:** implementar Mercado Pago no lugar do MockPaymentGateway. Cobrança por Kafka, confirmação antes da execução e Saga no OS com compensação por recusa já estão implementadas. Estorno, cancelamento após aprovação e novas tentativas ficam fora deste incremento.
-- **Frontend:** adaptar as chamadas e as telas para os novos serviços. A interface atual continua consumindo a API legada.
-- **Infraestrutura e tráfego:** preparar e implantar OS, Execution e Billing no ambiente de destino, incluindo bancos, Kafka, segredos, observabilidade e roteamento. A infraestrutura AWS existente ainda corresponde ao legado; o tráfego não foi migrado.
-- **Retirada do legado:** após cobrir e validar o fluxo completo nos novos serviços, remover o backend legado e os artefatos de teste, build e deploy que só atendem a ele.
-- **Dados:** os novos serviços podem começar com bancos novos de demonstração; não é necessária a importação do histórico legado. A limpeza dos dados e a retirada do banco legado ainda não foram executadas e ficam para a transição definitiva.
+```mermaid
+flowchart LR
+    A[Abertura no OS] -->|Kafka| B[Diagnóstico no Execution]
+    B -->|Snapshots e total| C[OS aguarda aprovação]
+    C -->|Administrador ou link privado| D[Pagamento solicitado]
+    D --> E[Billing e gateway mockado]
+    E -->|Confirmado| F[OS autoriza Execution]
+    F --> G[Execution inicia e conclui]
+    G --> H[OS Finalizada]
+    H -->|Entrega administrativa| I[OS Entregue]
+    E -->|Recusado nos testes| J[OS solicita compensação]
+    J --> K[Execution cancela e devolve estoque]
+    K --> L[OS Cancelada e Saga Compensada]
+```
 
-## Limite conhecido da mensageria
+Aprovar/cancelar retorna 202; o OS preserva o status operacional até a confirmação do Execution. Decisão repetida não republica; decisão oposta retorna conflito. O cancelamento pelo administrador ou cliente é permitido enquanto aguarda aprovação e antes de aprovar; depois disso, apenas a compensação por recusa de pagamento pode cancelar a ordem aprovada. O histórico da aprovação é preservado.
 
-A publicação é direta, dentro do caso de uso, antes do commit local. Não há atomicidade entre banco e Kafka: uma entrega seguida de falha no commit pode exigir reconciliação manual. O padrão atual não usa Outbox, DLQ ou retry de aplicação. Consulte o [padrão de mensageria](mensageria.md) para o comportamento em falhas.
+O cliente pode consultar, aprovar e cancelar pelo link privado da ordem. Um administrador emite ou troca o token; apenas seu hash é persistido. O link vale até a próxima emissão, sem expiração automática neste incremento, e não depende de CPF nem da Lambda legada. A entrega é exclusiva do administrador após `Finalizada`: OS passa a `Entregue` (6), Execution permanece `Finalizada` (5) e a Saga continua `Concluida`. Não há nova cobrança ou evento de entrega. Consulte [acompanhamento e entrega](acompanhamento-e-entrega.md) e [Saga](saga-pagamento.md).
+
+## Marcos e evidências
+
+| Marco | Estado |
+| --- | --- |
+| Extração OS e chassi | Implementada, com soluções, testes, imagens e persistência próprias. O [primeiro incremento](fase4-incremento1.md) é histórico. |
+| Execution e Kafka | Implementados, incluindo diagnóstico, orçamento, estoque e confirmação de transições. |
+| Billing e Saga no OS | Implementados com gateway mockado e compensação por recusa. |
+| Autenticação no OS | Implementada: cadastro anônimo por decisão do projeto, login e JWT validado localmente pelas três APIs. Não há importação de usuários legados, refresh token ou revogação de JWT já emitido. |
+| Acompanhamento e entrega | Backend implementado; tela do frontend ainda usa contratos e link legados. |
+| Execução local | `docker compose up -d --build` na raiz do OS inicia as três APIs, dois PostgreSQL, MongoDB replica set e Kafka. Scalar/OpenAPI em cada API. |
+| Validação backend | Última validação registrada: 265 testes OS sem imagem, 2 testes da imagem e 9 cenários distribuídos aprovados; cobertura OS de 90,9%. [Evidências](../operacao/validacao-ponta-a-ponta.md). |
+| Migração do frontend | Pendente de implementação e validação em navegador. [Roteiro e diferenças de contrato](migracao-frontend.md). |
+| Publicação e deploy | Geração e validação locais não comprovam CI remoto, publicação de imagens, Sonar ou deploy AWS. Ver dependências abaixo. |
+
+## Pacotes e builds reproduzíveis
+
+Consulta ao feed público em 2026-11-02:
+
+| Produtor | Versão necessária | Estado observado |
+| --- | --- | --- |
+| OS | `FIAP.TechChallenge.OS.Application.Messaging` 0.2.0, consumido pelo Billing | Disponível no [índice NuGet](https://api.nuget.org/v3-flatcontainer/fiap.techchallenge.os.application.messaging/index.json), além da versão anterior 0.1.0. Inclui `PagamentoSolicitado`. |
+| Execution | `FIAP.TechChallenge.Execution.Application.Messaging` 0.1.0, consumido pelo OS | Disponível no [índice NuGet](https://api.nuget.org/v3-flatcontainer/fiap.techchallenge.execution.application.messaging/index.json). |
+| Billing | `FIAP.TechChallenge.Billing.Application.Messaging` 0.1.0, consumido pelo OS | O [índice público](https://api.nuget.org/v3-flatcontainer/fiap.techchallenge.billing.application.messaging/index.json) retornou 404. Pacote candidato local disponível; publicação ainda precisa ser concluída ou confirmada. |
+
+A ausência do OS 0.2.0 que causava `NU1102` no Billing deixou de ser a pendência observada no feed. A versão foi testada com os quatro testes de contratos e restore/build do Billing em diretório de pacotes isolado. Para o OS restaurar em um runner limpo somente pelo feed público, falta disponibilizar também os contratos Billing 0.1.0. O estado do feed pode mudar após esta consulta; confirme a versão e o resultado do workflow antes de liberar os builds consumidores.
+
+Os candidatos locais são uma etapa explícita de desenvolvimento, sem referência entre projetos dos repositórios. Consulte [CI e dependências](../operacao/monorepo-ci.md) para restore local e publicação por produtor.
+
+## Próximos incrementos
+
+| Frente | Trabalho restante e critério de conclusão |
+| --- | --- |
+| Pacotes e CI | Publicar/confirmar Billing Messaging 0.1.0 e verificar restore limpo, build, testes, cobertura, imagem, OpenAPI e Sonar em cada repositório. |
+| Frontend | Dividir chamadas entre serviços, adaptar DTOs e etapas assíncronas, emitir link privado, tratar autenticação e proxy, ajustar ações sem endpoint equivalente e testar os fluxos no navegador. Não basta trocar a URL base. |
+| Gateway real | Implementar Mercado Pago no lugar do mock; novas tentativas após recusa, estornos e cancelamentos após aprovação ficam para incrementos posteriores. |
+| Infraestrutura e tráfego | Implantar APIs, bancos, Kafka, segredos, observabilidade e roteamento. A AWS/Lambda existente ainda atende ao legado. A adaptação local do frontend não comprova migração da borda. |
+| Dados | Usar bancos novos de demonstração. Não importar contas ou histórico automaticamente, reutilizar links legados ou inventar orçamento para ordens antigas. |
+| Retirada do legado | Só após validar o fluxo migrado, trocar o tráfego e confirmar as dependências restantes; remover então backend, banco e artefatos exclusivos do legado. Essa retirada não foi executada. |
+
+## Consistência e recuperação
+
+Cada serviço mantém alterações e deduplicação na própria transação. A publicação segue **persistir → publicar e aguardar Kafka → commit local**; o consumidor confirma o offset após o commit. Falhas técnicas e contratos inválidos encerram o host e deixam o offset pendente; não há reinício automático que esconda essas falhas.
+
+Banco, Kafka e gateway não têm atomicidade distribuída. Uma publicação entregue seguida de falha no commit pode exigir reconciliação. Não há Outbox, DLQ, retry de aplicação, framework de Saga ou timeout comercial. A compensação implementada responde à recusa de negócio; indisponibilidade técnica não é convertida em recusa. Consulte [mensageria](mensageria.md) e [Saga](saga-pagamento.md).
 
 ## Documentos relacionados
 
-- [OS Service](../../src/Services/OrdensServico/README.md).
-- [Execution e integração com OS](execution.md).
-- [Arquitetura do legado e infraestrutura existente](README.md).
-- [Histórico de validação do Execution](../operacao/validacao-execution.md). Os relatórios registram o estado de cada entrega; este documento consolida o estado atual.
-
-Consulte [Billing e validação](../operacao/validacao-billing.md). Os novos contratos são candidatos locais até publicação explícita no NuGet.
-
-Guia de [autenticação administrativa no OS](autenticacao-os.md): contas novas no PostgreSQL OS, emissão compatível e limites conhecidos.
-
-[Acompanhamento e entrega no OS](acompanhamento-e-entrega.md) implementados; frontend continua sem migração.
+- [Roteiro da migração do frontend](migracao-frontend.md).
+- [OS Service e execução local](../../src/Services/OrdensServico/README.md).
+- [Execution e integração](execution.md).
+- [Autenticação administrativa no OS](autenticacao-os.md).
+- [Acompanhamento e entrega](acompanhamento-e-entrega.md).
+- [Validação ponta a ponta](../operacao/validacao-ponta-a-ponta.md) e [validação Billing](../operacao/validacao-billing.md).
+- [Arquitetura do legado/AWS](README.md) e [histórico do primeiro incremento](fase4-incremento1.md).

@@ -6,7 +6,7 @@ Este guia descreve a implementação atual da Saga e seu limite de compensação
 
 | Serviço | Responsabilidade | Persistência própria |
 | --- | --- | --- |
-| OS | Decisão administrativa, referência e total do orçamento, etapa da Saga e projeção da execução | PostgreSQL; `OrcamentoId`, `ValorOrcamento` e `PagamentoJson` na ordem, histórico e mensagens processadas |
+| OS | Decisão administrativa ou do cliente, orçamento projetado, etapa da Saga, projeção da execução e entrega | PostgreSQL; `OrcamentoId`, `ValorOrcamento`, `OrcamentoJson`, `PagamentoJson` e `DataEntrega` na ordem, acessos privados, histórico e mensagens processadas |
 | Billing | Uma cobrança por ordem e interação com o gateway | PostgreSQL; cobrança, resultado, identificador externo, datas e mensagens processadas |
 | Execution | Diagnóstico, snapshots dos itens, baixa/devolução de estoque e execução | MongoDB; execução, itens e estoque |
 
@@ -58,7 +58,7 @@ A aprovação repetida mantém a decisão existente e não publica outro pedido.
 | `AguardandoPagamento` | 0 | Aprovação administrativa e pedido publicados | `AguardandoAprovacao` |
 | `AutorizacaoSolicitada` | 1 | Pagamento confirmado; autorização publicada | `AguardandoAprovacao` |
 | `ExecucaoIniciada` | 2 | Confirmação do início pelo Execution | `EmExecucao` |
-| `Concluida` | 3 | Confirmação da conclusão pelo Execution | `Finalizada` |
+| `Concluida` | 3 | Confirmação da conclusão pelo Execution; permanece após entrega administrativa | `Finalizada` ou `Entregue` |
 | `CompensacaoSolicitada` | 4 | Pagamento recusado; cancelamento publicado | `AguardandoAprovacao` |
 | `Compensada` | 5 | Cancelamento confirmado pelo Execution | `Cancelada` |
 

@@ -9,9 +9,9 @@ O monorepo inclui um [OS Service independente](src/Services/OrdensServico/README
 Abra [OrdensServico.slnx](src/Services/OrdensServico/OrdensServico.slnx) para os nove projetos do OS, incluindo contratos de mensageria e seus testes. `Backend.slnx` mantém a visão integrada dos 18 projetos do legado e do OS. Build, testes, cobertura e Sonar são orquestrados pelo GitHub Actions.
 
 O legado usa `Maieru.FiapTechChallenge.Chassis` **0.1.0** e o OS usa **1.1.1**, com adaptador Kafka **0.1.1**, por `PackageReference`.
-Os contratos OS e Execution estão publicados no NuGet na versão **0.1.0** e são restaurados normalmente pelo feed público.
+Consulta ao feed em 2026-11-02: contratos OS **0.2.0** e Execution **0.1.0** disponíveis; contratos Billing **0.1.0**, consumidos pelo OS, ainda precisam de publicação ou restore local explícito. Consulte [dependências e publicação](docs/operacao/monorepo-ci.md).
 
-Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing com gateway mockado, Saga, acompanhamento privado e entrega administrativa estão implementados. Adaptação do frontend, gateway real, implantação dos novos serviços e retirada do legado permanecem pendentes. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
+Consulte o [estado atual da migração](docs/arquitetura/estado-da-migracao.md) para o que foi entregue e o que permanece pendente. Billing com gateway mockado, Saga, acompanhamento privado e entrega administrativa estão implementados. Adaptação do frontend, gateway real, implantação dos novos serviços e retirada do legado permanecem pendentes. O [roteiro do frontend](docs/arquitetura/migracao-frontend.md) detalha chamadas, contratos e critérios de aceite ainda pendentes. A configuração de build e dependências está no [guia de CI](docs/operacao/monorepo-ci.md).
 
 ## Subir OS, Execution e Billing
 
@@ -25,14 +25,14 @@ O `compose.yaml` da raiz constrói as três APIs e inicia seus dois PostgreSQL, 
 
 Na primeira configuração de um checkout novo, copie `.env.example` para `.env` e preencha as senhas e `JWT_SIGNING_KEY` (pelo menos 32 bytes). OS emite os tokens administrativos; issuer/audience/chave devem coincidir nos três serviços. O arquivo `.env` é ignorado pelo Git. Nesta migração do comando anterior, a configuração local existente foi reaproveitada, sem regenerar credenciais. Não troque senhas de bancos com volumes existentes sem atualizar os bancos correspondentes.
 
-Enquanto os contratos candidatos ainda não estiverem publicados no NuGet, prepare-os uma vez com .NET SDK 10, nesta mesma pasta:
+Enquanto Billing Messaging 0.1.0 não estiver publicado no NuGet, prepare esse candidato com .NET SDK 10, nesta mesma pasta:
 
 ```powershell
 dotnet pack src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging -c Release -o ../FiapTechChallengeBilling/artifacts/packages
 dotnet pack ../FiapTechChallengeBilling/src/FIAP.TechChallenge.Billing.Application.Messaging -c Release -o artifacts/packages
 ```
 
-Os Dockerfiles consomem esses feeds locais. Os contratos já foram preparados no ambiente atual. Depois da publicação das versões esperadas, o restore público atende aos builds sem essa preparação.
+O Dockerfile OS consome esse feed local; Billing já pode restaurar OS Messaging 0.2.0 do NuGet público. Depois da publicação do contrato Billing, o restore público atende aos builds sem essa preparação. Consulte o [guia de restore e publicação](docs/operacao/monorepo-ci.md).
 
 ```powershell
 docker compose ps -a       # Estado dos serviços
@@ -56,11 +56,11 @@ Na API legada, quando executada pelo Compose do legado, o endereço é http://lo
 
 Scalar/OpenAPI ficam habilitados em `Development`; OS, Execution e Billing também os habilitam em `Testing`. O Compose integrado usa `Development`. A autenticação JWT dos endpoints administrativos permanece exigida nas chamadas realizadas pela documentação.
 
-Verificação local em 2026-11-02: Scalar e OpenAPI retornaram HTTP 200 em OS, Execution e Billing, com 9, 14 e 3 rotas documentadas, respectivamente.
+Scalar e OpenAPI foram verificados localmente com HTTP 200 nas três APIs. As especificações acompanham as rotas atuais; consulte as [evidências ponta a ponta](docs/operacao/validacao-ponta-a-ponta.md).
 
 ## Ecossistema de repositórios
 
-O [Execution](docs/arquitetura/execution.md) possui repositório próprio, com MongoDB, catálogo, estoque, diagnóstico e execução. A integração Kafka com o OS e os testes distribuídos das duas APIs estão implementados. Isso não representa migração do tráfego nem implantação dos novos serviços na AWS.
+O [Execution](docs/arquitetura/execution.md) possui repositório próprio, com MongoDB, catálogo, estoque, diagnóstico e execução. A integração Kafka entre OS, Billing e Execution e os testes distribuídos das três APIs estão implementados. Isso não representa migração do tráfego nem implantação dos novos serviços na AWS.
 
 O projeto está distribuído por responsabilidade entre os seguintes repositórios:
 
@@ -68,6 +68,7 @@ O projeto está distribuído por responsabilidade entre os seguintes repositóri
 | --- | --- |
 | [`fiap-tech-challenge`](https://github.com/Maieru/fiap-tech-challenge) | OS Service, backend legado, frontend React e documentação central, com testes, imagens e workflows. |
 | [`fiap-tech-challenge-execution`](https://github.com/Maieru/fiap-tech-challenge-execution) | Execution, MongoDB, integração Kafka, contratos NuGet e testes próprios e distribuídos. |
+| [`fiap-tech-challenge-billing`](https://github.com/Maieru/fiap-tech-challenge-billing) | Billing, PostgreSQL exclusivo, gateway mockado, contratos NuGet e testes próprios. |
 | [`fiap-tech-challenge-chassis`](https://github.com/Maieru/fiap-tech-challenge-chassis) | Biblioteca técnica, testes, exemplo consumidor e publicação NuGet com CI/Sonar próprios. |
 | [`fiap-tech-challenge-infra`](https://github.com/Maieru/fiap-tech-challenge-infra) | Infraestrutura compartilhada: backend do Terraform, VPC, EKS, ECR, add-ons, configurações Kubernetes, observabilidade, API Gateway e infraestrutura da Lambda Authorizer. |
 | [`fiap-tech-challenge-db`](https://github.com/Maieru/fiap-tech-challenge-db) | Infraestrutura do PostgreSQL no Amazon RDS e credenciais do banco no AWS Secrets Manager. |

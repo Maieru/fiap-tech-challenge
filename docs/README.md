@@ -4,12 +4,12 @@ Para acompanhar a transição do monólito, consulte o [estado atual da migraç�
 
 | Área | Documentos |
 | --- | --- |
-| Migração e serviços | [Estado atual](arquitetura/estado-da-migracao.md), [OS Service](../src/Services/OrdensServico/README.md), [Execution](arquitetura/execution.md), [chassi em repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis) |
+| Migração e serviços | [Estado atual](arquitetura/estado-da-migracao.md), [roteiro do frontend](arquitetura/migracao-frontend.md), [OS Service](../src/Services/OrdensServico/README.md), [Execution](arquitetura/execution.md), [Billing e Saga](arquitetura/saga-pagamento.md), [chassi em repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis) |
 | Qualidade e dependências | [CI do monorepo, consumo NuGet e Sonar](operacao/monorepo-ci.md), [histórico de validação do Execution](operacao/validacao-execution.md), [revisão Billing/Saga](operacao/revisao-billing-saga.md), [validação ponta a ponta](operacao/validacao-ponta-a-ponta.md) |
-| Arquitetura do legado | [Componentes e camadas](arquitetura/README.md), [sequências](arquitetura/sequencias.md), [banco de dados e ER](arquitetura/banco-de-dados.md) |
+| Arquitetura e legado | [Componentes, coexistência e camadas](arquitetura/README.md), [sequências](arquitetura/sequencias.md), [banco de dados e ER](arquitetura/banco-de-dados.md) |
 | Operação do legado/AWS | [CI/CD e deploy](operacao/ci-cd.md), [observabilidade](operacao/observabilidade.md), [métricas de negócio](operacao/metricas-negocio.md), [configuração do dashboard New Relic](operacao/dashboard-new-relic.md) |
 | Decisões arquiteturais | [Índice de ADRs](ADRs/README.md) |
-| Mensageria e integração | [Padrão canônico](arquitetura/mensageria.md), [contratos OS](../src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging/README.md), [integração OS/Execution](RFCs/RFC-009-integracao-os-execution.md), [Saga de pagamento](arquitetura/saga-pagamento.md), [autenticação OS](arquitetura/autenticacao-os.md) |
+| Mensageria e integração | [Padrão canônico](arquitetura/mensageria.md), [contratos OS](../src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging/README.md), [integração OS/Execution](RFCs/RFC-009-integracao-os-execution.md), [Saga de pagamento](arquitetura/saga-pagamento.md), [autenticação OS](arquitetura/autenticacao-os.md), [acompanhamento e entrega](arquitetura/acompanhamento-e-entrega.md) |
 | Histórico da extração | [Inventário inicial](arquitetura/fase4-incremento1.md), [evidências iniciais](operacao/evidencias-fase4-incremento1.md) |
 | Escolhas técnicas | [Índice de RFCs](RFCs/README.md) |
 
@@ -21,6 +21,9 @@ docs/
 ├── arquitetura/
 │   ├── README.md
 │   ├── estado-da-migracao.md
+│   ├── migracao-frontend.md
+│   ├── autenticacao-os.md
+│   ├── acompanhamento-e-entrega.md
 │   ├── sequencias.md
 │   ├── banco-de-dados.md
 │   ├── mensageria.md
@@ -33,6 +36,7 @@ docs/
 │   ├── evidencias-fase4-incremento1.md
 │   ├── validacao-ponta-a-ponta.md
 │   ├── revisao-billing-saga.md
+│   ├── validacao-billing.md
 │   ├── validacao-execution.md
 │   ├── revisao-execution-etapa1.md
 │   ├── revisao-execution-etapa2.md
@@ -60,5 +64,3 @@ docs/
 - Use o template correspondente, inclua evidências e atualize o índice ao adicionar uma decisão.
 - Correções preservam a data original e informam a última revisão. Mudanças de decisão ganham um novo registro vinculado ao anterior.
 - Registros retrospectivos descrevem a implementação existente; suas alternativas não representam atas de discussões históricas.
-
-- [Acompanhamento privado e entrega da ordem](arquitetura/acompanhamento-e-entrega.md).

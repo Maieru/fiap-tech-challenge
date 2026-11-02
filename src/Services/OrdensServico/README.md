@@ -1,6 +1,6 @@
-# OS Service — integração com Execution
+# OS Service — integração com Execution e Billing
 
-API independente para clientes, veículos, abertura, decisão administrativa e consulta de ordens.
+API independente para clientes, veículos, usuários/JWT, abertura e consulta de ordens, decisões administrativas ou do cliente, Saga de pagamento e entrega.
 Publica as entradas do Execution e projeta suas confirmações por Kafka. O monólito continua com suas rotas e banco existentes.
 
 ## Executar
@@ -12,8 +12,8 @@ A solução `OrdensServico.slnx`, nesta pasta, reúne os nove projetos do servi�
 ## Contratos de mensageria
 
 O projeto [Application.Messaging](FIAP.TechChallenge.OS.Application.Messaging/README.md) publica os contratos
-OrdemServicoCriada, ExecucaoAutorizada e CancelamentoSolicitado. Ele não tem dependências de negócio ou Kafka.
-O OS injeta IMessagingService nos casos de uso e recebe os cinco eventos Execution em BackgroundService com switch explícito.
+OrdemServicoCriada, ExecucaoAutorizada, CancelamentoSolicitado e PagamentoSolicitado (pacote 0.2.0). Ele não tem dependências de negócio ou Kafka.
+O OS injeta IMessagingService nos casos de uso e recebe os cinco eventos Execution e os resultados de pagamento Billing em BackgroundService com switch explícito.
 Consulte a [RFC-007](../../../docs/RFCs/RFC-007-contratos-mensageria-kafka.md) e o
 [padrão de mensageria](../../../docs/arquitetura/mensageria.md).
 
@@ -24,16 +24,15 @@ dotnet test src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messagi
 dotnet pack src/Services/OrdensServico/FIAP.TechChallenge.OS.Application.Messaging -c Release -o artifacts/packages
 ```
 
-Publicação: tag `os-messaging-v0.1.0` em commit revisado de main, variável `NUGET_USER` e
+Publicação: tag `os-messaging-v0.2.0` em commit revisado de main, variável `NUGET_USER` e
 NuGet Trusted Publishing para owner Maieru, repositório fiap-tech-challenge,
 workflow publish-os-messaging.yml, environment vazio e pacote FIAP.TechChallenge.OS.Application.Messaging.
-O pacote OS.Application.Messaging 0.1.0 já está publicado no NuGet.
+O feed NuGet consultado em 2026-11-02 oferece OS.Application.Messaging 0.1.0 e 0.2.0. A versão 0.2.0 contém o pedido de pagamento usado pelo Billing.
 
 ## Pré-requisitos locais
 
 Pré-requisitos: .NET SDK 10, PowerShell 7 e Docker com containers Linux.
-Versões fixadas: chassi 1.1.1, adaptador Kafka 0.1.1 e contrato Execution.Application.Messaging 0.1.0.
-Essas dependências estão publicadas no NuGet. Na raiz deste repositório:
+Versões fixadas: chassi 1.1.1, adaptador Kafka 0.1.1 e contratos Execution.Application.Messaging 0.1.0 e Billing.Application.Messaging 0.1.0. A publicação Billing ainda não estava disponível na consulta ao feed em 2026-11-02. Enquanto isso, gere o candidato e faça restore explícito conforme [CI e dependências](../../../docs/operacao/monorepo-ci.md#candidatos-locais-antes-da-publicação). Após publicar todas as dependências, use o restore público abaixo. Para o candidato Billing, o roteiro citado já faz o restore com a configuração local explícita; prossiga então com o build `--no-restore`, na raiz deste repositório:
 
 ```powershell
 dotnet restore src/Services/OrdensServico/OrdensServico.slnx
@@ -42,7 +41,7 @@ dotnet build src/Services/OrdensServico/OrdensServico.slnx -c Release --no-resto
 
 Para testar um pacote de contratos gerado localmente, opcionalmente use `scripts/Restore-OsLocal.ps1 -ExecutionMessagingPackage <caminho-do-nupkg>`.
 O roteiro valida o pacote e gera artifacts/NuGet.Local.Config ignorado pelo Git; o Dockerfile também aceita artifacts/packages/*.nupkg.
-O restore padrão e o CI usam o feed público, sem compilar outro checkout.
+O restore padrão e o CI usam o feed público, sem compilar outro checkout; dependências candidatas precisam ser publicadas antes de esses builds funcionarem em runner limpo.
 Na raiz do repositório:
 
 ```powershell
@@ -52,8 +51,7 @@ docker compose -f src/Services/OrdensServico/compose.yaml up --build -d
 ```
 
 O chassi é mantido em [repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis) e restaurado como pacote público.
-Para integrar as duas APIs, use compose.yaml + compose.integrated.yaml no Execution com uma imagem OS pronta,
-conforme o README daquele repositório. O Compose desta pasta usa broker próprio para trabalho isolado.
+Para integrar as três APIs, prefira `docker compose up -d --build` na raiz do OS. O Compose integrado do Execution continua disponível para trabalhar com imagens prontas. O Compose desta pasta usa broker próprio para trabalho isolado.
 
 | Recurso | Endereço |
 | --- | --- |
@@ -94,6 +92,10 @@ Para uma demonstração completamente isolada, `OsImageSmokeTests` cria credenci
 | `/api/os/v1/ordens/{id}/historico` | GET |
 | `/api/os/v1/ordens/{id}/aprovar-execucao` | PUT |
 | `/api/os/v1/ordens/{id}/cancelar` | PUT |
+| `/api/os/v1/ordens/{id}/entregar` | PUT com JWT |
+| `/api/os/v1/ordens/{id}/acesso-cliente` | POST com JWT; emite/troca link privado |
+| `/api/os/v1/ordens/acompanhamento/{id}` | GET com token privado |
+| `/api/os/v1/ordens/acompanhamento/{id}/aprovar-execucao` e `/cancelar` | PUT com token privado |
 
 Listagens usam `pageNumber` e `pageSize`, inicialmente 1 e 10. Cadastros retornam 201 com `Location`, edições 200, exclusões 204, validações 400, recursos inexistentes/inativos 404 e duplicidades de documentos/placas ativos 409. Erros de negócio preservam `{ error, errorCode }`; exceções técnicas usam `ProblemDetails`.
 

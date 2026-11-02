@@ -1,6 +1,6 @@
 # Arquitetura da solução
 
-Esta página descreve o legado e a infraestrutura existente. Consulte o [estado atual da migração](estado-da-migracao.md) para os componentes extraídos e as pendências. O [primeiro incremento da Fase 4](fase4-incremento1.md) é um registro histórico da extração inicial.
+Esta página distingue os serviços extraídos da infraestrutura legada existente. O [estado atual da migração](estado-da-migracao.md) consolida entregas, pacotes e pendências; o [roteiro do frontend](migracao-frontend.md) descreve a adaptação ainda não implementada. O [primeiro incremento da Fase 4](fase4-incremento1.md) é um registro histórico da extração inicial.
 
 O [padrão de mensageria entre serviços](mensageria.md) documenta os contratos Kafka, publicação, consumo e tratamento de falhas.
 O [guia do Execution](execution.md) descreve o serviço independente com MongoDB, catálogo, estoque, execução e integração com OS.
@@ -9,7 +9,30 @@ A aplicação usa AWS, Kubernetes e PostgreSQL, com telemetria no New Relic. Est
 
 A [Saga de pagamento](saga-pagamento.md) descreve a coordenação OS/Billing/Execution, estados persistidos, compensação e limites de recuperação.
 
-## Diagrama de componentes
+## Serviços extraídos e coexistência local
+
+```mermaid
+flowchart LR
+    Frontend[Frontend atual] --> Legado[API legada]
+    Legado --> DBLegado[(PostgreSQL legado)]
+    Operador[Operador com JWT OS] --> OS[OS API: 8081]
+    Operador --> Execution[Execution API: 8082]
+    Operador --> Billing[Billing API: 8083]
+    Cliente[Cliente com token privado] --> OS
+    OS --> DBOS[(PostgreSQL OS)]
+    Execution --> Mongo[(MongoDB Execution)]
+    Billing --> DBBilling[(PostgreSQL Billing)]
+    OS <--> Kafka
+    Execution <--> Kafka
+    Billing <--> Kafka
+    Billing --> Mock[Gateway mockado]
+```
+
+OS emite o JWT administrativo e valida o acesso privado do cliente; Execution e Billing validam o JWT localmente. O ciclo distribuído inclui pagamento e entrega. O frontend continua na API legada. `docker compose up -d --build` na raiz inicia as três APIs e suas dependências, preservando volumes por serviço; não implanta AWS. Não há banco compartilhado ou coordenação síncrona HTTP entre serviços.
+
+O authorizer Lambda abaixo pertence ao fluxo legado. Os novos endpoints de acompanhamento validam seu próprio token no OS e não consultam o banco legado. A migração da borda e do frontend permanece pendente.
+
+## Infraestrutura legada AWS
 
 ```mermaid
 flowchart TB
@@ -100,10 +123,10 @@ Domain concentra entidades e regras; Application coordena casos de uso; API trad
 
 ## Documentos relacionados
 
-- [Sequências de autenticação e abertura de ordem](sequencias.md).
+- [Estado consolidado da migração](estado-da-migracao.md) e [roteiro do frontend](migracao-frontend.md).
+- [Autenticação no OS](autenticacao-os.md) e [acompanhamento/entrega](acompanhamento-e-entrega.md).
+- [Sequências legadas de autenticação e abertura de ordem](sequencias.md).
 - [Modelo ER, relacionamentos e evolução do banco](banco-de-dados.md).
 - [Observabilidade e validação](../operacao/observabilidade.md).
 - [Estados e repositórios](../ADRs/ADR-008-estados-terraform-e-repositorios.md).
 - [Escolhas técnicas](../RFCs/README.md) e [decisões arquiteturais](../ADRs/README.md).
-
-- [Acompanhamento privado e entrega da ordem no OS](acompanhamento-e-entrega.md).

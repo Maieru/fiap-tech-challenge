@@ -11,13 +11,36 @@ Este repositório contém o legado e o OS Service. O [chassi técnico](https://g
 | `src/Services/OrdensServico/OrdensServico.slnx` | OS, contratos de mensageria e testes: 9 projetos |
 | `src/TechChallengeFase1.slnx` | Projetos legados e integração Docker Compose do Visual Studio |
 
-## Dependência do chassi
+## Dependências entre repositórios
 
-O legado fixa `Maieru.FiapTechChallenge.Chassis` **0.1.0**. O OS fixa o chassi **1.1.1**, o adaptador `Maieru.FiapTechChallenge.Messaging.Kafka` **0.1.1** e `FIAP.TechChallenge.Execution.Application.Messaging` **0.1.0** nos respectivos `PackageReference`. Build, CI e Docker restauram as versões públicas no NuGet.org. O chassi não é compilado nem publicado neste repositório.
+O legado fixa `Maieru.FiapTechChallenge.Chassis` **0.1.0**. O OS usa chassi **1.1.1**, adaptador `Maieru.FiapTechChallenge.Messaging.Kafka` **0.1.1**, contratos Execution **0.1.0** e contratos Billing **0.1.0** nos respectivos `PackageReference`. Billing consome contratos OS **0.2.0**; Execution permanece em OS **0.1.0**, cujos tipos continuam compatíveis.
 
-Essas versões já estão publicadas. Para atualizar uma dependência compartilhada, publique uma versão imutável no repositório responsável e altere explicitamente o `PackageReference` dos consumidores desejados. O roteiro opcional `scripts/Restore-OsLocal.ps1` permite testar um contrato Execution local; não é necessário para o restore padrão.
+Os contratos são distribuídos por produtor, sem referência ao código-fonte de outro repositório. Consulta ao NuGet em 2026-11-02 confirmou OS 0.2.0 e Execution 0.1.0 disponíveis; o índice Billing ainda retornou 404. O [estado da migração](../arquitetura/estado-da-migracao.md#pacotes-e-builds-reproduzíveis) registra a consulta e as evidências. Build local aprovado com pacote candidato não comprova restore em runner limpo usando somente NuGet.org.
 
-A configuração `NUGET_USER`, a política Trusted Publishing e a tag `vX.Y.Z` pertencem somente a `Maieru/fiap-tech-challenge-chassis`. Consulte seu README para publicação e desenvolvimento da biblioteca.
+O erro `NU1102` do Billing por ausência de OS 0.2.0 deve ser revalidado após a disponibilidade dessa versão no feed. Para o build OS, a dependência ainda pendente de publicação é Billing Messaging 0.1.0. Reexecute o pipeline consumidor após a publicação e indexação; não reduza o `PackageReference` para uma versão que não contém o contrato necessário.
+
+### Publicação por produtor
+
+| Pacote | Repositório e workflow | Tag da versão necessária |
+| --- | --- | --- |
+| OS Messaging | `fiap-tech-challenge`, `publish-os-messaging.yml` | `os-messaging-v0.2.0`, versão disponível no feed |
+| Billing Messaging | `fiap-tech-challenge-billing`, `publish-messaging.yml` | `messaging-v0.1.0`, ainda pendente na consulta registrada |
+| Execution Messaging | `fiap-tech-challenge-execution`, `publish-messaging.yml` | `messaging-v0.1.0`, versão disponível no feed |
+
+Os workflows de publicação validam a tag e exigem commit já integrado à `origin/main`, `NUGET_USER` no repositório produtor e política NuGet Trusted Publishing correspondente. A tag do pacote é independente da versão 1 do envelope Kafka. Não reaproveite uma versão publicada para conteúdo diferente. A configuração de publicação do chassi fica em seu próprio repositório; publicar contratos OS não publica Billing automaticamente.
+
+### Candidatos locais antes da publicação
+
+Na raiz OS, com o checkout Billing ao lado e .NET SDK 10:
+
+```powershell
+dotnet pack ../FiapTechChallengeBilling/src/FIAP.TechChallenge.Billing.Application.Messaging -c Release -o artifacts/packages
+./scripts/Restore-BillingLocal.ps1 -BillingMessagingPackage artifacts/packages/FIAP.TechChallenge.Billing.Application.Messaging.0.1.0.nupkg
+```
+
+Esse roteiro valida o pacote e restaura o OS com `artifacts/NuGet.Local.Config`, contendo o feed local explícito e NuGet.org. O Dockerfile OS também aceita candidatos em `artifacts/packages`. Depois da publicação, validar `dotnet restore` sem esse feed e em diretório de pacotes limpo antes de considerar o CI desbloqueado.
+
+Para um contrato Execution candidato, permanece disponível `scripts/Restore-OsLocal.ps1 -ExecutionMessagingPackage <arquivo>`. No Billing, `scripts/Restore-Local.ps1 -OsMessagingPackage <arquivo>` permite validar um candidato OS; a versão OS 0.2.0 agora pode ser restaurada do feed público. Esses roteiros não são publicação e não configuram automaticamente os runners remotos.
 
 ## Como a automação funciona
 
