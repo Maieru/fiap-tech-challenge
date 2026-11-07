@@ -43,7 +43,7 @@ A mesma imagem Docker usa variáveis de execução:
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Collector OTLP HTTP, por exemplo `http://collector:4318` |
 | `UPSTREAM_CA_CERTIFICATE` | Caminho do bundle PEM de CAs confiáveis; padrão: raízes do sistema |
 
-A imagem usa `npm ci --ignore-scripts` e Nginx sem root (UID/GID 101), ouvindo na porta interna **8080**. O Compose continua publicando 5173. Chamadas HTTPS validam cadeia e hostname do certificado. Na nuvem, use HTTPS para os upstreams e Collector; para CA privada, monte um bundle somente leitura e configure `UPSTREAM_CA_CERTIFICATE`. Os [pré-requisitos Kubernetes](../../k8s/README.md) incluem terminação TLS nos serviços e o Secret de CA. Alterar a URL não habilita TLS no backend.
+A imagem usa `npm ci --ignore-scripts` e Nginx sem root (UID/GID 101), ouvindo na porta interna **8080**. O Compose continua publicando 5173. No EKS de laboratório, a entrada pública usa HTTPS e os upstreams internos usam HTTP: APIs em 8080 e Collector em 4318. Não há Secret de CA obrigatório. Chamadas a um upstream HTTPS futuro continuam validando cadeia e hostname; para CA privada, monte um bundle somente leitura e configure `UPSTREAM_CA_CERTIFICATE`. Ver [pré-requisitos Kubernetes](../../k8s/README.md) e [ADR-022](../../docs/ADRs/ADR-022-kubernetes-microsservicos.md).
 
 Há duas topologias possíveis:
 

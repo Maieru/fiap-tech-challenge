@@ -29,4 +29,6 @@ Compose da raiz inclui frontend. `services/api.ts`, `ordensServico.service.ts` e
 
 Os manifests do frontend passam a requerer os três Services internos configurados no ConfigMap. Isso prepara a entrada na nuvem, mas não implanta OS, Execution, Billing ou suas dependências. O rollout exige provisionar esses serviços antes; a AWS não foi alterada por esta implementação.
 
+A [ADR-022](ADR-022-kubernetes-microsservicos.md) acrescenta os manifestos das APIs e define HTTP interno em 8080, substituindo o contrato preparado de TLS interno em 8443. O frontend não depende mais de Secret de CA privada para esse fluxo.
+
 Ver [guia da migração](../arquitetura/migracao-frontend.md) e [RFC-013](../RFCs/RFC-013-proxy-frontend-microsservicos.md).

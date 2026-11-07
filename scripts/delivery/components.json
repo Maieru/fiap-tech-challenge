@@ -1,0 +1,20 @@
+{
+  "os": {
+    "ci": "monorepo-ci.yml",
+    "ecr": "fiap-ecr-os-repository",
+    "context": ".",
+    "dockerfile": "Dockerfile",
+    "manifests": "k8s/os",
+    "namespace": "fiap-os",
+    "repository": "Maieru/fiap-tech-challenge"
+  },
+  "frontend": {
+    "ci": "monorepo-ci.yml",
+    "ecr": "fiap-ecr-frontend-repository",
+    "context": "src/FIAP.TechChallenge.Fase1.Frontend",
+    "dockerfile": "src/FIAP.TechChallenge.Fase1.Frontend/Dockerfile",
+    "manifests": "k8s/frontend",
+    "namespace": "fiap-frontend",
+    "repository": "Maieru/fiap-tech-challenge"
+  }
+}

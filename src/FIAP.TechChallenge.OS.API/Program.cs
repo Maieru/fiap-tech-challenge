@@ -17,6 +17,15 @@ public partial class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        if (args.Contains("--migrate-only", StringComparer.Ordinal))
+        {
+            var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(
+                builder.Configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("Configure ConnectionStrings:DefaultConnection.")).Options;
+            await using var database = new AppDbContext(options);
+            await database.Database.MigrateAsync();
+            return;
+        }
         // Hosting request-start logs include query strings; private customer links must not leak there.
         builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
         _ = builder.Services.AddControllers();

@@ -99,11 +99,18 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
           $scanner = Join-Path $env:RUNNER_TEMP 'scanner/dotnet-sonarscanner.exe'
+          # ADR-022: HTTP interno aceito apenas nos ConfigMaps de frontend/OTLP.
+          # Manter demais regras e manifests no escopo; scripts .mjs têm job Node próprio.
           & $scanner begin "/k:$env:SONAR_PROJECT_KEY" "/o:$env:SONAR_ORGANIZATION" `
             "/d:sonar.token=$env:SONAR_TOKEN" /d:sonar.host.url=https://sonarcloud.io `
             /d:sonar.cs.opencover.reportsPaths=artifacts/reports/**/coverage.opencover.xml `
-            '/d:sonar.exclusions=src/FIAP.TechChallenge.Fase1.Frontend/**,legacy/**,artifacts/**,**/Migrations/**,**/*.feature.cs,**/node_modules/**,**/dist/**,**/bin/**,**/obj/**' `
+            '/d:sonar.exclusions=src/FIAP.TechChallenge.Fase1.Frontend/**,legacy/**,artifacts/**,**/Migrations/**,**/*.feature.cs,**/node_modules/**,**/dist/**,**/bin/**,**/obj/**,**/*.mjs' `
             '/d:sonar.test.exclusions=src/FIAP.TechChallenge.Fase1.Frontend/**' `
+            '/d:sonar.issue.ignore.multicriteria=internalFrontendHttp,internalOsOtlp' `
+            '/d:sonar.issue.ignore.multicriteria.internalFrontendHttp.ruleKey=kubernetes:S5332' `
+            '/d:sonar.issue.ignore.multicriteria.internalFrontendHttp.resourceKey=k8s/frontend/config-maps.yaml' `
+            '/d:sonar.issue.ignore.multicriteria.internalOsOtlp.ruleKey=kubernetes:S5332' `
+            '/d:sonar.issue.ignore.multicriteria.internalOsOtlp.resourceKey=k8s/os/config-maps.yaml' `
             /d:sonar.scanner.scanAll=true /d:sonar.qualitygate.wait=true
           dotnet build Backend.slnx -c Release --no-incremental --disable-build-servers
           & $scanner end "/d:sonar.token=$env:SONAR_TOKEN"

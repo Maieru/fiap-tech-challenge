@@ -13,6 +13,8 @@ A API não mantém sessão local e o cluster possui Metrics Server. CPU oferece 
 
 ## Decisão
 
+Este registro descreve a política histórica do monólito. Para OS, Execution e Billing, a [ADR-022](ADR-022-kubernetes-microsservicos.md) define HPAs independentes de 1 a 3 réplicas, mantendo CPU alvo de 70%. Os arquivos abaixo permanecem somente como inventário legado.
+
 Usar HPA `autoscaling/v2` somente no backend:
 
 | Parâmetro | Valor |

@@ -35,10 +35,6 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
-          volumeMounts:
-            - name: upstream-ca
-              mountPath: /etc/nginx/upstream-ca
-              readOnly: true
           resources:
             requests:
               cpu: "100m"
@@ -48,7 +44,3 @@ spec:
               cpu: "500m"
               memory: "512Mi"
               ephemeral-storage: "256Mi"
-      volumes:
-        - name: upstream-ca
-          secret:
-            secretName: fiap-upstream-ca

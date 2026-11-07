@@ -4,6 +4,10 @@ Os ADRs preservam decisões arquiteturais vigentes e suas consequências. Use o 
 
 ## Catálogo
 
+- [ADR-023 — Entrega independente por repositório com OIDC e digest](ADR-023-entrega-servicos-ecr-eks.md) — Aceita.
+
+- [ADR-022 — Microsserviços no EKS com HTTP interno e credenciais isoladas](ADR-022-kubernetes-microsservicos.md) — Aceita.
+
 - [ADR-021 — Retirada do código do monólito e separação da infraestrutura legada](ADR-021-retirada-codigo-monolito.md) — Aceita.
 
 - [ADR-020 — Frontend por microsserviços e mesma origem](ADR-020-frontend-microsservicos-mesma-origem.md) — Aceita.
@@ -36,3 +40,5 @@ A data original identifica o registro; a última revisão indica a atualização
 - [Autenticação administrativa no OS](ADR-018-autenticacao-administrativa-no-os.md).
 
 - [Entrega e acesso do cliente à ordem no OS](ADR-019-entrega-acesso-cliente.md).
+
+- [Plataforma efêmera AWS dos microsserviços](ADR-024-plataforma-microsservicos-aws.md).
