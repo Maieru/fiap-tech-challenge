@@ -35,6 +35,8 @@ Páginas abertas por link não inicializam OpenTelemetry; requisições pública
 
 ## Local e nuvem
 
+A [ADR-022](../ADRs/ADR-022-kubernetes-microsservicos.md) acrescenta os manifestos das APIs: Services ClusterIP em HTTP 8080, HPA de 1 a 3 réplicas, credenciais exclusivas por banco e OpenTelemetry ativo para o Collector compartilhado. A entrada pública continua HTTPS; não há mais exigência de TLS/CA privada entre Nginx e as APIs nesta etapa. Consulte o [roteiro Kubernetes](../../k8s/README.md).
+
 Vite encaminha os três prefixos para portas 8081/8082/8083; Nginx usa upstreams configuráveis em execução. Kong não é obrigatório localmente. A mesma imagem atende à nuvem, atrás de API Gateway e ALB, com upstreams internos. Os manifests do frontend incluem um Ingress dos três prefixos com prioridade anterior ao `/api` legado. Os nomes dos Services no ConfigMap devem corresponder aos serviços provisionados antes do rollout.
 
 Outra topologia pode encaminhar Nginx para um gateway separado; ele não pode devolver a mesma chamada ao Nginx. Hospedagem puramente estática pode definir gateway/bases públicas no build e exige CORS na borda. Os arquivos `.env*` locais são excluídos do build Docker. `VITE_API_BASE_URL` do legado é ignorada.

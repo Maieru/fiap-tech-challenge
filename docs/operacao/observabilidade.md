@@ -30,9 +30,11 @@ A configuração remota de laboratório está no repositório `FiapTechChallenge
 
 1. Configure o GitHub Actions secret `NEW_RELIC_LICENSE_KEY` com a chave de ingestão no repositório que dispara o workflow (`FiapTechChallengeInfra` para execução direta; o orquestrador de criação legado foi retirado). Os workflows de aplicação e destruição repassam esse secret ao Terraform.
 2. Aplique o estágio `infra/kubernetes-addons`. O Terraform cria o secret `fiap-newrelic-license` e sua versão com o JSON `{"license-key":"..."}` a partir da variável sensível e obrigatória `new_relic_license_key`. Para execução local, forneça `TF_VAR_new_relic_license_key` no ambiente antes de executar `terraform plan`/`apply` (também no `destroy`). Não é necessário cadastrar o valor manualmente no AWS Secrets Manager.
-3. Se sua conta for EU, ajuste `NEW_RELIC_OTLP_ENDPOINT` em `k8s/observability/application/otel-collector-deployment.yaml` antes do deploy.
+3. Se sua conta for EU, forneça `TF_VAR_new_relic_otlp_endpoint=https://otlp.eu01.nr-data.net` ao estágio `kubernetes-configs` (ou configure a variável `new_relic_otlp_endpoint` no tfvars utilizado). O padrão é US. O Deployment do Collector é renderizado pelo Terraform; não aplique o template diretamente.
 4. Aplique `infra/kubernetes-configs` e faça o deploy atualizado das aplicações. O ExternalSecret cria `newrelic-license` no namespace `fiap-observability`; o Collector lê a chave via `secretKeyRef`. Sem o valor no Secrets Manager, o Collector aguardará o Secret e não iniciará.
 5. Verifique `kubectl -n fiap-observability get externalsecret newrelic-license` e `kubectl -n fiap-observability rollout status deployment/otel-collector`.
+
+Os manifestos de OS, Execution e Billing habilitam OTLP gRPC em `http://otel-collector.fiap-observability.svc:4317`; o frontend encaminha `/otlp` por HTTP à porta 4318. O Collector é compartilhado, permanece sob gestão do Infra e exporta os três sinais por HTTPS ao New Relic. As APIs não recebem a licença; seus nomes são `oficina-os`, `oficina-execution` e `oficina-billing`. Consulte o [roteiro integrado](../../k8s/README.md) para segredos e ordem de rollout.
 
 Os workflows do repositório de infraestrutura definem a aplicação desses estágios; o orquestrador de criação no repositório da aplicação foi retirado. O valor é gravado durante o estágio de add-ons, antes de configurar o Collector. A variável sensível oculta a chave na saída normal do Terraform, mas o valor fica armazenado no estado e no plano salvo (`tfplan`); restrinja o acesso ao backend e aos artifacts do workflow. O plano de `kubernetes-configs` remove os Deployments, Services e ConfigMaps antigos de Grafana, Prometheus, Loki e Jaeger. Se precisar do histórico ou de dashboards personalizados, exporte-os antes de aplicar: eles não são importados automaticamente pelo New Relic.
 
@@ -45,7 +47,7 @@ Procure os serviços pelo nome na interface de entidades/APM e consulte no Query
 ```sql
 FROM Span SELECT count(*) FACET service.name SINCE 30 minutes ago
 FROM Log SELECT count(*) FACET service.name SINCE 30 minutes ago
-FROM Metric SELECT uniques(metricName) WHERE service.name = 'fiap-tech-challenge-backend' SINCE 30 minutes ago
+FROM Metric SELECT uniques(metricName) WHERE service.name IN ('oficina-os', 'oficina-execution', 'oficina-billing') FACET service.name SINCE 30 minutes ago
 ```
 
 Para diagnóstico, use `docker compose logs otel-collector` ou `kubectl -n fiap-observability logs deployment/otel-collector`. Erros 401/403 indicam problema de chave/conta; confira também região e saída HTTPS na porta 443. O Collector usa lotes de até 256 registros, gzip, limite de memória e retentativas. A fila é em memória: reinícios podem perder dados pendentes. Se receber 413, reduza o lote ou o tamanho dos registros (o limite de ingestão é por bytes).

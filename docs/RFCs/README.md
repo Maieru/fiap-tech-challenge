@@ -4,6 +4,10 @@ As RFCs documentam escolhas técnicas relevantes já aceitas, suas alternativas 
 
 ## Catálogo
 
+- [RFC-017 — Actions de publicação ECR e aplicação EKS](RFC-017-actions-ecr-eks.md) — Aceita.
+
+- [RFC-016 — Manifestos Kubernetes das APIs e integração OTLP](RFC-016-manifestos-kubernetes-microsservicos.md) — Aceita.
+
 - [RFC-015 — Projetos OS diretamente em src](RFC-015-projetos-os-diretamente-src.md) — Aceita.
 
 - [RFC-014 — Soluções e verificação sem o monólito](RFC-014-solucoes-ci-sem-monolito.md) — Aceita.

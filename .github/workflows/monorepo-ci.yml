@@ -15,6 +15,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  delivery:
+    name: Verify delivery tooling
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix scripts/delivery --ignore-scripts --no-audit --no-fund
+      - run: npm test --prefix scripts/delivery
   frontend:
     name: Verify frontend
     runs-on: ubuntu-latest
@@ -112,7 +122,7 @@ jobs:
   ci-required:
     name: ci-required
     if: always()
-    needs: [frontend, component, quality]
+    needs: [frontend, component, quality, delivery]
     runs-on: ubuntu-latest
     steps:
       - name: Require frontend, tests, coverage and quality success
@@ -120,4 +130,5 @@ jobs:
           TEST_RESULT: ${{ needs.component.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
           FRONTEND_RESULT: ${{ needs.frontend.result }}
-        run: test "$FRONTEND_RESULT" = success && test "$TEST_RESULT" = success && test "$QUALITY_RESULT" = success
+          DELIVERY_RESULT: ${{ needs.delivery.result }}
+        run: test "$FRONTEND_RESULT" = success && test "$TEST_RESULT" = success && test "$QUALITY_RESULT" = success && test "$DELIVERY_RESULT" = success

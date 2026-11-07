@@ -1,20 +1,11 @@
-name: Push Frontend
-
-env:
-  AWS_REGION: 'us-east-1'
-  ECR_REPOSITORY: 'fiap-ecr-frontend-repository'
-  IMAGE_TAG: ${{ github.sha }}
-
-  DOCKERFILE_PATH: './src/FIAP.TechChallenge.Fase1.Frontend/Dockerfile' 
-  DOCKER_BUILD_CONTEXT: './src/FIAP.TechChallenge.Fase1.Frontend' 
-
+name: Push Frontend (compatibility)
 on:
   workflow_call:
     secrets:
       ACTION_ROLE_ARN:
         required: true
-
 permissions:
+  id-token: write
   contents: read
 
 jobs:

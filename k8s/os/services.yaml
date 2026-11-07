@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fiap-os-service
+  namespace: fiap-os
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: fiap-os
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

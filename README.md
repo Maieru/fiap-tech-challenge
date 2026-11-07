@@ -290,9 +290,11 @@ Habilite a exportação dos serviços desejados conforme o [guia de observabilid
 
 A plataforma AWS é mantida nos repositórios Infra, DB e Serverless do inventário. Eles separam rede/plataforma, RDS e código da Lambda. Terraform, estados remotos, OIDC, EKS, ECR, API Gateway e segredos fazem parte dessa infraestrutura.
 
-A árvore ativa `k8s/frontend` prepara o frontend para um rollout futuro. Os serviços OS, Execution e Billing, suas dependências e seus endpoints TLS precisam ser provisionados antes desse rollout. Nginx valida a cadeia e o hostname dos certificados; o Kubernetes exige o Secret de CA documentado no [guia de implantação](k8s/README.md).
+A árvore ativa contém [OS](k8s/os/README.md) e frontend; Execution e Billing mantêm seus manifestos nos próprios repositórios. Cada API usa Service ClusterIP em HTTP 8080, HPA de 1 a 3 réplicas, credencial exclusiva de banco e OpenTelemetry habilitado. HTTPS permanece na entrada pública; o frontend não exige Secret de CA interna. Bancos, Kafka, imagens, segredos/IAM e migrations prévias são pré-requisitos do [guia de implantação](k8s/README.md).
 
 Os manifests do backend antigo ficam em `legacy/aws` como referência. Os workflows exclusivos de deploy do monólito foram removidos; o CI atual não implanta automaticamente os microsserviços na AWS. A ordem de provisionamento, migração de tráfego, validação do gateway e retirada dos recursos antigos deve seguir os [guias de CI/CD](docs/operacao/ci-cd.md) e de [retirada do monólito](docs/arquitetura/retirada-monolito.md).
+
+As Actions manuais [publish-image e deploy-eks](scripts/delivery/README.md) permitem publicar OS/frontend no ECR e aplicar seus manifestos no EKS. Execution e Billing têm os mesmos workflows em seus repositórios, com roles OIDC próprias, CI aprovado e deploy por digest. O Infra declara os ECRs, identidades e RBAC necessários; seus applies e a configuração das variáveis precisam ser concluídos antes de usar as Actions.
 
 ## Estado da entrega
 
