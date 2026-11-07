@@ -54,7 +54,7 @@ O check agregado `ci-required` exige sucesso de `frontend`, `component` (OS) e `
 
 ## SonarQube Cloud do principal
 
-A análise mantém `sonar.scanner.scanAll=true` para analisar as linguagens de infraestrutura além do C#. Por solicitação da equipe, `src/FIAP.TechChallenge.Fase1.Frontend/**` está excluído de fontes e testes do Sonar, incluindo TypeScript, testes, Dockerfile e Nginx dessa pasta. Os manifests Kubernetes e workflows continuam no escopo. As demais exclusões abrangem os manifests não implantáveis em `legacy/**` e arquivos gerados (`artifacts`, migrations, feature gerada, dependências e saída de build). A exclusão terá efeito na próxima análise CI que usar esta configuração.
+A análise mantém `sonar.scanner.scanAll=true` para analisar as linguagens de infraestrutura além do C#. Por solicitação da equipe, `src/FIAP.TechChallenge.Fase1.Frontend/**` está excluído de fontes e testes do Sonar, incluindo TypeScript, testes, Dockerfile e Nginx dessa pasta. Os arquivos **/*.mjs de automação ficam fora do Sonar, conforme a decisão da equipe; seus testes e verificações de sintaxe permanecem no job delivery. Os manifests Kubernetes e workflows continuam no escopo. As demais exclusões abrangem os manifests não implantáveis em `legacy/**` e arquivos gerados (`artifacts`, migrations, feature gerada, dependências e saída de build). A exclusão terá efeito na próxima análise CI que usar esta configuração.
 
 O job frontend instala pelo lockfile sem lifecycle scripts e executa também o teste isolado de Nginx sem root e validação TLS. Actions de build, análise e publicação estão fixadas em SHAs completos, conferidos nos repositórios oficiais; atualizações exigem revisar o novo commit. O job que publica a imagem frontend recebe `id-token: write` somente em seu próprio escopo. A destruição agendada preexistente permanece fora desta alteração.
 
@@ -87,3 +87,11 @@ dotnet test src/FIAP.TechChallenge.OS.Integration.Tests/FIAP.TechChallenge.OS.In
 ```
 
 Os relatórios do primeiro incremento são históricos; a mudança do agregador de cobertura para ReportGenerator pode alterar percentuais sem representar aumento de cobertura. Consulte as [evidências e limitações](evidencias-fase4-incremento1.md) e a [ADR da separação do chassi](../ADRs/ADR-013-chassi-em-repositorio-proprio.md).
+
+## Correções de qualidade dos PRs 30 e Execution 4
+
+A cobertura do backend continua sendo coletada em OpenCover, com testes reais para os modos CLI de migrations/verificação e configuração de TLS/sessões DocumentDB. Nenhum arquivo C# foi excluído da cobertura e o gate de 80% foi mantido. O modo --migrate-only do OS aplica migrations e encerra sem JWT, HTTP ou consumidores; testes PostgreSQL verificam execução repetida e preservação dos dados.
+
+O principal exclui **/*.mjs da análise Sonar; isso não desativa seus testes Node nem a análise dos YAMLs. A action central declara actions:read e id-token:write somente nos jobs que precisam dessas permissões; o job resolve não recebe OIDC e o smoke público não recebe permissões AWS.
+
+A regra kubernetes:S5332 possui exceção somente para k8s/frontend/config-maps.yaml e k8s/os/config-maps.yaml, que materializam o HTTP interno aceito na [ADR-022](../ADRs/ADR-022-kubernetes-microsservicos.md). A exceção não adiciona criptografia ao tráfego: a entrada pública e o envio ao New Relic permanecem HTTPS, e o risco do trecho interno permanece aceito para o laboratório. Outras regras e arquivos Kubernetes continuam analisados. A migração para TLS interno deve retirar essa exceção.

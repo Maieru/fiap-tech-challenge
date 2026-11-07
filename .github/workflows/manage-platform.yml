@@ -14,8 +14,6 @@ on:
     - cron: 0 3 * * *
 permissions:
   contents: read
-  actions: read
-  id-token: write
 concurrency:
   group: fiap-platform
   cancel-in-progress: false
@@ -59,6 +57,9 @@ jobs:
       - name: Resolver fontes e exigir CI aprovado somente para apply
         id: resolve
         run: node scripts/platform/resolve.mjs
+    permissions:
+      contents: read
+      actions: read
   core:
     needs:
       - resolve
@@ -71,6 +72,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   database:
     needs:
       - resolve
@@ -84,6 +89,10 @@ jobs:
       role_arn: ${{ vars.DATABASE_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   addons:
     needs:
       - resolve
@@ -98,6 +107,10 @@ jobs:
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
       NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   configs:
     needs:
       - resolve
@@ -111,6 +124,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   messaging:
     needs:
       - resolve
@@ -124,6 +141,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   publish_os:
     needs:
       - resolve
@@ -136,6 +157,10 @@ jobs:
       role_arn: ${{ vars.AWS_OS_PUBLISH_ROLE_ARN }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   publish_execution:
     needs:
       - resolve
@@ -148,6 +173,10 @@ jobs:
       role_arn: ${{ vars.AWS_EXECUTION_PUBLISH_ROLE_ARN }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   publish_billing:
     needs:
       - resolve
@@ -160,6 +189,10 @@ jobs:
       role_arn: ${{ vars.AWS_BILLING_PUBLISH_ROLE_ARN }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   publish_frontend:
     needs:
       - resolve
@@ -172,6 +205,10 @@ jobs:
       role_arn: ${{ vars.AWS_OS_PUBLISH_ROLE_ARN }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   initialize:
     needs:
       - resolve
@@ -184,6 +221,10 @@ jobs:
       execution_image: ${{ needs.publish_execution.outputs.image_uri }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   deploy_os:
     needs:
       - resolve
@@ -201,6 +242,10 @@ jobs:
       jwt_audience: ${{ vars.JWT_AUDIENCE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   deploy_execution:
     needs:
       - resolve
@@ -218,6 +263,10 @@ jobs:
       jwt_audience: ${{ vars.JWT_AUDIENCE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   deploy_billing:
     needs:
       - resolve
@@ -235,6 +284,10 @@ jobs:
       jwt_audience: ${{ vars.JWT_AUDIENCE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   deploy_frontend:
     needs:
       - resolve
@@ -254,6 +307,10 @@ jobs:
       jwt_audience: ${{ vars.JWT_AUDIENCE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   edge:
     needs:
       - resolve
@@ -267,6 +324,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   smoke:
     needs:
       - resolve
@@ -298,6 +359,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   cleanup:
     needs:
       - resolve
@@ -308,6 +373,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   destroy_messaging:
     needs:
       - resolve
@@ -321,6 +390,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   destroy_configs:
     needs:
       - resolve
@@ -334,6 +407,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   destroy_addons:
     needs:
       - resolve
@@ -347,6 +424,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   destroy_database:
     needs:
       - resolve
@@ -360,6 +441,10 @@ jobs:
       role_arn: ${{ vars.DATABASE_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   destroy_core:
     needs:
       - resolve
@@ -373,6 +458,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   verify_destroy:
     needs:
       - resolve
@@ -383,6 +472,10 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
   verify_runtime:
     needs:
       - resolve
@@ -393,3 +486,7 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write

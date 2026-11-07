@@ -24,6 +24,8 @@ A etapa posterior [RFC-017](RFC-017-actions-ecr-eks.md), aceita em 2026-11-07, i
 
 ## Consequências e validação
 
+A análise Sonar mantém os manifests no escopo. A regra `kubernetes:S5332` tem exceção somente em `k8s/frontend/config-maps.yaml` e `k8s/os/config-maps.yaml`, onde o HTTP interno das APIs/OTLP materializa a limitação aceita na ADR-022. A exceção não torna esses trechos criptografados e não se aplica a outras regras ou arquivos. Removê-la quando o TLS interno for implementado. As permissões OIDC da action central ficam nos jobs que executam operações AWS; o workflow não recebe escrita global.
+
 O operador valida todos os placeholders, sincroniza segredos e confere métricas do HPA antes do aceite. Alterações em variáveis exigem rollout restart. YAML válido não comprova permissão IAM, grants no banco, alcance Kafka ou ingestão remota.
 
 Validar manifests e referências, testes existentes do frontend e configuração Nginx. No ambiente, confirmar probes, JWT entre as três APIs, escala sob carga e traces/métricas/logs no New Relic. Ver o [roteiro integrado](../../k8s/README.md).
