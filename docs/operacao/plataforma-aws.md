@@ -78,6 +78,8 @@ Se o store indicar InvalidProviderConfig, verificar a cadeia IAM do ESO. Em 07/1
 
 Em messaging, o resumo Plan pode acompanhar um planejamento parcial com erro anterior. A pipeline identifica a fase/linha em uma anotação de erro e coleta diagnóstico de fiap-messaging/fiap-mongodb em falha. O ID Kafka continua gerado em Terraform e é entregue pelo ConfigMap kafka-cluster; o manifesto estático permite o primeiro plano com ID ainda desconhecido, coberto por teste Terraform. Não é necessário aplicar random_id separadamente nem descartar o state para provisionar o broker.
 
+O Job kafka-topics aceita em computed_fields as labels de Pod template adicionadas automaticamente pelo Job controller. Se a versão anterior falhar com Provider produced inconsistent result after apply, publicar a correção Infra e iniciar novo apply; o Job marcado como tainted será substituído pelo Terraform. Seus comandos --if-not-exists preservam os tópicos existentes. Manter o state, o cluster-id e os volumes; essa correção não exige bootstrap administrativo.
+
 Destroy apaga bancos sem snapshot final, segredos de runtime, mensagens/offsets Kafka, volumes e imagens ECR. RDS tem retenção automática zero; MongoDB usa PVC com retenção Delete ao excluir o StatefulSet. Bootstrap, IAM das pipelines e versões do state permanecem e podem ter custo residual S3. Dados/telemetria já enviados ao New Relic seguem a retenção desse serviço externo.
 
 Validações locais não comprovam IAM efetivo, oferta regional, montagem EBS no EKS, ingestão New Relic ou o ciclo AWS. As Actions validam oferta regional e executam os gates de persistência/smoke; confirmar a ingestão de telemetria no New Relic no ambiente implantado e guardar evidências. Não utilizar este laboratório para dados únicos ou produção.
