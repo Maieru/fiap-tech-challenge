@@ -4,7 +4,7 @@ A entrada operacional é **Manage AWS microservices platform**, no repositório 
 
 ## Arquitetura e responsabilidades
 
-- Infra: VPC, EKS (três t3.medium), ECR, IAM, add-ons, Kafka, observabilidade e API Gateway.
+- Infra: VPC, EKS (três c7i-flex.large x86_64, 2 vCPUs/4 GiB por nó), ECR, IAM, add-ons, Kafka, observabilidade e API Gateway. O tipo EC2 é elegível ao Free Tier atual; isso não implica gratuidade da plataforma inteira. Créditos, prazo do plano e cobrança dos serviços devem ser acompanhados na conta.
 - DB: RDS PostgreSQL 18.3/db.t4g.micro/20 GiB e DocumentDB 5.0/db.t4g.medium, ambos privados e criptografados.
 - OS/Billing: bancos fiap_os/fiap_billing e usuários diferentes no mesmo RDS. Não compartilham schemas nem credenciais; as conexões usam pools máximos de 10 por pod. Cada usuário administra apenas seu próprio banco.
 - Execution: DocumentDB fiap_execution; usuário criado em admin com readWrite somente nesse banco. Localmente permanece MongoDB 8.0.
