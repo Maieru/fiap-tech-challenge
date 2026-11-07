@@ -1,0 +1,395 @@
+name: Manage AWS microservices platform
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Criar/atualizar ou destruir todo o laboratorio (destroy apaga dados)
+        type: choice
+        required: true
+        default: apply
+        options:
+          - apply
+          - destroy
+  schedule:
+    - cron: 0 3 * * *
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+concurrency:
+  group: fiap-platform
+  cancel-in-progress: false
+jobs:
+  resolve:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    outputs:
+      os_sha: ${{ steps.resolve.outputs.os_sha }}
+      execution_sha: ${{ steps.resolve.outputs.execution_sha }}
+      billing_sha: ${{ steps.resolve.outputs.billing_sha }}
+      infra_sha: ${{ steps.resolve.outputs.infra_sha }}
+      db_sha: ${{ steps.resolve.outputs.db_sha }}
+      operation: ${{ inputs.operation || 'destroy' }}
+    env:
+      GH_TOKEN: ${{ secrets.REPOSITORIES_TOKEN || github.token }}
+      PLATFORM_ENABLED: ${{ vars.PLATFORM_ENABLED }}
+      OPERATION: ${{ inputs.operation || 'destroy' }}
+      INFRA_ACTION_ROLE: ${{ vars.INFRA_ACTION_ROLE }}
+      DATABASE_ACTION_ROLE: ${{ vars.DATABASE_ACTION_ROLE }}
+      AWS_OS_PUBLISH_ROLE_ARN: ${{ vars.AWS_OS_PUBLISH_ROLE_ARN }}
+      AWS_OS_DEPLOY_ROLE_ARN: ${{ vars.AWS_OS_DEPLOY_ROLE_ARN }}
+      AWS_EXECUTION_PUBLISH_ROLE_ARN: ${{ vars.AWS_EXECUTION_PUBLISH_ROLE_ARN }}
+      AWS_EXECUTION_DEPLOY_ROLE_ARN: ${{ vars.AWS_EXECUTION_DEPLOY_ROLE_ARN }}
+      AWS_BILLING_PUBLISH_ROLE_ARN: ${{ vars.AWS_BILLING_PUBLISH_ROLE_ARN }}
+      AWS_BILLING_DEPLOY_ROLE_ARN: ${{ vars.AWS_BILLING_DEPLOY_ROLE_ARN }}
+      JWT_ISSUER: ${{ vars.JWT_ISSUER }}
+      JWT_AUDIENCE: ${{ vars.JWT_AUDIENCE }}
+      HAS_NEW_RELIC_LICENSE: ${{ secrets.NEW_RELIC_LICENSE_KEY != '' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: Maieru/fiap-tech-challenge
+          ref: ${{ github.sha }}
+          token: ${{ secrets.REPOSITORIES_TOKEN || github.token }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - run: npm ci --prefix scripts/delivery --ignore-scripts --no-audit --no-fund
+      - name: Resolver fontes e exigir CI aprovado somente para apply
+        id: resolve
+        run: node scripts/platform/resolve.mjs
+  core:
+    needs:
+      - resolve
+    if: needs.resolve.outputs.operation == 'apply'
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: aws-resources
+      operation: apply
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  database:
+    needs:
+      - resolve
+      - core
+    if: needs.resolve.outputs.operation == 'apply'
+    uses: Maieru/fiap-tech-challenge-db/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: database
+      operation: apply
+      source_sha: ${{ needs.resolve.outputs.db_sha }}
+      role_arn: ${{ vars.DATABASE_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  addons:
+    needs:
+      - resolve
+      - database
+    if: needs.resolve.outputs.operation == 'apply'
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: kubernetes-addons
+      operation: apply
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+      NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+  configs:
+    needs:
+      - resolve
+      - addons
+    if: needs.resolve.outputs.operation == 'apply'
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: kubernetes-configs
+      operation: apply
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  messaging:
+    needs:
+      - resolve
+      - configs
+    if: needs.resolve.outputs.operation == 'apply'
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: messaging
+      operation: apply
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  publish_os:
+    needs:
+      - resolve
+      - core
+    if: needs.resolve.outputs.operation == 'apply'
+    uses: Maieru/fiap-tech-challenge/.github/workflows/publish-image.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.os_sha }}
+      component: os
+      role_arn: ${{ vars.AWS_OS_PUBLISH_ROLE_ARN }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  publish_execution:
+    needs:
+      - resolve
+      - core
+    if: needs.resolve.outputs.operation == 'apply'
+    uses: Maieru/fiap-tech-challenge-execution/.github/workflows/publish-image.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.execution_sha }}
+      component: execution
+      role_arn: ${{ vars.AWS_EXECUTION_PUBLISH_ROLE_ARN }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  publish_billing:
+    needs:
+      - resolve
+      - core
+    if: needs.resolve.outputs.operation == 'apply'
+    uses: Maieru/fiap-tech-challenge-billing/.github/workflows/publish-image.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.billing_sha }}
+      component: billing
+      role_arn: ${{ vars.AWS_BILLING_PUBLISH_ROLE_ARN }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  publish_frontend:
+    needs:
+      - resolve
+      - core
+    if: needs.resolve.outputs.operation == 'apply'
+    uses: Maieru/fiap-tech-challenge/.github/workflows/publish-image.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.os_sha }}
+      component: frontend
+      role_arn: ${{ vars.AWS_OS_PUBLISH_ROLE_ARN }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  initialize:
+    needs:
+      - resolve
+      - messaging
+      - publish_execution
+    uses: Maieru/fiap-tech-challenge-db/.github/workflows/initialize-databases.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.db_sha }}
+      role_arn: ${{ vars.DATABASE_ACTION_ROLE }}
+      execution_image: ${{ needs.publish_execution.outputs.image_uri }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  deploy_os:
+    needs:
+      - resolve
+      - messaging
+      - publish_os
+      - initialize
+    uses: Maieru/fiap-tech-challenge/.github/workflows/deploy-eks.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.os_sha }}
+      component: os
+      role_arn: ${{ vars.AWS_OS_DEPLOY_ROLE_ARN }}
+      image_digest: ${{ needs.publish_os.outputs.image_digest }}
+      kafka_bootstrap_servers: ${{ needs.messaging.outputs.bootstrap_servers }}
+      jwt_issuer: ${{ vars.JWT_ISSUER }}
+      jwt_audience: ${{ vars.JWT_AUDIENCE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  deploy_execution:
+    needs:
+      - resolve
+      - messaging
+      - publish_execution
+      - initialize
+    uses: Maieru/fiap-tech-challenge-execution/.github/workflows/deploy-eks.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.execution_sha }}
+      component: execution
+      role_arn: ${{ vars.AWS_EXECUTION_DEPLOY_ROLE_ARN }}
+      image_digest: ${{ needs.publish_execution.outputs.image_digest }}
+      kafka_bootstrap_servers: ${{ needs.messaging.outputs.bootstrap_servers }}
+      jwt_issuer: ${{ vars.JWT_ISSUER }}
+      jwt_audience: ${{ vars.JWT_AUDIENCE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  deploy_billing:
+    needs:
+      - resolve
+      - messaging
+      - publish_billing
+      - initialize
+    uses: Maieru/fiap-tech-challenge-billing/.github/workflows/deploy-eks.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.billing_sha }}
+      component: billing
+      role_arn: ${{ vars.AWS_BILLING_DEPLOY_ROLE_ARN }}
+      image_digest: ${{ needs.publish_billing.outputs.image_digest }}
+      kafka_bootstrap_servers: ${{ needs.messaging.outputs.bootstrap_servers }}
+      jwt_issuer: ${{ vars.JWT_ISSUER }}
+      jwt_audience: ${{ vars.JWT_AUDIENCE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  deploy_frontend:
+    needs:
+      - resolve
+      - messaging
+      - publish_frontend
+      - deploy_os
+      - deploy_execution
+      - deploy_billing
+    uses: Maieru/fiap-tech-challenge/.github/workflows/deploy-eks.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.os_sha }}
+      component: frontend
+      role_arn: ${{ vars.AWS_OS_DEPLOY_ROLE_ARN }}
+      image_digest: ${{ needs.publish_frontend.outputs.image_digest }}
+      kafka_bootstrap_servers: ${{ needs.messaging.outputs.bootstrap_servers }}
+      jwt_issuer: ${{ vars.JWT_ISSUER }}
+      jwt_audience: ${{ vars.JWT_AUDIENCE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  edge:
+    needs:
+      - resolve
+      - deploy_frontend
+    if: needs.resolve.outputs.operation == 'apply'
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: api-gateway
+      operation: apply
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  smoke:
+    needs:
+      - resolve
+      - edge
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    env:
+      API_ENDPOINT: ${{ needs.edge.outputs.api_endpoint }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: Maieru/fiap-tech-challenge
+          ref: ${{ needs.resolve.outputs.os_sha }}
+          token: ${{ secrets.REPOSITORIES_TOKEN || github.token }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - run: node scripts/platform/smoke.mjs
+  destroy_edge:
+    needs:
+      - resolve
+    if: needs.resolve.outputs.operation == 'destroy'
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: api-gateway
+      operation: destroy
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  cleanup:
+    needs:
+      - resolve
+      - destroy_edge
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/cleanup-applications.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  destroy_messaging:
+    needs:
+      - resolve
+      - cleanup
+    if: needs.resolve.outputs.operation == 'destroy'
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: messaging
+      operation: destroy
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  destroy_configs:
+    needs:
+      - resolve
+      - destroy_messaging
+    if: needs.resolve.outputs.operation == 'destroy'
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: kubernetes-configs
+      operation: destroy
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  destroy_addons:
+    needs:
+      - resolve
+      - destroy_configs
+    if: needs.resolve.outputs.operation == 'destroy'
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: kubernetes-addons
+      operation: destroy
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  destroy_database:
+    needs:
+      - resolve
+      - destroy_addons
+    if: needs.resolve.outputs.operation == 'destroy'
+    uses: Maieru/fiap-tech-challenge-db/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: database
+      operation: destroy
+      source_sha: ${{ needs.resolve.outputs.db_sha }}
+      role_arn: ${{ vars.DATABASE_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  destroy_core:
+    needs:
+      - resolve
+      - destroy_database
+    if: needs.resolve.outputs.operation == 'destroy'
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
+    with:
+      stage: aws-resources
+      operation: destroy
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  verify_destroy:
+    needs:
+      - resolve
+      - destroy_core
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/verify-destroy.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+  verify_runtime:
+    needs:
+      - resolve
+      - smoke
+    uses: Maieru/fiap-tech-challenge-infra/.github/workflows/verify-runtime.yml@main
+    with:
+      source_sha: ${{ needs.resolve.outputs.infra_sha }}
+      role_arn: ${{ vars.INFRA_ACTION_ROLE }}
+    secrets:
+      REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}

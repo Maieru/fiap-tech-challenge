@@ -70,3 +70,5 @@ docs/
 - Use o template correspondente, inclua evidências e atualize o índice ao adicionar uma decisão.
 - Correções preservam a data original e informam a última revisão. Mudanças de decisão ganham um novo registro vinculado ao anterior.
 - Registros retrospectivos descrevem a implementação existente; suas alternativas não representam atas de discussões históricas.
+
+- [Operação da plataforma AWS dos microsserviços](operacao/plataforma-aws.md).

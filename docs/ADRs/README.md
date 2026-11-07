@@ -40,3 +40,5 @@ A data original identifica o registro; a última revisão indica a atualização
 - [Autenticação administrativa no OS](ADR-018-autenticacao-administrativa-no-os.md).
 
 - [Entrega e acesso do cliente à ordem no OS](ADR-019-entrega-acesso-cliente.md).
+
+- [Plataforma efêmera AWS dos microsserviços](ADR-024-plataforma-microsservicos-aws.md).

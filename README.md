@@ -1,5 +1,7 @@
 # FIAP Tech Challenge — Gestão de Oficina Mecânica
 
+> Operação AWS atual: ciclo completo centralizado em `manage-platform.yml` no repositório principal. Bancos gerenciados (RDS/DocumentDB), Kafka no EKS, segredos e migrations são provisionados pelo fluxo. Instruções antigas de ações manuais/pré-requisitos avulsos abaixo são históricas; seguir o [guia operacional](https://github.com/Maieru/fiap-tech-challenge/blob/main/docs/operacao/plataforma-aws.md). A aplicação remota ainda exige publicação coordenada, transição e bootstrap.
+
 Sistema para administrar clientes, veículos e o ciclo das ordens de serviço: diagnóstico, orçamento, aprovação, pagamento, execução e entrega.
 
 Este repositório é o ponto de entrada do projeto: reúne o serviço de Ordens de Serviço (OS), o frontend e a documentação central.

@@ -25,6 +25,10 @@ jobs:
           node-version: 22
       - run: npm ci --prefix scripts/delivery --ignore-scripts --no-audit --no-fund
       - run: npm test --prefix scripts/delivery
+      - name: Check central orchestration scripts
+        run: |
+          node --check scripts/platform/resolve.mjs
+          node --check scripts/platform/smoke.mjs
   frontend:
     name: Verify frontend
     runs-on: ubuntu-latest
