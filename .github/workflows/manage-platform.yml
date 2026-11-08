@@ -402,7 +402,7 @@ jobs:
   destroy_configs:
     needs:
       - resolve
-      - destroy_database
+      - destroy_messaging
     if: needs.resolve.outputs.operation == 'destroy'
     uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
     with:
@@ -419,7 +419,7 @@ jobs:
   destroy_addons:
     needs:
       - resolve
-      - destroy_configs
+      - destroy_database
     if: needs.resolve.outputs.operation == 'destroy'
     uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
     with:
@@ -437,7 +437,7 @@ jobs:
     name: Excluir PostgreSQL e verificar remocao dos dados
     needs:
       - resolve
-      - destroy_messaging
+      - destroy_configs
     if: needs.resolve.outputs.operation == 'destroy'
     uses: Maieru/fiap-tech-challenge-db/.github/workflows/terraform-stage.yml@main
     with:
