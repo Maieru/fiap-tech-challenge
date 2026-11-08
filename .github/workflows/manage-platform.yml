@@ -382,6 +382,7 @@ jobs:
       actions: read
       id-token: write
   destroy_messaging:
+    name: Excluir MongoDB, Kafka e volumes persistentes
     needs:
       - resolve
       - cleanup
@@ -401,7 +402,7 @@ jobs:
   destroy_configs:
     needs:
       - resolve
-      - destroy_messaging
+      - destroy_database
     if: needs.resolve.outputs.operation == 'destroy'
     uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
     with:
@@ -433,9 +434,10 @@ jobs:
       actions: read
       id-token: write
   destroy_database:
+    name: Excluir PostgreSQL e verificar remocao dos dados
     needs:
       - resolve
-      - destroy_addons
+      - destroy_messaging
     if: needs.resolve.outputs.operation == 'destroy'
     uses: Maieru/fiap-tech-challenge-db/.github/workflows/terraform-stage.yml@main
     with:
@@ -452,7 +454,7 @@ jobs:
   destroy_core:
     needs:
       - resolve
-      - destroy_database
+      - destroy_addons
     if: needs.resolve.outputs.operation == 'destroy'
     uses: Maieru/fiap-tech-challenge-infra/.github/workflows/terraform-stage.yml@main
     with:
