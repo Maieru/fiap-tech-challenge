@@ -8,6 +8,9 @@ for(const name of ['INFRA_ACTION_ROLE','DATABASE_ACTION_ROLE',...(operation==='a
  if(!process.env[name]?.trim())throw new Error('Configure a variable '+name+' no repositorio principal.');
 }
 if(operation==='apply'&&process.env.HAS_NEW_RELIC_LICENSE!=='true')throw new Error('Configure o secret NEW_RELIC_LICENSE_KEY.');
+for (const name of ['MERCADO_PAGO_ACCESS_TOKEN', 'MERCADO_PAGO_WEBHOOK_SECRET']) {
+ if(operation==='apply'&&process.env['HAS_'+name]!=='true')throw new Error('Configure o secret '+name+'.');
+}
 const names={os:'fiap-tech-challenge',execution:'fiap-tech-challenge-execution',billing:'fiap-tech-challenge-billing',infra:'fiap-tech-challenge-infra',db:'fiap-tech-challenge-db'};
 const token=process.env.GH_TOKEN;
 async function api(path){

@@ -8,6 +8,7 @@ export interface Cobranca {
   moeda: string;
   situacao: 0 | 1 | 2;
   motivo: string | null;
+  checkoutUrl: string | null;
 }
 
 export const billingService = {

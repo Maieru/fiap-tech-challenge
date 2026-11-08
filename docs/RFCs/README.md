@@ -39,3 +39,5 @@ As alternativas são avaliações retrospectivas, não atas de discussões hist�
 - [APIs de entrega e acompanhamento privado no OS](RFC-012-entrega-acompanhamento-os.md).
 
 - [Orquestração e segurança da plataforma AWS](RFC-018-orquestracao-plataforma-aws.md).
+
+- [Checkout hospedado Mercado Pago](RFC-019-mercado-pago-checkout.md) — Aceita.

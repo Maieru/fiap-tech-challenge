@@ -43,6 +43,8 @@ jobs:
       JWT_ISSUER: ${{ vars.JWT_ISSUER }}
       JWT_AUDIENCE: ${{ vars.JWT_AUDIENCE }}
       HAS_NEW_RELIC_LICENSE: ${{ secrets.NEW_RELIC_LICENSE_KEY != '' }}
+      HAS_MERCADO_PAGO_ACCESS_TOKEN: ${{ secrets.MERCADO_PAGO_ACCESS_TOKEN != '' }}
+      HAS_MERCADO_PAGO_WEBHOOK_SECRET: ${{ secrets.MERCADO_PAGO_WEBHOOK_SECRET != '' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -72,6 +74,8 @@ jobs:
       role_arn: ${{ vars.INFRA_ACTION_ROLE }}
     secrets:
       REPOSITORIES_TOKEN: ${{ secrets.REPOSITORIES_TOKEN }}
+      MERCADO_PAGO_ACCESS_TOKEN: ${{ secrets.MERCADO_PAGO_ACCESS_TOKEN }}
+      MERCADO_PAGO_WEBHOOK_SECRET: ${{ secrets.MERCADO_PAGO_WEBHOOK_SECRET }}
     permissions:
       contents: read
       actions: read

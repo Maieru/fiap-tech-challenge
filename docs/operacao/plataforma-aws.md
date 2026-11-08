@@ -102,3 +102,13 @@ Validações locais não comprovam IAM efetivo, oferta regional, montagem EBS no
 O gate MongoDB, o smoke público, o teste de HPA/Collector e o ensaio criar/destruir/recriar AWS estão implementados para execução pela action. Seus resultados remotos ainda dependem da publicação coordenada/bootstrap e da execução no EKS. O ensaio local scripts/platform/test-mongodb.mjs do Infra verifica TLS obrigatório/hostname, autenticação, grants idempotentes/isolados, commit/rollback e persistência após reinício em recursos Docker exclusivos.
 
 Na substituição por MongoDB, passaram 180 testes Execution com cobertura de linhas de 94,3%, sete testes de entrega Node, fmt/validate das cinco raízes Terraform alteradas, actionlint e validação dos manifests nativos. O ensaio MongoDB passou também com a imagem real Execution executando --verify-persistence via TLS, incluindo limpeza do banco temporário. Containers, volumes e rede exclusivos do ensaio foram removidos. Esses resultados são locais; nenhuma mudança foi aplicada na AWS nesta substituição.
+
+## Credenciais do checkout Mercado Pago
+
+Adicionar `MERCADO_PAGO_ACCESS_TOKEN` e `MERCADO_PAGO_WEBHOOK_SECRET` aos Actions Secrets do repositório principal `Maieru/fiap-tech-challenge`. Para a primeira validação, usar a aplicação e o comprador de teste. O preflight de `apply` exige ambos; `destroy` não depende deles.
+
+O estágio `aws-resources` cria o segredo `fiap-billing-mercadopago-credentials` sem incluir valores no Terraform. Após apply, o workflow grava seu JSON via AWS CLI e arquivo temporário descartado no mesmo passo. O SecretStore do namespace Billing recebe acesso de leitura ao ARN e o ExternalSecret injeta as duas propriedades no pod. Rotação: atualizar os GitHub Secrets e executar `apply` novamente; a anotação de execução garante o rollout mesmo com o mesmo digest.
+
+Antes do primeiro apply desta versão, aplicar a atualização do bootstrap IAM que autoriza o novo ARN, usando o procedimento de bootstrap já existente. Depois do deploy e da publicação do API Gateway, cadastrar `<api_endpoint>/api/billing/v1/webhooks/mercadopago` no painel Webhooks da aplicação Mercado Pago para orders do Checkout Pro no ambiente de teste. Copiar o segredo de assinatura gerado nesse painel para `MERCADO_PAGO_WEBHOOK_SECRET`. Se o segredo for gerado somente nesse momento, configurá-lo e repetir `apply` antes da compra.
+
+Aceite manual: aprovar uma ordem nova de valor positivo, verificar cobrança pendente/link no detalhe administrativo, pagar com comprador de teste e observar confirmação no Billing e liberação da execução. Reenvio da notificação não deve repetir efeitos. Uma ordem zero deve confirmar sem checkout. Não considerar o sucesso do Terraform como evidência de compra aprovada.

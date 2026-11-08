@@ -27,6 +27,8 @@ jobs:
       - run: npm test --prefix scripts/delivery
       - name: Test public gateway stabilization
         run: node --test scripts/platform/gateway-readiness.test.mjs
+      - name: Test platform preflight and secret requirements
+        run: node --test scripts/platform/resolve.test.mjs
       - name: Check central orchestration scripts
         run: |
           node --check scripts/platform/resolve.mjs
