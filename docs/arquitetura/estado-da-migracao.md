@@ -1,8 +1,10 @@
 # Estado da migração para microsserviços
 
-Atualizado em 2026-11-02. Esta página consolida o estado atual; os relatórios de incrementos anteriores preservam o contexto e os resultados da época.
+Atualizado em 2026-11-08. Esta página consolida o estado atual; os relatórios de incrementos anteriores preservam o contexto e os resultados da época. A integração Mercado Pago está implementada; implantação e compra com credenciais de teste precisam de validação operacional.
 
-OS, Execution e Billing estão implementados e integrados por Kafka, com bancos exclusivos. O fluxo de backend foi validado localmente até a entrega, com pagamento mockado e compensação por recusa. O frontend foi adaptado para os três serviços, com proxy local, contratos novos e acompanhamento privado. Build, smoke HTTP isolado e navegação local foram verificados; o código e a automação exclusiva do monólito foram retirados do checkout. Tráfego AWS, recursos antigos e retenção/migração de dados ainda exigem etapa operacional própria.
+Os testes locais desta integração estão registrados na [validação Mercado Pago](../operacao/validacao-mercado-pago.md): 49 testes Billing, 2 de contratos, 2 da imagem e 9 cenários distribuídos aprovados; cobertura Billing de 91,24%.
+
+OS, Execution e Billing estão implementados e integrados por Kafka, com bancos exclusivos. O fluxo de backend foi validado localmente até a entrega, com gateway HTTP apontado para simulador Mercado Pago, webhook assinado e compensação por recusa. O frontend foi adaptado para os três serviços, com proxy local, contratos novos e acompanhamento privado; o detalhe administrativo inclui o link do checkout. Build, smoke HTTP isolado e navegação local anteriores estão documentados nos relatórios históricos; o código e a automação exclusiva do monólito foram retirados do checkout. Tráfego AWS, compra externa, recursos antigos e retenção/migração de dados ainda exigem etapa operacional própria.
 
 ## Responsabilidades entregues
 
@@ -10,7 +12,7 @@ OS, Execution e Billing estão implementados e integrados por Kafka, com bancos 
 | --- | --- |
 | OS | Clientes, veículos, abertura/consulta de ordens, histórico, usuários administrativos e emissão JWT. Coordena a Saga, projeta status e orçamento, valida acesso privado do cliente e registra entrega administrativa. PostgreSQL exclusivo. |
 | Execution | Catálogo de serviços e peças/insumos, estoque, diagnóstico, snapshots do orçamento, execução, conclusão e devolução única de estoque no cancelamento. MongoDB exclusivo com transações. |
-| Billing | Uma cobrança por ordem, deduplicação, resultado do gateway e consultas administrativas. PostgreSQL exclusivo. `IPaymentGateway` permite substituir o mock, que aprova imediatamente sem rede ou credenciais. |
+| Billing | Uma cobrança por ordem, checkout hospedado Mercado Pago, confirmação por webhook assinado e consultas administrativas. PostgreSQL exclusivo; valor zero confirma localmente. |
 | Contratos e chassi | Contratos por produtor em NuGet; chassi e adaptador Kafka em repositório próprio. Nenhum serviço referencia o código-fonte, domínio ou banco dos demais. |
 | Frontend e retirada do monólito | Frontend e OS permanecem no repositório principal. Fonte/testes/Compose e deploy exclusivo do monólito foram removidos; manifests AWS antigos estão em `legacy/aws`, sem alteração de recursos ou dados remotos. |
 
@@ -23,12 +25,12 @@ flowchart LR
     A[Abertura no OS] -->|Kafka| B[Diagnóstico no Execution]
     B -->|Snapshots e total| C[OS aguarda aprovação]
     C -->|Administrador ou link privado| D[Pagamento solicitado]
-    D --> E[Billing e gateway mockado]
+    D --> E[Billing e checkout Mercado Pago]
     E -->|Confirmado| F[OS autoriza Execution]
     F --> G[Execution inicia e conclui]
     G --> H[OS Finalizada]
     H -->|Entrega administrativa| I[OS Entregue]
-    E -->|Recusado nos testes| J[OS solicita compensação]
+    E -->|Recusado| J[OS solicita compensação]
     J --> K[Execution cancela e devolve estoque]
     K --> L[OS Cancelada e Saga Compensada]
 ```
@@ -43,7 +45,7 @@ O cliente pode consultar, aprovar e cancelar pelo link privado da ordem. Um admi
 | --- | --- |
 | Extração OS e chassi | Implementada, com soluções, testes, imagens e persistência próprias. O [primeiro incremento](fase4-incremento1.md) é histórico. |
 | Execution e Kafka | Implementados, incluindo diagnóstico, orçamento, estoque e confirmação de transições. |
-| Billing e Saga no OS | Implementados com gateway mockado e compensação por recusa. |
+| Billing e Saga no OS | Implementados com checkout Mercado Pago, webhook e compensação por recusa. Compra de teste externa ainda precisa de validação operacional. |
 | Autenticação no OS | Implementada: cadastro anônimo por decisão do projeto, login e JWT validado localmente pelas três APIs. Não há importação de usuários legados, refresh token ou revogação de JWT já emitido. |
 | Acompanhamento e entrega | Backend e frontend adaptados ao link privado e à entrega administrativa. |
 | Execução local | `docker compose up -d --build` na raiz do OS inicia frontend, três APIs, dois PostgreSQL, MongoDB replica set e Kafka. Scalar/OpenAPI em cada API. |
@@ -71,7 +73,7 @@ Os candidatos locais são uma etapa explícita de desenvolvimento, sem referênc
 | --- | --- |
 | Pacotes e CI | Publicar/confirmar Billing Messaging 0.1.0 e verificar restore limpo, build, testes, cobertura, imagem, OpenAPI e Sonar em cada repositório. O gate agregado `ci-required` já exige OS, frontend e Sonar; validar sua execução remota. |
 | Frontend | Validar o frontend na borda AWS após implantar as APIs e suas dependências. A integração local, contratos e smoke HTTP estão implementados. |
-| Gateway real | Implementar Mercado Pago no lugar do mock; novas tentativas após recusa, estornos e cancelamentos após aprovação ficam para incrementos posteriores. |
+| Gateway real | Implementado conforme RFC-019; validar credenciais, deploy e compra de teste. Novas tentativas após recusa, estornos e cancelamentos após aprovação ficam para incrementos posteriores. |
 | Infraestrutura e tráfego | Implantar APIs, bancos, Kafka, segredos, observabilidade e roteamento. A AWS/Lambda existente ainda atende ao legado. A adaptação local do frontend não comprova migração da borda. |
 | Dados | Usar bancos novos de demonstração. Não importar contas ou histórico automaticamente, reutilizar links legados ou inventar orçamento para ordens antigas. |
 | Retirada operacional do legado | Fonte, testes e automação exclusiva já retirados. Ainda é necessário inventariar dados/recursos, validar substitutos na AWS, trocar tráfego e retirar somente recursos exclusivos antigos. Nenhum banco, volume ou recurso remoto foi excluído. |

@@ -298,6 +298,13 @@ export function OrdemServicoDetailsPage() {
                 <p>Cobrança: {billingError ? "Indisponível; tente atualizar" : cobranca ? ["Pendente", "Confirmada", "Recusada"][cobranca.situacao] : "Ainda não emitida"}</p>
                 {cobranca && <p>Valor cobrado: {formatCurrency(cobranca.valor)}</p>}
                 {cobranca?.motivo && <p>{cobranca.motivo}</p>}
+                {cobranca?.situacao === 0 && cobranca.checkoutUrl && (
+                  <Button asChild>
+                    <a href={cobranca.checkoutUrl} target="_blank" rel="noopener noreferrer">
+                      Abrir pagamento no Mercado Pago
+                    </a>
+                  </Button>
+                )}
                 <p>Serviços: {formatCurrency(ordem.valorTotalServicos)}</p>
                 <p>Peças/Insumos: {formatCurrency(ordem.valorTotalPecasInsumos)}</p>
                 <p className="text-base font-semibold">Total: {formatCurrency(ordem.valorTotalOrdemServico)}</p>

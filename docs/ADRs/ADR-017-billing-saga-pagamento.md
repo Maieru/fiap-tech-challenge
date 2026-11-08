@@ -22,3 +22,7 @@ Novas dependências NuGet entre contratos dos produtores, estado eventual explí
 ## Evidências
 
 Implementação em Billing, Saga e migrations OS; contratos e testes reais. Consulte RFC-010 e o relatório de validação Billing para distinguir código entregue de verificações executadas.
+
+## Atualização — 2026-11-08
+
+A [RFC-019](../RFCs/RFC-019-mercado-pago-checkout.md) substitui o gateway mock pela integração com checkout hospedado Mercado Pago. A criação mantém a cobrança pendente; a confirmação/recusa ocorre por webhook validado e conserva os contratos e compensações desta Saga. Valor zero confirma localmente. Novas tentativas após recusa e estornos continuam fora do escopo. Os eventos terminais usam o ID da cobrança como MessageId estável para deduplicação em reentregas após falha de commit.

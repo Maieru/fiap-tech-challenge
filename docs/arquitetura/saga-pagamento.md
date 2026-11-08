@@ -1,6 +1,6 @@
 # Saga de pagamento entre OS, Billing e Execution
 
-Este guia descreve a implementação atual da Saga e seu limite de compensação. OS coordena o processo; Billing realiza a cobrança; Execution controla o trabalho e o estoque. As decisões estão na [ADR-017](../ADRs/ADR-017-billing-saga-pagamento.md) e na [RFC-010](../RFCs/RFC-010-billing-mock-kafka.md).
+Este guia descreve a implementação atual da Saga e seu limite de compensação. OS coordena o processo; Billing realiza a cobrança; Execution controla o trabalho e o estoque. As decisões estão na [ADR-017](../ADRs/ADR-017-billing-saga-pagamento.md), na [RFC-010](../RFCs/RFC-010-billing-mock-kafka.md) original e na [RFC-019](../RFCs/RFC-019-mercado-pago-checkout.md) do checkout Mercado Pago.
 
 ## Responsabilidades e persistência
 
@@ -20,7 +20,7 @@ sequenceDiagram
     participant OS
     participant Kafka
     participant Billing
-    participant Gateway as MockPaymentGateway
+    participant Gateway as Mercado Pago
     participant Execution
     Execution->>Kafka: DiagnosticoConcluido (itens e total)
     Kafka->>OS: Registrar orçamento e aguardar aprovação
@@ -28,8 +28,13 @@ sequenceDiagram
     OS->>Kafka: PagamentoSolicitado
     OS-->>Operador: 202, decisão aceita e pagamento pendente
     Kafka->>Billing: ProcessarPagamento
-    Billing->>Gateway: ChargeAsync (chave = UUID da ordem)
-    Gateway-->>Billing: Aprovado e identificador determinístico
+    Billing->>Gateway: Criar order (chave = UUID da ordem)
+    Gateway-->>Billing: Order e checkout_url
+    Billing-->>Operador: Consulta autenticada da cobrança pendente e link
+    Operador->>Gateway: Pagar no checkout hospedado
+    Gateway->>Billing: Webhook assinado
+    Billing->>Gateway: Consultar order e validar referência, valor e moeda
+    Gateway-->>Billing: processed/accredited
     Billing->>Kafka: PagamentoConfirmado
     Kafka->>OS: Registrar confirmação
     OS->>Kafka: ExecucaoAutorizada
@@ -44,8 +49,8 @@ sequenceDiagram
 1. Execution encerra o diagnóstico e publica os snapshots e `ValorTotal`. OS guarda o total e usa o `MessageId` original desse evento como `OrcamentoId`. Itens e preços detalhados continuam pertencendo ao Execution; o OS mantém uma projeção imutável dos snapshots para o acompanhamento privado do cliente.
 2. A aprovação administrativa registra `Decisao = Autorizada`, cria `Pagamento` em `AguardandoPagamento` e grava histórico `PagamentoSolicitado`. Publica o pedido de pagamento e retorna 202 após o commit local. Essa resposta não comprova pagamento nem início de execução.
 3. Billing abre transação, verifica deduplicação e adquire um advisory lock PostgreSQL pela ordem. Uma solicitação já concluída com os mesmos dados não chama novamente o gateway nem republica resultado. Dados diferentes para a mesma ordem são recusados.
-4. Na primeira solicitação, Billing cria a cobrança em memória e chama `IPaymentGateway.ChargeAsync`. O mock aprova imediatamente e devolve `mock-<UUID da ordem>`. Valor zero é permitido; o valor decimal recebido é preservado, sem recalcular ou arredondar os itens.
-5. Billing grava cobrança e deduplicação, publica o resultado e confirma a transação. O consumidor confirma o offset depois desse commit.
+4. Na primeira solicitação, Billing chama `IPaymentGateway.CreateCheckoutAsync` e guarda o ID da order, o link e a correlação/causação na cobrança pendente. Preserva o valor decimal recebido sem recalcular ou arredondar. Valor zero confirma localmente com `sem-cobranca-<UUID da ordem>`, sem checkout externo.
+5. Billing grava cobrança e deduplicação e confirma a transação; o consumidor confirma o offset após o commit. Para valores positivos, o webhook validado consulta a order e conclui a cobrança em nova transação sob o mesmo bloqueio por ordem: `processed/accredited` confirma; `failed` e `canceled` recusam; demais estados aguardam. Somente a conclusão publica o resultado. Duplicatas e notificações atrasadas não alteram uma cobrança concluída. O MessageId terminal é o ID da cobrança.
 6. OS valida orçamento, cobrança, valor e moeda do resultado contra o pedido persistido. Na confirmação, registra o resultado e publica `ExecucaoAutorizada`. Apenas esse evento libera o início no Execution.
 7. As confirmações do Execution fazem OS avançar para execução e conclusão. Não existe endpoint Billing de criação manual de cobrança: sua API é de consulta com JWT administrativo.
 
@@ -87,7 +92,7 @@ A recusa é um resultado de negócio, não uma exceção técnica. OS mantém a 
 
 Execution usa seu cancelamento existente: devolve cada peça, inclusive se ela foi inativada no catálogo, e grava o cancelamento na mesma transação. Uma execução já cancelada não devolve estoque novamente, mesmo com outro `MessageId`. OS só marca a compensação como concluída ao receber `ExecucaoCancelada`.
 
-O mock de produção sempre aprova. A recusa é exercitada por implementação substituta de `IPaymentGateway` nos testes Billing. No BDD distribuído, um responder Kafka de teste assume a resposta recusada enquanto Billing real está parado; isso valida a integração de compensação OS/Execution, sem representar uma recusa do mock de produção.
+O gateway real pode confirmar ou recusar. Os testes Billing simulam respostas HTTP e validam o webhook. No BDD distribuído, o caminho aprovado usa um servidor HTTP descartável e webhook assinado; o cenário de compensação continua usando um responder Kafka de teste enquanto Billing está parado, verificando o contrato OS/Execution.
 
 O cancelamento administrativo anterior à aprovação é outro caminho: não cria pagamento nem cobrança e utiliza o mesmo cancelamento do Execution. Não é uma Saga de pagamento compensada.
 
@@ -111,7 +116,7 @@ O cancelamento administrativo anterior à aprovação é outro caminho: não cri
 
 Cada serviço aplica alterações e deduplicação na própria transação. OS usa `FOR UPDATE` e versão da linha; Billing usa lock por ordem e índice único para impedir cobranças concorrentes. O processamento também verifica o estado de negócio para não repetir efeitos com outro identificador de mensagem.
 
-A ordem geral é **gravar localmente → publicar e aguardar Kafka → commit local → confirmar offset**. A chamada ao gateway no Billing ocorre antes da gravação e publicação finais, dentro do período da transação. Não há transação distribuída entre gateway, banco e Kafka.
+A ordem geral de conclusão é **gravar localmente → publicar e aguardar Kafka → commit local**. Na criação do checkout, Billing chama o gateway antes de salvar a cobrança pendente e confirmar o offset, sem publicar resultado. A conclusão posterior ocorre no webhook, que responde 200 somente após sucesso; falhas de consulta/publicação/commit ou cobrança ainda indisponível retornam 503 para reentrega. Não há transação distribuída entre gateway, banco e Kafka.
 
 | Falha | Comportamento implementado |
 | --- | --- |
@@ -122,7 +127,7 @@ A ordem geral é **gravar localmente → publicar e aguardar Kafka → commit lo
 | Commit local bem-sucedido, mas offset não confirmado | Reentrega é deduplicada pelo registro local e pelo estado de negócio |
 | Mensagem inválida ou estado conflitante | Host encerra com código não zero, sem avançar o offset da mensagem; o grupo pode ficar bloqueado |
 
-Não há Outbox, DLQ, retry de aplicação, timeout comercial da Saga, cancelamento automático por indisponibilidade ou estorno. Uma falha técnica após pagamento confirmado não aciona por si só a compensação por recusa. O mock não realiza um débito externo, mas um gateway real deverá respeitar a chave de idempotência e tratar resultados incertos.
+Não há Outbox, DLQ, retry de aplicação, timeout comercial da Saga, cancelamento automático por indisponibilidade ou estorno. Uma falha técnica após pagamento confirmado não aciona por si só a compensação por recusa. A criação externa reutiliza a chave de idempotência; eventos terminais preservam MessageId para deduplicação em reentregas após rollback local.
 
 Os consumidores exigem a presença de `valorTotal` no diagnóstico e de `valor` nos pedidos e resultados de pagamento, como número JSON decimal válido. Ausência, null, string e overflow interrompem o consumo sem avançar o offset; zero explícito continua permitido. A [revisão da implementação](../operacao/revisao-billing-saga.md) registra os achados originais e as correções aplicadas, incluindo a espera por offsets nos testes de reentrega.
 
@@ -138,7 +143,7 @@ Os novos serviços podem usar dados novos de demonstração. Ordens antigas sem 
 ## Código e verificações
 
 - Coordenação: `OrdemServico`, `PagamentoOrdem`, `AutorizarExecucaoUseCase`, `RegistrarPagamentoUseCase` e os casos de projeção do Execution no OS.
-- Cobrança: `ProcessarPagamentoUseCase`, `BillingDbContext`, `IPaymentGateway` e `MockPaymentGateway` no Billing.
+- Cobrança: `ProcessarPagamentoUseCase`, `AtualizarPagamentoUseCase`, `BillingDbContext`, `IPaymentGateway`, `MercadoPagoPaymentGateway` e `MercadoPagoWebhookController` no Billing.
 - Compensação de estoque: `CancelarExecucaoUseCase` no Execution.
 - Consulte o [padrão de mensageria](mensageria.md), o [estado da migração](estado-da-migracao.md) e as [evidências Billing](../operacao/validacao-billing.md). Os testes isolados e distribuídos verificam caminhos de negócio e falhas específicas; não oferecem garantia de exactly-once entre serviços.
 
