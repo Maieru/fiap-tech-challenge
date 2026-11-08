@@ -2,6 +2,8 @@
 
 Este repositório contém o OS Service e o frontend integrado aos microsserviços. O código e a automação exclusiva do monólito foram retirados; ver [escopo da retirada](../arquitetura/retirada-monolito.md). O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui biblioteca, testes, exemplo, CI/Sonar e publicação NuGet em repositório próprio.
 
+O job Verify delivery tooling executa também `node --test scripts/platform/gateway-readiness.test.mjs`. Os testes usam servidor HTTP local real para simular 503 após readiness positiva, recorrência de falha, indisponibilidade persistente e timeout. Verificam que o gate usa somente GET sem token e rejeita uma rota protegida que retorne 200 ou readiness com HTML. O smoke só inicia escritas após três rodadas estáveis; o requisito de HTTP 401 e os testes de autenticação permanecem estritos.
+
 ## Soluções
 
 | Solução | Conteúdo |

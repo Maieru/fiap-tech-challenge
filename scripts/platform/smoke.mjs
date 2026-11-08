@@ -1,5 +1,6 @@
 import {randomUUID,randomInt,randomBytes} from 'node:crypto';
 import {appendFileSync} from 'node:fs';
+import {waitForGateway} from './gateway-readiness.mjs';
 const endpoint=process.env.API_ENDPOINT;
 if(!/^https:\/\/[a-z0-9]+\.execute-api\.us-east-1\.amazonaws\.com\/?$/.test(endpoint||''))throw new Error('Endpoint AWS invalido.');
 const base=endpoint.replace(/\/$/,'');
@@ -22,18 +23,7 @@ async function wait(path,accept){
  }
  throw new Error('Prazo excedido aguardando '+path);
 }
-for(const service of ['os','execution','billing']){
- const path='/api/'+service+'/v1/health/ready';
- let ready=false;
- for(let attempt=0;attempt<60;attempt++){
-  const response=await fetch(base+path,{signal:AbortSignal.timeout(15000)});
-  if(response.ok){ready=true;break;}await pause(3000);
- }
- if(!ready)throw new Error('Readiness falhou: '+service);
-}
-const frontend=await fetch(base+'/',{signal:AbortSignal.timeout(15000)});
-if(!frontend.ok||!(frontend.headers.get('content-type')||'').includes('text/html'))throw new Error('Frontend indisponivel.');
-for(const path of ['/api/os/v1/clientes','/api/execution/v1/servicos','/api/billing/v1/cobrancas'])await request('GET',path,undefined,401,false);
+await waitForGateway(base,{correlation});
 const credentials={usuario:'smoke-'+randomUUID().slice(0,18),senha:randomBytes(24).toString('base64url')};
 const user=await request('POST','/api/os/v1/usuarios',credentials,201,false);
 try{
