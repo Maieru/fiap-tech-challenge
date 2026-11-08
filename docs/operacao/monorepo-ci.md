@@ -4,6 +4,10 @@ Este repositório contém o OS Service e o frontend integrado aos microsserviço
 
 O job Verify delivery tooling executa também `node --test scripts/platform/gateway-readiness.test.mjs`. Os testes usam servidor HTTP local real para simular 503 após readiness positiva, recorrência de falha, indisponibilidade persistente e timeout. Verificam que o gate usa somente GET sem token e rejeita uma rota protegida que retorne 200 ou readiness com HTML. O smoke só inicia escritas após três rodadas estáveis; o requisito de HTTP 401 e os testes de autenticação permanecem estritos.
 
+`node --test scripts/platform/smoke-flow.test.mjs` verifica o protocolo do smoke contra um servidor HTTP local de contrato: checkout positivo pendente (inclusive propagação com 404/503), finalização somente da ordem zero, rejeição de checkout inválido/autorização prematura, timeout com etapa/estado/correlação, preservação do erro original se a limpeza falhar e ausência de retry em escrita. Esses testes não iniciam APIs/Kafka nem comprovam compra/webhook no Mercado Pago ou execução AWS.
+
+`node --test scripts/platform/destroy-workflow.test.mjs` verifica que todo destroy central, inclusive o agendamento, inclui MongoDB/Kafka e RDS e condiciona a retirada de configurações/add-ons/core à remoção dos dados. Os repositórios Infra e DB executam seus testes de exclusão/inventário nos respectivos CIs, com CLIs e respostas AWS simuladas; nenhuma suíte local exclui recursos remotos.
+
 ## Soluções
 
 | Solução | Conteúdo |

@@ -25,6 +25,8 @@ O link é exibido apenas no detalhe administrativo, abre em nova aba e aproveita
 
 A confirmação deixa de ser imediata. Credenciais ausentes interrompem o apply antes do provisionamento; destroy não depende delas. A primeira validação usa credenciais e comprador de teste. O endpoint público do webhook deve ser cadastrado no painel da aplicação Mercado Pago depois do deploy. A API externa é a mesma para teste e produção; as credenciais selecionam o ambiente.
 
+O smoke automático da plataforma valida o checkout pendente de R$ 140,55 e mantém a execução bloqueada nessa ordem. Uma ordem separada, de valor zero, percorre confirmação Billing, autorização e finalização no OS/Execution usando a regra de negócio existente. O resultado distingue esses dois cenários do aceite manual de compra/webhook; não há confirmação artificial de pagamento na AWS. Testes do protocolo HTTP do script executam no CI e verificam também que escritas não recebem retry e que timeouts identificam etapa/estado/correlação.
+
 A migration adiciona somente campos anuláveis; cobranças antigas são preservadas. Banco e Kafka continuam sem transação distribuída: publicação antes do commit pode resultar em reentrega do mesmo evento. O MessageId estável permite deduplicação pelos consumidores. Erros de consulta/publicação/commit geram 503 para reentrega do webhook, sem gravar uma recusa técnica.
 
 ## Evidências e validação
