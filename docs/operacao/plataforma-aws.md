@@ -54,6 +54,10 @@ Após sincronizar ExternalSecrets, OS/Billing executam --migrate-only em Jobs co
 
 O smoke usa o endpoint público, testa frontend/readiness/JWT e conclui uma ordem real com pagamento Billing e execução, conferindo valor e estoque. Cria dados sintéticos exclusivos e desativa o usuário de teste ao terminar. Não registra senha, JWT ou connection strings. Os demais dados sintéticos permanecem no laboratório até destroy.
 
+Antes de criar dados, o smoke exige três rodadas consecutivas de GETs bem-sucedidos: readiness JSON Healthy das três APIs, frontend HTML e HTTP 401 nas três rotas protegidas sem token. A espera inicial tem prazo global de três minutos; somente falhas de conexão/timeout e HTTP 502/503/504 são repetidas nessa fase, com reinício da janela de estabilidade. Resposta 200 sem token, outros códigos inesperados, conteúdo incorreto ou indisponibilidade persistente continuam falhando. POST/PUT/DELETE do fluxo funcional não recebem retries automáticos.
+
+Na execução de 07/11/2026, os access logs mostraram 503 intermitentes logo após criar a entrada API Gateway/VPC Link/ALB. Uma resposta positiva por serviço permitia ao smoke avançar enquanto a entrada ainda oscilava. Consultas posteriores confirmaram destinos ALB saudáveis e HTTP 401 nas três rotas sem token. O gate read-only substitui essa checagem isolada e registra path/status/requestId de falhas transitórias, sem registrar o corpo das respostas de negócio.
+
 ## Segredos e permissões
 
 Senhas e JWT são aleatórios, mantidos no Secrets Manager. Os segredos de banco incluem metadados administrativos para inicialização; cada ExternalSecret de aplicação importa somente ConnectionStrings__DefaultConnection ou Mongo__ConnectionString. O operador usa Pod Identity e assume uma role diferente por SecretStore, com acesso aos ARNs exatos do namespace. Deploy não altera SecretStores, RBAC ou namespaces e não lê Secrets diretamente. Criar Jobs/Deployments permite executar código com as credenciais autorizadas ao próprio serviço, portanto entrega é uma permissão privilegiada dentro desse escopo.

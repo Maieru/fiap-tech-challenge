@@ -25,10 +25,13 @@ jobs:
           node-version: 22
       - run: npm ci --prefix scripts/delivery --ignore-scripts --no-audit --no-fund
       - run: npm test --prefix scripts/delivery
+      - name: Test public gateway stabilization
+        run: node --test scripts/platform/gateway-readiness.test.mjs
       - name: Check central orchestration scripts
         run: |
           node --check scripts/platform/resolve.mjs
           node --check scripts/platform/smoke.mjs
+          node --check scripts/platform/gateway-readiness.mjs
   frontend:
     name: Verify frontend
     runs-on: ubuntu-latest
