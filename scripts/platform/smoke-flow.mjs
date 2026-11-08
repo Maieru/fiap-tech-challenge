@@ -5,7 +5,8 @@ import {waitForGateway} from './gateway-readiness.mjs';
 // O CLI valida o endpoint AWS; a funcao permite exercitar o protocolo HTTP no CI.
 export async function runSmoke(base, {
   correlation = 'smoke-' + randomUUID(), report = console.log,
-  waitTimeoutMs = 180000, intervalMs = 2000, readiness = {}
+  waitTimeoutMs = 180000, intervalMs = 2000, readiness = {},
+  now = () => performance.now(), sleep = pause
 } = {}) {
   let token;
   async function request(method, path, body, expected = 200, authenticated = true) {
@@ -25,26 +26,30 @@ export async function runSmoke(base, {
     }
   }
   async function wait(path, accept, stage) {
-    const deadline = performance.now() + waitTimeoutMs;
-    let last = 'sem resposta';
+    const deadline = now() + waitTimeoutMs;
+    let lastResponse;
+    let lastConnectionFailure;
     report(`Aguardando ${stage}: ${path}; correlacao ${correlation}`);
-    while (performance.now() < deadline) {
+    while (now() < deadline) {
       let response;
       try {
         try {
           response = await fetch(base + path, {
             headers: {Authorization:'Bearer ' + token, 'X-Correlation-Id':correlation},
-            signal:AbortSignal.timeout(Math.max(1, Math.min(15000, Math.ceil(deadline - performance.now()))))
+            signal:AbortSignal.timeout(Math.max(1, Math.min(15000, Math.ceil(deadline - now()))))
           });
         } catch (error) {
           if (!['TypeError','AbortError','TimeoutError'].includes(error.name)) throw error;
-          last = 'falha de conexao ou timeout';
+          lastConnectionFailure = 'falha de conexao ou timeout';
         }
-        if (response) last = 'HTTP ' + response.status;
+        if (response) {
+          lastResponse = 'HTTP ' + response.status;
+          lastConnectionFailure = undefined;
+        }
         if (response?.ok) {
           const data = await response.json();
           // Somente estados operacionais; nao registrar payloads, JWT ou checkoutUrl.
-          last += '; ' + JSON.stringify({status:data.execucao?.status ?? data.status,
+          lastResponse += '; ' + JSON.stringify({status:data.execucao?.status ?? data.status,
             situacao:data.situacao, etapaPagamento:data.pagamento?.etapa});
           if (accept(data)) return data;
         } else if (response && ![404,502,503,504].includes(response.status)) {
@@ -53,9 +58,11 @@ export async function runSmoke(base, {
       } finally {
         if (response?.body && !response.bodyUsed) await response.body.cancel();
       }
-      const remaining = deadline - performance.now();
-      if (remaining > 0) await pause(Math.min(intervalMs, remaining));
+      const remaining = deadline - now();
+      if (remaining > 0) await sleep(Math.min(intervalMs, remaining));
     }
+    const last = (lastResponse ?? lastConnectionFailure ?? 'sem resposta')
+      + (lastResponse && lastConnectionFailure ? '; ultima tentativa: ' + lastConnectionFailure : '');
     throw new Error(`Prazo excedido aguardando ${stage}: ${path}; ultimo estado: ${last}; correlacao ${correlation}`);
   }
 

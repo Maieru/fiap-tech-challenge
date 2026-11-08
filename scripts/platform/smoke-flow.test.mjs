@@ -56,6 +56,7 @@ async function platform(t, options = {}) {
     if (method === 'PUT') {
       if (path.endsWith('/solicitar-aprovacao')) order.status = 3;
       if (path.endsWith('/aprovar-execucao')) {
+        order.approved = true;
         if (amount() === 0 && !options.blockAuthorization) order.status = 4;
         if (amount() > 0 && options.prematureAuthorization) order.status = 4;
         return send(202, {});
@@ -75,6 +76,13 @@ async function platform(t, options = {}) {
       status:order.status, orcamentoId:order.budget,
       pagamento:{etapa:amount() > 0 ? 0 : 3, valor:amount(), cobrancaId:order.charge}
     });
+    if (order.approved && amount() === 0 && options.disconnectAuthorization) {
+      order.authorizationReads = (order.authorizationReads ?? 0) + 1;
+      if (!options.respondBeforeDisconnect || order.authorizationReads > 1) {
+        request.socket.destroy();
+        return;
+      }
+    }
     return send(200, {execucao:{status:order.status, servicos:[{id:'service-item'}]}, valorTotal:amount()});
   });
   server.listen(0, '127.0.0.1');
@@ -85,6 +93,13 @@ async function platform(t, options = {}) {
 
 const config = {correlation:'smoke-regression', waitTimeoutMs:1000, intervalMs:5,
   readiness:{intervalMs:5, timeoutMs:3000}, report:() => {}};
+
+// A rede continua real. Somente o prazo de polling avanca sem depender da carga do CI.
+function pollingClock(intervalMs = 180000) {
+  let elapsed = 0;
+  return {waitTimeoutMs:180000, intervalMs, now:() => elapsed,
+    sleep:async ms => { elapsed += ms; }};
+}
 
 test('valida checkout pendente e conclui somente a ordem zero, sem webhook artificial', async t => {
   const app = await platform(t, {delayedCheckout:true});
@@ -123,10 +138,25 @@ test('rejeita inicio de execucao antes da confirmacao do pagamento', async t => 
 test('timeout informa etapa, status e correlacao; falha de limpeza nao esconde a causa', async t => {
   const app = await platform(t, {blockAuthorization:true, cleanupFailure:true});
   const messages = [];
-  await assert.rejects(runSmoke(app.base, {...config, waitTimeoutMs:200, report:message => messages.push(message)}),
+  await assert.rejects(runSmoke(app.base, {...config, ...pollingClock(), report:message => messages.push(message)}),
     /Prazo excedido aguardando autorizacao da execucao de valor zero:.*ultimo estado: HTTP 200;.*"status":3.*correlacao smoke-regression/);
   assert.ok(messages.some(message => /Falha adicional.*HTTP 503/.test(message)));
   assert.equal(app.calls.filter(c => c.path.endsWith('/finalizar')).length, 0);
+});
+
+test('timeout preserva ultimo estado HTTP quando a tentativa seguinte perde a conexao', async t => {
+  const app = await platform(t, {blockAuthorization:true, disconnectAuthorization:true, respondBeforeDisconnect:true});
+  await assert.rejects(runSmoke(app.base, {...config, ...pollingClock(90000)}),
+    /Prazo excedido aguardando autorizacao da execucao de valor zero:.*ultimo estado: HTTP 200;.*"status":3\}; ultima tentativa: falha de conexao ou timeout; correlacao smoke-regression/);
+  assert.equal(app.calls.at(-1).method, 'DELETE');
+  assert.equal(app.calls.filter(c => c.path.endsWith('/finalizar')).length, 0);
+});
+
+test('timeout sem resposta HTTP identifica falha de conexao sem inventar estado', async t => {
+  const app = await platform(t, {blockAuthorization:true, disconnectAuthorization:true});
+  await assert.rejects(runSmoke(app.base, {...config, ...pollingClock()}),
+    /Prazo excedido aguardando autorizacao da execucao de valor zero:.*ultimo estado: falha de conexao ou timeout; correlacao smoke-regression/);
+  assert.equal(app.calls.at(-1).method, 'DELETE');
 });
 
 test('HTTP 503 em escrita permanece erro imediato e nao repete POST', async t => {

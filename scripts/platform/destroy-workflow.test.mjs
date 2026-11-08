@@ -13,13 +13,19 @@ function dependsOn(job, dependency, visited = new Set()) {
   return (jobs[job].needs ?? []).some(need => need === dependency || dependsOn(need, dependency, visited));
 }
 
-test('destroy encerra apps, apaga dados e so depois remove controllers e cluster', () => {
-  const order = ['destroy_edge', 'cleanup', 'destroy_messaging', 'destroy_database',
-    'destroy_configs', 'destroy_addons', 'destroy_core', 'verify_destroy'];
+test('destroy preserva outputs dos bancos ate remover configs e apaga dados antes dos controllers', () => {
+  const order = ['destroy_edge', 'cleanup', 'destroy_messaging', 'destroy_configs',
+    'destroy_database', 'destroy_addons', 'destroy_core', 'verify_destroy'];
   for (let index = 1; index < order.length; index++) {
     assert.ok(dependsOn(order[index], order[index - 1]), `${order[index]} deve aguardar ${order[index - 1]}`);
     assert.doesNotMatch(jobs[order[index]].if ?? '', /always\(\)|failure\(\)/);
   }
+});
+
+test('o produtor de outputs database so e destruido apos seu consumidor kubernetes-configs', () => {
+  assert.ok(dependsOn('destroy_database', 'destroy_configs'));
+  assert.equal(dependsOn('destroy_configs', 'destroy_database'), false);
+  assert.ok(dependsOn('destroy_addons', 'destroy_database'));
 });
 
 test('RDS e MongoDB fazem parte de todo destroy, inclusive agendamento', () => {
