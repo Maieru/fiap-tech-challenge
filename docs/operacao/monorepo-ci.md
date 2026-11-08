@@ -6,6 +6,8 @@ O job Verify delivery tooling executa também `node --test scripts/platform/gate
 
 `node --test scripts/platform/smoke-flow.test.mjs` verifica o protocolo do smoke contra um servidor HTTP local de contrato: checkout positivo pendente (inclusive propagação com 404/503), finalização somente da ordem zero, rejeição de checkout inválido/autorização prematura, timeout com etapa/estado/correlação, preservação do erro original se a limpeza falhar e ausência de retry em escrita. Esses testes não iniciam APIs/Kafka nem comprovam compra/webhook no Mercado Pago ou execução AWS.
 
+Os cenários de timeout usam relógio e pausa de polling controlados, mantendo HTTP real e o orçamento normal das requisições. A antiga janela real de 200 ms podia terminar com uma tentativa abortada perto do prazo, tornando a expectativa de HTTP 200 dependente da carga do runner. Os testes agora cobrem expiração após status 3, perda de conexão após uma resposta válida e falha sem nenhuma resposta. O diagnóstico preserva a última resposta HTTP e informa separadamente a falha da última tentativa. Os prazos usados pelo CLI de produção continuam os mesmos.
+
 `node --test scripts/platform/destroy-workflow.test.mjs` verifica que todo destroy central, inclusive o agendamento, inclui MongoDB/Kafka e RDS, remove configurações antes de esvaziar os outputs database e condiciona a retirada de add-ons/core à remoção dos dados. Os repositórios Infra e DB executam seus testes de exclusão/inventário nos respectivos CIs, com CLIs e respostas AWS simuladas; nenhuma suíte local exclui recursos remotos. Infra também testa recuperação de configurações com o state database ausente e a seleção de destroy_mode somente no plano destrutivo.
 
 ## Soluções
