@@ -2,7 +2,7 @@
 
 Para importar o painel de aplicação e Kubernetes, siga o [guia de configuração do dashboard](dashboard-new-relic.md), com um template JSON sem identificadores da conta original.
 
-As APIs .NET e o frontend podem exportar telemetria ao OpenTelemetry Collector. O Collector exporta traces, métricas e logs por OTLP/HTTP com TLS para o New Relic. O frontend usa `fiap-tech-challenge-frontend`; os serviços backend têm nomes próprios. O nome `fiap-tech-challenge-backend` nos painéis existentes se refere ao monólito retirado e não comprova instrumentação dos novos serviços.
+As APIs .NET e o frontend podem exportar telemetria ao OpenTelemetry Collector. O Collector exporta traces, métricas e logs por OTLP/HTTP com TLS para o New Relic. O frontend usa `fiap-tech-challenge-frontend`; os serviços backend têm nomes próprios.
 
 ## Ambiente local integrado
 
@@ -28,7 +28,7 @@ O [relatório local](validacao-frontend.md) registra a verificação dos logs OS
 
 A configuração remota de laboratório está no repositório `FiapTechChallengeInfra`:
 
-1. Configure o GitHub Actions secret `NEW_RELIC_LICENSE_KEY` com a chave de ingestão no repositório que dispara o workflow (`FiapTechChallengeInfra` para execução direta; o orquestrador de criação legado foi retirado). Os workflows de aplicação e destruição repassam esse secret ao Terraform.
+1. Configure o GitHub Actions secret `NEW_RELIC_LICENSE_KEY` com a chave de ingestão no repositório que dispara o workflow (`FiapTechChallengeInfra` para execução direta). Os workflows de aplicação e destruição repassam esse secret ao Terraform.
 2. Aplique o estágio `infra/kubernetes-addons`. O Terraform cria o secret `fiap-newrelic-license` e sua versão com o JSON `{"license-key":"..."}` a partir da variável sensível e obrigatória `new_relic_license_key`. Para execução local, forneça `TF_VAR_new_relic_license_key` no ambiente antes de executar `terraform plan`/`apply` (também no `destroy`). Não é necessário cadastrar o valor manualmente no AWS Secrets Manager.
 3. Se sua conta for EU, forneça `TF_VAR_new_relic_otlp_endpoint=https://otlp.eu01.nr-data.net` ao estágio `kubernetes-configs` (ou configure a variável `new_relic_otlp_endpoint` no tfvars utilizado). O padrão é US. O Deployment do Collector é renderizado pelo Terraform; não aplique o template diretamente.
 4. Aplique `infra/kubernetes-configs` e faça o deploy atualizado das aplicações. O ExternalSecret cria `newrelic-license` no namespace `fiap-observability`; o Collector lê a chave via `secretKeyRef`. Sem o valor no Secrets Manager, o Collector aguardará o Secret e não iniciará.
@@ -70,6 +70,6 @@ A configuração versionada não comprova ingestão nem alertas ativos. Validar 
 | Alertas de ordens | Definir condição, janela, limiar e destinatário; provocar uma falha controlada no processamento e comprovar notificação e recuperação. Não há alerta declarado nos arquivos revisados. |
 | Dashboards de negócio | Executar a jornada e conferir volume diário, duração por etapa e falhas de integração, conforme o [guia de métricas](metricas-negocio.md). |
 
-O exporter OTLP envia registros estruturados, mas isso não comprova que todos os logs do legado são JSON; seu serviço de e-mail ainda usa saída de console. A padronização e a prova de correlação ponta a ponta continuam pendentes. A migração do frontend implementou o tratamento de URLs privadas descrito acima; ingestão e privacidade na borda AWS ainda precisam ser verificadas.
+O exporter OTLP envia registros estruturados. A correlação ponta a ponta precisa ser comprovada nos três serviços e no frontend. A migração do frontend implementou o tratamento de URLs privadas descrito acima; ingestão e privacidade na borda AWS ainda precisam ser verificadas.
 
 O contador de falhas de e-mail não substitui um alerta de falha no processamento da ordem: erros de validação, persistência e execução precisam de cobertura própria. A ausência de eventos de falha não é evidência de funcionamento do alerta.

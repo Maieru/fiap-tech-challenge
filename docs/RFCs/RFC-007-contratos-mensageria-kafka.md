@@ -2,7 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-01
-- **Última revisão:** 2026-11-01
+- **Última revisão:** 2026-11-14
 - **Responsáveis:** equipe
 - **Escopo:** contratos OS, compatibilidade e publicação
 
@@ -31,7 +31,7 @@ Os contratos OS e Execution estão publicados no NuGet na versão 0.1.0, com tes
 O OS publica as entradas do Execution e recebe suas confirmações; os dois serviços usam BackgroundService e casos de uso específicos.
 A [integração das duas aplicações](RFC-009-integracao-os-execution.md) está implementada e verificada com imagens reais.
 A transação local não pode garantir atomicidade com Kafka.
-Os contratos não alteram as versões do chassi consumidas pelo OS e pelo legado.
+Os contratos não alteram as versões do chassi consumidas pelos serviços.
 
 ## Evidências e relações
 

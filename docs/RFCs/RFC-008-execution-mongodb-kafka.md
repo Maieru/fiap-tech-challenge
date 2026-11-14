@@ -2,14 +2,14 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-01
-- **Última revisão:** 2026-11-01
+- **Última revisão:** 2026-11-14
 - **Responsáveis:** equipe
 - **Escopo:** implementação local do Execution e verificação
 
 ## Contexto
 
 A base de contratos aprovada precisa de uma implementação concreta com pouco código técnico adicional.
-O serviço deve conservar as regras do legado e permitir testes sem depender da API OS em execução.
+O serviço deve preservar as invariantes do domínio e permitir testes sem depender da API OS em execução.
 
 ## Decisão
 
@@ -25,7 +25,7 @@ O consumidor confirma o offset depois do commit. Qualquer falha de processamento
 sem DLQ ou retry na aplicação. Registra tópico, partição, offset, MessageId e correlação.
 Contexto W3C e correlação acompanham o processamento.
 
-A API valida JWT administrativo sem chamar o legado. MongoDB e Kafka compõem readiness;
+A API valida JWT administrativo localmente. MongoDB e Kafka compõem readiness;
 liveness não consulta essas dependências. OpenAPI/Scalar ficam disponíveis em Development/Testing.
 OTLP é opcional.
 

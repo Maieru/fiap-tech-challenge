@@ -1,6 +1,6 @@
 # Migração do frontend para microsserviços
 
-Atualizado em 2026-11-02. O frontend foi adaptado para OS, Execution e Billing e incluído no Compose integrado. Não há fallback ao monólito. A implementação e a verificação local não representam implantação dos serviços na AWS. A [retirada posterior do código do monólito](retirada-monolito.md) não apaga recursos ou dados legados.
+Atualizado em 2026-11-02. O frontend foi adaptado para OS, Execution e Billing e incluído no Compose integrado. A implementação e a verificação local não representam implantação dos serviços na AWS.
 
 ## Distribuição das chamadas
 
@@ -37,9 +37,9 @@ Páginas abertas por link não inicializam OpenTelemetry; requisições pública
 
 A [ADR-022](../ADRs/ADR-022-kubernetes-microsservicos.md) acrescenta os manifestos das APIs: Services ClusterIP em HTTP 8080, HPA de 1 a 3 réplicas, credenciais exclusivas por banco e OpenTelemetry ativo para o Collector compartilhado. A entrada pública continua HTTPS; não há mais exigência de TLS/CA privada entre Nginx e as APIs nesta etapa. Consulte o [roteiro Kubernetes](../../k8s/README.md).
 
-Vite encaminha os três prefixos para portas 8081/8082/8083; Nginx usa upstreams configuráveis em execução. Kong não é obrigatório localmente. A mesma imagem atende à nuvem, atrás de API Gateway e ALB, com upstreams internos. Os manifests do frontend incluem um Ingress dos três prefixos com prioridade anterior ao `/api` legado. Os nomes dos Services no ConfigMap devem corresponder aos serviços provisionados antes do rollout.
+Vite encaminha os três prefixos para portas 8081/8082/8083; Nginx usa upstreams configuráveis em execução. Kong não é obrigatório localmente. A mesma imagem atende à nuvem, atrás de API Gateway e ALB, com upstreams internos. Os manifests do frontend incluem um Ingress dos três prefixos com prioridade 5. Os nomes dos Services no ConfigMap devem corresponder aos serviços provisionados antes do rollout.
 
-Outra topologia pode encaminhar Nginx para um gateway separado; ele não pode devolver a mesma chamada ao Nginx. Hospedagem puramente estática pode definir gateway/bases públicas no build e exige CORS na borda. Os arquivos `.env*` locais são excluídos do build Docker. `VITE_API_BASE_URL` do legado é ignorada.
+Outra topologia pode encaminhar Nginx para um gateway separado; ele não pode devolver a mesma chamada ao Nginx. Hospedagem puramente estática pode definir gateway/bases públicas no build e exige CORS na borda. Os arquivos `.env*` locais são excluídos do build Docker.
 
 Comandos, variáveis e smoke isolado estão no [README do frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/README.md). Decisões: [ADR-020](../ADRs/ADR-020-frontend-microsservicos-mesma-origem.md) e [RFC-013](../RFCs/RFC-013-proxy-frontend-microsservicos.md).
 
@@ -53,4 +53,4 @@ Resultados e evidências da sessão: [verificação local do frontend](../operac
 - Verificação no navegador de login, lista e detalhes, incluindo orçamento público e entrega. A primeira inspeção detectou limite de página do Execution (100), corrigido nas consultas dos seletores.
 - O lint global tem erros anteriores em componentes UI, AuthContext e outras listagens; o lint dos serviços, tipos, páginas de ordens, observabilidade e Vite alterados passa.
 
-Pendências: provisionar/implantar os serviços e suas dependências na AWS, validar roteamento/JWT/privacidade na borda real, trocar pagamento mockado por gateway real e executar a retirada dos recursos/dados legados quando os critérios de produção forem atendidos. O código e a automação exclusiva do monólito já foram retirados. Os fluxos de indisponibilidade prolongada/compensação por recusa continuam dependendo dos cenários distribuídos backend; o smoke frontend usa o mock de aprovação existente.
+Pendências: provisionar/implantar os serviços e suas dependências na AWS, validar roteamento/JWT/privacidade na borda real, validar compra externa e definir retenção de dados conforme os critérios de produção. Os fluxos de indisponibilidade prolongada/compensação por recusa continuam dependendo dos cenários distribuídos backend; o smoke frontend usa o mock de aprovação existente.

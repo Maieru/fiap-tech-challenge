@@ -2,58 +2,32 @@
 
 - **Status:** Aceita
 - **Data:** 2026-08-23
-- **Responsáveis:** equipe do Tech Challenge
-- **Escopo:** segurança da aplicação
-- **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-09-07
+- **Última revisão:** 2026-11-14
+- **Escopo:** autenticação administrativa e acesso do cliente
 
 ## Contexto
 
-A SPA administrativa precisa autenticar usuários sem sessão no servidor. O acesso do cliente a uma ordem usa um token separado do JWT administrativo.
+A SPA administrativa precisa autenticar usuários sem sessão no servidor. O acesso do cliente a uma ordem utiliza um token privado separado do JWT administrativo.
 
 ## Decisão
 
-Manter autenticação local com BCrypt e JWT:
+OS armazena hashes BCrypt e emite JWT. As três APIs validam assinatura, emissor, audiência e expiração localmente. O frontend envia Bearer JWT e encerra a sessão ao expirar ou receber `401`.
 
-- Armazenar hashes com `BCrypt.Net-Next`.
-- Emitir JWT `HMAC-SHA256`, atualmente válido por 60 minutos, com `sub`, `unique_name` e `jti`.
-- Validar assinatura, emissor, audiência e expiração, com `ClockSkew = 0`.
-- Enviar JWT como Bearer; a SPA limpa a sessão ao expirar ou receber `401`.
-- Receber a chave remota pelo mecanismo da ADR-007.
-
-Para as requisições de clientes às ordens, usar a Lambda como authorizer do API Gateway, validando o token de acesso e devolvendo uma decisão de autorização. Esse escopo foi alinhado para o projeto; a emissão de JWT pertence à autenticação administrativa na API.
+Para acompanhamento, aprovação e cancelamento pelo cliente, OS emite um token aleatório por ordem e persiste apenas seu hash. Os endpoints públicos validam o token no próprio OS; uma nova emissão substitui o acesso anterior. O gateway deve encaminhar essas requisições ao serviço, preservando a privacidade das URLs.
 
 ## Alternativas consideradas
 
-- **Provedor OIDC externo:** acrescentaria federação e gestão de identidade, exigindo integração adicional.
-- **Sessão no servidor:** exigiria estado compartilhado e proteção CSRF.
-- **API key:** não atenderia ao fluxo de identidade individual adotado.
+Um provedor OIDC externo acrescentaria federação e gestão de identidade. Sessões no servidor exigiriam estado compartilhado. API keys não atendem ao fluxo de identidade individual adotado.
 
 ## Consequências e limites
 
-- Réplicas validam JWT sem consultar uma sessão; não há refresh token, revogação, MFA ou autorização por perfis.
-- O cadastro de usuário é anônimo e permite criar usuários com o mesmo acesso administrativo. Login e health checks também são anônimos.
-- A SPA guarda JWT em `localStorage`, sujeito a acesso por scripts em caso de XSS.
-- Chaves JWT de fallback ainda estão no artefato; removê-las e exigir segredo remoto válido permanece pendente. Rotação exige coordenação entre pods.
+Cadastro administrativo anônimo é uma decisão do projeto. Não há refresh, revogação ou perfis distintos. Excluir usuário impede novos logins, mas não revoga JWT emitido. O frontend guarda a sessão em `localStorage`, sujeito a XSS. O token privado não tem expiração automática; logs, histórico e telemetria devem proteger sua URL.
 
-## Acesso à ordem na implementação atual
+## Evidências
 
-Acompanhamento, aprovação e cancelamento têm `AllowAnonymous` na API. Na AWS, as três rotas declaradas no estado serverless exigem Lambda Authorizer, sem cache, que valida `token` na query string consultando o banco. Esse token é SHA-256 do CPF normalizado concatenado ao código de aprovação; não é JWT.
-
-A aprovação também valida o token no caso de uso. Acompanhamento e cancelamento dependem da proteção da borda: acessar a API diretamente não executa a Lambda. Esse controle não constitui uma estratégia completa de autorização, e o token na URL pode aparecer em histórico, logs ou telemetria.
-
-Reconsiderar antes de uso público durável ou quando houver necessidade de perfis, SSO, MFA ou revogação.
-
-## Evidências e relações
-
-- [Sequências de autenticação e validação das requisições](../arquitetura/sequencias.md)
-
-- [Configuração JWT Bearer](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/InfraestructureDependecyInjection.cs)
-- [Emissão do JWT](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Security/JwtTokenService.cs)
-- [Hash de senha](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Security/BCryptPasswordHasher.cs)
-- [Persistência da sessão no frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/src/services/storage.ts)
-- [ADR-007 — Gestão de segredos](../ADRs/ADR-007-gestao-centralizada-de-segredos.md)
-- [Rotas anônimas na API](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.API/Controllers/OrdensServicoController.cs)
-- [Validação na aprovação](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Application/UseCases/OrdensServico/AprovarExecucaoOrdemServico/AprovarExecucaoOrdemServicoUseCase.cs)
-- [Rotas com autorizador](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/infra/serverless/api-gateway.tf)
-- [Código do autorizador](https://github.com/Maieru/fiap-tech-challenge-serverless/tree/main/src/FIAP.TechChallenge.Serverless.OrdemServicoAuthorizer)
+- [Configuração JWT](../../src/FIAP.TechChallenge.OS.API/Security/AuthenticationDependencyInjection.cs).
+- [Emissão JWT](../../src/FIAP.TechChallenge.OS.Infrastructure/Security/JwtTokenService.cs).
+- [Hash de senha](../../src/FIAP.TechChallenge.OS.Infrastructure/Security/BCryptPasswordHasher.cs).
+- [Acompanhamento](../../src/FIAP.TechChallenge.OS.API/Controllers/AcompanhamentoController.cs).
+- [Guia de autenticação](../arquitetura/autenticacao-os.md).
+- [Acesso do cliente](../arquitetura/acompanhamento-e-entrega.md).

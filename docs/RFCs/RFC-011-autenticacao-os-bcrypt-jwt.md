@@ -2,11 +2,11 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-02
-- **Última revisão:** 2026-11-02
+- **Última revisão:** 2026-11-14
 
 ## Implementação
 
-Reutilizar as regras do legado com namespaces OS, arquivos por caso de uso e abstrações independentes de EF/BCrypt/JWT. Infrastructure implementa repositório EF, BCrypt.Net-Next 4.0.3 e emissão JWT com System.IdentityModel.Tokens.Jwt 8.17.0. Não há ProjectReference ao legado.
+Organizar autenticação nos namespaces OS, com arquivos por caso de uso e abstrações independentes de EF/BCrypt/JWT. Infrastructure implementa repositório EF, BCrypt.Net-Next 4.0.3 e emissão JWT com System.IdentityModel.Tokens.Jwt 8.17.0.
 
 Usuarios é tabela própria com ID, login normalizado, hash e Ativo. Índice único de login ativo protege concorrência; exclusão lógica retira o usuário do login. Senhas têm mínimo de oito caracteres não vazios e máximo de 72 bytes UTF-8 pelo limite do BCrypt. A senha é usada integralmente no hash e na verificação, preservando espaços fornecidos pelo usuário.
 
@@ -16,7 +16,7 @@ A chave simétrica singleton é compartilhada por validação e emissão no OS. 
 
 ## Alternativas e compatibilidade
 
-Sem refresh, revogação, perfis, migração automática de usuários ou bootstrap. Cadastro anônimo foi mantido por decisão explícita. Endpoints legados permanecem disponíveis separadamente; o frontend migrado usa o prefixo versionado OS, conforme a [RFC-013](RFC-013-proxy-frontend-microsservicos.md). Tokens existentes continuam compatíveis enquanto assinatura, issuer, audience e expiração forem válidos.
+Sem refresh, revogação, perfis, migração automática de usuários ou bootstrap. Cadastro anônimo foi mantido por decisão explícita. O frontend usa o prefixo versionado OS, conforme a [RFC-013](RFC-013-proxy-frontend-microsservicos.md). Tokens existentes continuam compatíveis enquanto assinatura, issuer, audience e expiração forem válidos.
 
 ## Verificação
 

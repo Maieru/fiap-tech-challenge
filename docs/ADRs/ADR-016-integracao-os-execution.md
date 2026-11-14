@@ -2,6 +2,7 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-01
+- **Última revisão:** 2026-11-14
 - **Escopo:** etapa 3 da implementação aprovada
 
 ## Contexto
@@ -41,7 +42,7 @@ não existe garantia de atomicidade entre PostgreSQL/MongoDB e Kafka.
 
 A consulta OS passa a ser uma projeção eventual, com decisão pendente explicitamente disponível.
 Uma ordem anterior em Recebida permanece válida na migration. Estados novos impedem downgrade direto para o schema anterior.
-Não há migração do legado, pagamento, entrega, frontend ou deploy AWS nesta etapa.
+Pagamento, entrega, frontend e deploy AWS estão fora do escopo desta etapa de integração.
 
 [RFC-009](../RFCs/RFC-009-integracao-os-execution.md), [padrão](../arquitetura/mensageria.md)
 e [evidências](../operacao/revisao-execution-etapa3.md).

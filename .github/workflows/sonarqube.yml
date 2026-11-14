@@ -104,7 +104,7 @@ jobs:
           & $scanner begin "/k:$env:SONAR_PROJECT_KEY" "/o:$env:SONAR_ORGANIZATION" `
             "/d:sonar.token=$env:SONAR_TOKEN" /d:sonar.host.url=https://sonarcloud.io `
             /d:sonar.cs.opencover.reportsPaths=artifacts/reports/**/coverage.opencover.xml `
-            '/d:sonar.exclusions=src/FIAP.TechChallenge.Fase1.Frontend/**,legacy/**,artifacts/**,**/Migrations/**,**/*.feature.cs,**/node_modules/**,**/dist/**,**/bin/**,**/obj/**,**/*.mjs' `
+            '/d:sonar.exclusions=src/FIAP.TechChallenge.Fase1.Frontend/**,artifacts/**,**/Migrations/**,**/*.feature.cs,**/node_modules/**,**/dist/**,**/bin/**,**/obj/**,**/*.mjs' `
             '/d:sonar.test.exclusions=src/FIAP.TechChallenge.Fase1.Frontend/**' `
             '/d:sonar.issue.ignore.multicriteria=internalFrontendHttp,internalOsOtlp' `
             '/d:sonar.issue.ignore.multicriteria.internalFrontendHttp.ruleKey=kubernetes:S5332' `

@@ -2,12 +2,12 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-01
-- **Última revisão:** 2026-11-01
+- **Última revisão:** 2026-11-14
 - **Escopo:** fronteira do Execution, persistência e consistência
 
 ## Contexto
 
-O Execution precisa assumir diagnóstico, catálogo, estoque e execução sem consultar o PostgreSQL do OS ou do legado.
+O Execution precisa assumir diagnóstico, catálogo, estoque e execução usando somente seu próprio banco.
 A fase 4 prevê persistência SQL/NoSQL. A baixa de peças e sua devolução precisam permanecer consistentes com a ordem.
 
 ## Decisão
@@ -33,7 +33,7 @@ Entrega seguida de falha no commit continua sendo um limite aceito, não uma tra
 - PostgreSQL: tecnologia já usada, mas não atende à decisão de NoSQL para o Execution.
 - MongoDB standalone: não oferece as transações necessárias entre execução, estoque e deduplicação.
 - Outbox: não adotada, conforme a decisão explícita de publicação direta com rollback limitado.
-- Acesso ao banco legado ou catálogo compartilhado: rompe o isolamento dos serviços.
+- Acesso ao banco de outro serviço ou catálogo compartilhado: rompe o isolamento dos serviços.
 
 ## Consequências
 

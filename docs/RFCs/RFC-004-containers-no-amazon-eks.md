@@ -2,49 +2,30 @@
 
 - **Status:** Aceita
 - **Data:** 2026-08-23
-- **Responsáveis:** equipe do Tech Challenge
-- **Escopo:** plataforma de execução
-- **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-09-07
+- **Última revisão:** 2026-11-14
+- **Escopo:** plataforma de execução dos microsserviços
 
 ## Contexto
 
-API ASP.NET Core e SPA React precisam de imagens reproduzíveis, implantação declarativa, health checks e escala do backend. Kubernetes faz parte do escopo do projeto.
+APIs e frontend precisam de imagens reproduzíveis, implantação declarativa, health checks e escala independente. Kubernetes faz parte do escopo do projeto.
 
 ## Decisão
 
-Executar API e frontend no Amazon EKS:
+Executar OS, Execution, Billing e frontend no EKS. Dockerfiles geram imagens separadas; ECR mantém imagens por componente. Deployments e Services ClusterIP usam namespaces distintos. APIs declaram probes, recursos e HPAs independentes de 1 a 3 réplicas. Nginx serve o frontend e encaminha os prefixos das APIs.
 
-- Dockerfiles multi-stage geram imagens separadas no ECR.
-- Deployments e services `ClusterIP` usam namespaces distintos.
-- O backend declara startup, liveness e readiness probes, recursos e HPA.
-- O frontend usa Nginx e uma réplica.
-- Load Balancer Controller, Metrics Server e External Secrets integram a plataforma.
-- Collector e integração Kubernetes do New Relic usam namespace de observabilidade.
-
-O node group usa `t3.small`, com mínimo 1, desejado 3 e máximo 4 nós. O autorizador de ordens executa separadamente em Lambda.
+Infra mantém Load Balancer Controller, Metrics Server, External Secrets e observabilidade. Kafka e MongoDB usam StatefulSets e volumes próprios. O perfil dos nós e a capacidade declarada estão no [guia da plataforma](../operacao/plataforma-aws.md).
 
 ## Alternativas consideradas
 
-- **ECS/Fargate ou App Runner:** exigiriam substituir manifests e integrações Kubernetes adotadas.
-- **EC2 com Compose:** transferiria rollout, recuperação e escala para automação própria.
-- **Lambda para toda a aplicação:** não corresponde ao modelo de hospedagem escolhido para API e SPA.
+ECS/Fargate ou App Runner exigiriam outra integração. EC2 com Compose transferiria rollout e recuperação à automação própria. Funções isoladas não correspondem ao modelo adotado para estas APIs e SPA.
 
 ## Consequências
 
-- Kubernetes oferece rollout, probes e HPA, com custo de manter cluster, add-ons e versões.
-- Não há autoscaler de nós, PodDisruptionBudget ou NetworkPolicy nos manifests atuais. Namespaces organizam cargas, mas não isolam tráfego.
-- Os nós usam sub-redes públicas; o endpoint do control plane permite acesso público e privado.
-- O deploy usa a role de infraestrutura com acesso administrativo ao cluster, embora exista uma role de aplicação limitada aos namespaces.
-- Uma réplica mínima não garante alta disponibilidade; os parâmetros são do laboratório.
+Kubernetes exige operação de cluster e add-ons. HPA depende de capacidade disponível e não garante redundância com mínimo de uma réplica. Namespaces organizam cargas; NetworkPolicies protegem dependências específicas e não constituem isolamento universal. O perfil de laboratório exige implantação e validação antes da demonstração.
 
-Reconsiderar se custo e operação superarem o benefício ou surgirem requisitos de escala a zero e disponibilidade não atendidos.
+## Evidências
 
-## Evidências e relações
-
-- [Dockerfile do backend](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.API/Dockerfile)
-- [Dockerfile do frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/Dockerfile)
-- [Guia Kubernetes](../../k8s/README.md)
-- [Configuração do EKS](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/infra/aws-resources/eks.tf)
-- [ADR-005 — Topologia de entrada](../ADRs/ADR-005-topologia-de-entrada-na-aws.md)
-- [ADR-006 — HPA do backend](../ADRs/ADR-006-hpa-do-backend-por-cpu.md)
+- [Dockerfile OS](../../Dockerfile).
+- [Kubernetes OS](../../k8s/os/README.md).
+- [Manifestos dos microsserviços](RFC-016-manifestos-kubernetes-microsservicos.md).
+- [Entrega ECR/EKS](RFC-017-actions-ecr-eks.md).

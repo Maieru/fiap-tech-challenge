@@ -1,43 +1,35 @@
-# Request for Comments (RFCs)
+# Escolhas técnicas aceitas
 
-As RFCs documentam escolhas técnicas relevantes já aceitas, suas alternativas e a decisão da equipe. Discussões ainda abertas permanecem em issues ou pull requests. Use o [template](TEMPLATE.md) depois da aprovação.
+Este catálogo reúne 19 registros aceitos do projeto. Os documentos apresentam contexto, decisão, alternativas, consequências e evidências. Propostas ainda abertas ficam em issues ou pull requests.
 
 ## Catálogo
 
-- [RFC-017 — Actions de publicação ECR e aplicação EKS](RFC-017-actions-ecr-eks.md) — Aceita.
+| Registro | Status |
+| --- | --- |
+| [RFC-001 — Adoção da AWS como provedor de nuvem](RFC-001-escolha-da-nuvem-aws.md) | Aceita |
+| [RFC-002 — PostgreSQL com EF Core e Amazon RDS](RFC-002-postgresql-no-amazon-rds.md) | Aceita |
+| [RFC-003 — Autenticação local com BCrypt e JWT](RFC-003-autenticacao-jwt-e-bcrypt.md) | Aceita |
+| [RFC-004 — Execução de containers no Amazon EKS](RFC-004-containers-no-amazon-eks.md) | Aceita |
+| [RFC-005 — Terraform e GitHub Actions com OIDC](RFC-005-terraform-e-github-actions-oidc.md) | Aceita |
+| [RFC-006 — Chassi NuGet e verificação dos componentes](RFC-006-chassi-nuget-e-verificacao-monorepo.md) | Aceita |
+| [RFC-007 — Contratos de integração do OS por NuGet](RFC-007-contratos-mensageria-kafka.md) | Aceita |
+| [RFC-008 — Persistência MongoDB e consumidor Kafka do Execution](RFC-008-execution-mongodb-kafka.md) | Aceita |
+| [RFC-009 — Integração Kafka do OS e BDD distribuído](RFC-009-integracao-os-execution.md) | Aceita |
+| [RFC-010 — Billing, gateway mockado e contratos Kafka](RFC-010-billing-mock-kafka.md) | Aceita |
+| [RFC-011 — Cadastro/login OS com BCrypt e JWT compatível](RFC-011-autenticacao-os-bcrypt-jwt.md) | Aceita |
+| [RFC-012 — APIs de entrega e acompanhamento privado no OS](RFC-012-entrega-acompanhamento-os.md) | Aceita |
+| [RFC-013 — Proxy configurável e contratos do frontend](RFC-013-proxy-frontend-microsservicos.md) | Aceita |
+| [RFC-014 — Soluções e verificação de OS e frontend](RFC-014-solucoes-e-ci.md) | Aceita |
+| [RFC-015 — Projetos OS diretamente em src](RFC-015-projetos-os-diretamente-src.md) | Aceita |
+| [RFC-016 — Manifestos Kubernetes das APIs e integração OTLP](RFC-016-manifestos-kubernetes-microsservicos.md) | Aceita |
+| [RFC-017 — Actions de publicação ECR e aplicação EKS](RFC-017-actions-ecr-eks.md) | Aceita |
+| [RFC-018 — Orquestração e segurança da plataforma AWS](RFC-018-orquestracao-plataforma-aws.md) | Aceita |
+| [RFC-019 — Checkout hospedado Mercado Pago](RFC-019-mercado-pago-checkout.md) | Aceita |
 
-- [RFC-016 — Manifestos Kubernetes das APIs e integração OTLP](RFC-016-manifestos-kubernetes-microsservicos.md) — Aceita.
+## Como consultar e manter
 
-- [RFC-015 — Projetos OS diretamente em src](RFC-015-projetos-os-diretamente-src.md) — Aceita.
+A data original identifica o registro e a última revisão indica atualização do texto/evidências. Avaliações retrospectivas não são atas de reuniões. Correções documentais devem refletir a implementação atual; resultados de testes em datas específicas não comprovam o último CI remoto ou deploy.
 
-- [RFC-014 — Soluções e verificação sem o monólito](RFC-014-solucoes-ci-sem-monolito.md) — Aceita.
+Use o [template](TEMPLATE.md) para um registro novo e mantenha este índice sincronizado com os arquivos. Decisões técnicas e arquiteturais relevantes acompanham sua implementação. Não inclua registros em rascunho neste catálogo; preserve IDs e links ao atualizar títulos.
 
-- [RFC-013 — Proxy configurável e contratos do frontend](RFC-013-proxy-frontend-microsservicos.md) — Aceita.
-
-| RFC | Status | Decisão |
-| --- | --- | --- |
-| [RFC-001](RFC-001-escolha-da-nuvem-aws.md) | Aceita | Adotar AWS em `us-east-1` como nuvem principal. |
-| [RFC-002](RFC-002-postgresql-no-amazon-rds.md) | Aceita | Usar PostgreSQL com EF Core/Npgsql e Amazon RDS. |
-| [RFC-003](RFC-003-autenticacao-jwt-e-bcrypt.md) | Aceita | Autenticar credenciais locais com BCrypt e access token JWT. |
-| [RFC-004](RFC-004-containers-no-amazon-eks.md) | Aceita | Executar os containers de aplicação no Amazon EKS. |
-| [RFC-005](RFC-005-terraform-e-github-actions-oidc.md) | Aceita | Provisionar com Terraform e operar pipelines AWS por OIDC. |
-| [RFC-006](RFC-006-chassi-nuget-e-verificacao-monorepo.md) | Aceita | Distribuir chassi técnico por NuGet e verificar os componentes separadamente. |
-| [RFC-007](RFC-007-contratos-mensageria-kafka.md) | Aceita | Distribuir contratos de mensagens do OS em pacote próprio para a integração Kafka. |
-| [RFC-008](RFC-008-execution-mongodb-kafka.md) | Aceita | Implementar Execution com driver MongoDB, consumidor Kafka explícito e testes reais. |
-| [RFC-009](RFC-009-integracao-os-execution.md) | Aceita | Integrar OS por Kafka, persistir decisões pendentes e verificar as duas APIs por BDD. |
-
-## Regra para RFCs aceitas
-
-As RFCs `001` a `005` formalizam retrospectivamente escolhas já presentes no código e na infraestrutura. Novas RFCs entram neste catálogo somente depois da aprovação da decisão.
-
-As alternativas são avaliações retrospectivas, não atas de discussões históricas. A data original identifica o registro; a última revisão indica a atualização do texto e das evidências. O template usa **Decisão**, pois o catálogo contém escolhas aceitas, não recomendações pendentes.
-
-- [Billing e Saga de pagamento](RFC-010-billing-mock-kafka.md).
-
-- [Autenticação administrativa no OS](RFC-011-autenticacao-os-bcrypt-jwt.md).
-
-- [APIs de entrega e acompanhamento privado no OS](RFC-012-entrega-acompanhamento-os.md).
-
-- [Orquestração e segurança da plataforma AWS](RFC-018-orquestracao-plataforma-aws.md).
-
-- [Checkout hospedado Mercado Pago](RFC-019-mercado-pago-checkout.md) — Aceita.
+Consulte o [índice técnico](../README.md) e o [estado da aplicação](../arquitetura/estado-da-migracao.md) para visão de conjunto.

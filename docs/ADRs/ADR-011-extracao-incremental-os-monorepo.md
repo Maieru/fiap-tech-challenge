@@ -1,40 +1,31 @@
-# ADR-011 — Extração incremental do OS Service em monorepo
+# ADR-011 — Responsabilidade e isolamento do OS Service
 
 - **Status:** Aceita
 - **Data:** 2026-10-31
-- **Última revisão:** 2026-11-01
-- **Escopo:** primeiro incremento da Fase 4
-
-A coexistência descrita neste registro encerrou-se para o código e a automação exclusiva do monólito na [ADR-021](ADR-021-retirada-codigo-monolito.md). A retirada de recursos e dados remotos continua separada. O restante registra o contexto do incremento original.
+- **Última revisão:** 2026-11-14
+- **Escopo:** limites do OS Service
 
 ## Contexto
 
-O monólito reúne cadastros, orçamento e execução. A fase 4 exige independência entre serviços, mas a primeira entrega precisa preservar o fluxo atual e aproveitar domínio, aplicação e testes. A equipe decidiu manter o monorepo temporariamente e executar o OS em paralelo, apenas localmente e no CI.
-
-## Alternativas consideradas
-
-- Referenciar Domain/Application completos do legado: menos alterações iniciais, com dependência de responsabilidades alheias ao OS.
-- Compartilhar módulos de negócio temporários: evita cópias, mas exige uma reorganização maior do legado e coordenação de mudanças.
-- Extrair código pertinente para projetos próprios do OS: permite separar a responsabilidade e adiar a migração de tráfego.
+O ciclo da oficina distribui responsabilidades entre OS, Execution e Billing. O OS precisa evoluir com domínio, aplicação, testes, imagem e banco próprios.
 
 ## Decisão
 
-Extrair as regras e casos de uso pertinentes, preservar suas validações e transportar seus testes. Manter o legado em funcionamento, sem referência do OS aos seus assemblies ou banco. Clientes e veículos pertencem inicialmente ao OS. Compartilhar somente recursos técnicos por pacote NuGet versionado.
+Manter no OS clientes, veículos, abertura e consulta de ordens, histórico, autenticação administrativa e coordenação da Saga. Execution controla diagnóstico, catálogo, estoque e execução; Billing controla cobrança e pagamento.
 
-Cada componente tem verificação independente e artefato próprio; alterações exclusivas dos novos componentes não acionam o provisionamento AWS atual.
+OS e frontend ficam neste repositório. Execution, Billing e Chassis possuem repositórios próprios. Não referenciar assemblies ou bancos de negócio de outro serviço. Compartilhar somente recursos técnicos e contratos versionados por NuGet.
+
+## Alternativas consideradas
+
+Compartilhar módulos de negócio criaria coordenação entre releases. Consultar diretamente bancos de outros serviços romperia a autonomia. Contratos e eventos explícitos mantêm os limites verificáveis.
 
 ## Consequências
 
-Há duplicação temporária de código de negócio, documentada no inventário de extração. Mudanças no legado durante a coexistência precisam ser confrontadas antes da migração definitiva. A extração inicial do OS não substitui todo o ciclo da ordem; a implantação dos novos serviços e a retirada do legado permanecem pendentes.
+Cada serviço aplica migrations e valida seus próprios dados. Coordenação entre serviços tem consistência eventual. Build e testes independentes não substituem cenários distribuídos ou validação de implantação.
 
 ## Evidências
 
-- [Arquitetura e inventário](../arquitetura/fase4-incremento1.md).
-- [OS Service](../operacao/os-service.md).
-- [CI](../operacao/monorepo-ci.md).
-
-As ADRs 001 e 008 continuam descrevendo o legado e a infraestrutura existente.
-
-A [ADR-013](ADR-013-chassi-em-repositorio-proprio.md) atualiza a organização do chassi, extraído para repositório próprio. A coexistência temporária de legado e OS permanece neste monorepo.
-
-O Execution também possui repositório próprio, conforme a [ADR-015](ADR-015-execution-mongodb.md), e sua integração com OS está implementada conforme a [ADR-016](ADR-016-integracao-os-execution.md). O [estado da migração](../arquitetura/estado-da-migracao.md) reúne entregas e pendências atuais.
+- [Solução OS](../../Backend.slnx).
+- [Dados e histórico OS](ADR-012-dados-historico-os.md).
+- [Chassi independente](ADR-013-chassi-em-repositorio-proprio.md).
+- [Estado da aplicação](../arquitetura/estado-da-migracao.md).

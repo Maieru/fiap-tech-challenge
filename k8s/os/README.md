@@ -6,25 +6,25 @@ Manifestos da API para o EKS de laboratório. Service interno `fiap-os-service.f
 
 - Namespace `fiap-os` e SecretStore `aws-secrets-store` criados pelo estágio `kubernetes-configs` do repositório Infra; CRDs/operador External Secrets e metrics-server instalados por `kubernetes-addons`.
 - Imagem publicada, acessível aos nodes, com tag imutável ou digest. Os manifestos não criam ECR nem publicam imagens.
-- Banco exclusivo e usuário restrito a ele. PostgreSQL com schema já migrado para a imagem escolhida. `Database__ApplyMigrations=false` evita migrations concorrentes entre réplicas. Execute as migrations EF fora dos pods da API, antes do rollout; esta entrega não inclui executor/Job de migrations.
+- Banco exclusivo e usuário restrito a ele. PostgreSQL com schema já migrado para a imagem escolhida. `Database__ApplyMigrations=false` evita migrations concorrentes entre réplicas. O fluxo central executa um Job `--migrate-only` com conexão e CA antes do rollout; não inicia HTTP, JWT ou consumidor nesse modo.
 - Kafka acessível pelos pods e com advertised listeners resolvíveis no cluster. Os quatro tópicos devem existir: `oficina.os.events.v1`, `oficina.execution.events.v1`, `oficina.os.billing.requests.v1` e `oficina.billing.events.v1`. Não há criação automática de tópicos nem provisionamento do broker.
 - Collector central e licença New Relic sincronizada no namespace `fiap-observability`. O Collector pertence ao Infra e não deve ser aplicado novamente por esta pasta.
 
 ## Segredos e parâmetros
 
-Crie no AWS Secrets Manager o segredo **`fiap-os-database-credentials`**, JSON com somente a propriedade `ConnectionStrings__DefaultConnection`, cujo valor é a connection string exclusiva deste banco. Não reutilize usuário/senha dos outros serviços ou o segredo do RDS legado.
+O estágio DB cria no AWS Secrets Manager o segredo **`fiap-os-database-credentials`**, JSON com somente a propriedade `ConnectionStrings__DefaultConnection`, cujo valor é a connection string exclusiva deste banco. Use credenciais exclusivas do OS, sem reutilizar as dos outros serviços.
 
 O ExternalSecret de JWT lê somente `Jwt__SigningKey` do segredo compartilhado `fiap-secret-manager-jwt-signing-key`. A chave deve ter ao menos 32 bytes UTF-8 e issuer/audience devem coincidir nas três APIs. OS é o emissor administrativo.
 
-A role do operador External Secrets precisa de `secretsmanager:DescribeSecret` e `secretsmanager:GetSecretValue` nos ARNs dos novos segredos; a política atual do Infra ainda precisa dessa concessão antes do rollout. Para CMK própria, providencie também a permissão de descriptografia aplicável. Criação dos segredos, permissões IAM e grants dos bancos são pré-requisitos externos a esta entrega.
+A role do operador External Secrets precisa de `secretsmanager:DescribeSecret` e `secretsmanager:GetSecretValue` nos ARNs dos novos segredos; o Infra declara as roles/policies específicas e elas precisam estar aplicadas antes do rollout. Para CMK própria, providencie também a permissão de descriptografia aplicável. O fluxo central prepara segredos, permissões e grants nos estágios Infra/DB antes da aplicação.
 
-Prepare uma cópia local dos YAMLs e substitua **todos** os valores `REPLACE_WITH_*`: imagem em `deployment.yaml`, broker, issuer e audience em `config-maps.yaml`. Imagem de exemplo é intencionalmente inválida. Não coloque senhas, connection strings ou chaves nos ConfigMaps/manifests.
+Para inspeção/aplicação controlada, prepare uma cópia local dos YAMLs e substitua **todos** os valores `REPLACE_WITH_*`: imagem em `deployment.yaml`, broker, issuer e audience em `config-maps.yaml`. Imagem de exemplo é intencionalmente inválida. Não coloque senhas, connection strings ou chaves nos ConfigMaps/manifests.
 
 ## Aplicação manual
 
-Alternativa automatizada: use os workflows manuais `publish-image.yml` e `deploy-eks.yml` em main, após CI aprovado. Eles publicam no ECR e renderizam/aplicam estes manifestos por digest. Configure as roles/variables conforme o [guia de entrega](../../scripts/delivery/README.md) no próprio repositório. Os pré-requisitos de bancos, Kafka, segredos/IAM e migrations permanecem os mesmos.
+A operação normal é `manage-platform.yml` do principal, que chama `publish-image.yml` e `deploy-eks.yml` reutilizáveis, exige CI aprovado e aplica por digest. Configure roles/variables conforme o [guia de entrega](../../scripts/delivery/README.md). A sequência abaixo é uma alternativa controlada para YAMLs já renderizados, com banco já migrado e dependências prontas; aplicar YAML manualmente não executa o Job de migrations nem substitui o fluxo central.
 
-Confirme o contexto e configure o caminho da cópia preparada. Não use a árvore `legacy`.
+Confirme o contexto e configure o caminho da cópia preparada.
 
 ```powershell
 $manifests = '<caminho-absoluto-da-copia-configurada>'
@@ -55,4 +55,4 @@ OpenTelemetry está habilitado: `OTEL_EXPORTER_OTLP_PROTOCOL=grpc` e `http://ote
 
 Após disponibilizar as dependências, confirme probes, chamada autenticada via frontend e sinais no New Relic filtrados por `service.name = 'oficina-os'`. Valide HPA sob carga e retorno ao mínimo após estabilização; em ambiente isolado, confirme readiness indisponível sem reinícios causados pela liveness quando o banco/broker falhar. Nenhuma dessas verificações de cluster é comprovada apenas pelo YAML.
 
-O roteiro integrado e a decisão aceita estão no repositório OS, em `k8s/README.md` e `docs/ADRs/ADR-022-kubernetes-microsservicos.md`.
+Consulte o [roteiro integrado](../README.md), a [decisão Kubernetes](../../docs/ADRs/ADR-022-kubernetes-microsservicos.md) e o [guia de plataforma](../../docs/operacao/plataforma-aws.md).

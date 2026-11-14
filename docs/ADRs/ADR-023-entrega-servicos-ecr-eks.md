@@ -2,17 +2,18 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-07
+- **Última revisão:** 2026-11-14
 - **Escopo:** OS/frontend, Execution, Billing e infraestrutura de entrega
 
 ## Contexto
 
-A ADR-022 preparou os manifestos para aplicação manual. A revisão encontrou ECRs ausentes para as APIs, identidade de aplicação limitada aos namespaces legados e ausência de roles para Execution/Billing. Também era necessário renovar pods ao atualizar ConfigMaps/Secrets consumidos por ambiente.
+A ADR-022 preparou os manifestos para aplicação manual. A revisão encontrou ECRs ausentes para as APIs, identidades de aplicação sem acesso aos namespaces dos serviços e ausência de roles para Execution/Billing. Também era necessário renovar pods ao atualizar ConfigMaps/Secrets consumidos por ambiente.
 
 ## Decisão
 
 Cada repositório oferece um workflow de publicação ECR e outro de deploy EKS. No OS, o componente pode ser OS ou frontend. Ambos são manuais, em main, e exigem o último CI do commit concluído com sucesso; PRs não recebem credenciais de entrega.
 
-Usar OIDC com roles separadas de publicação e deploy por repositório. Infra declara ECRs imutáveis das APIs, roles/trust policies, access entries EKS e RBAC nos namespaces. Não adicionar serviços ao mapa legado que também cria roles amplas de infraestrutura. O grupo de deploy OS atende fiap-os/fiap-frontend; os demais atendem somente seus namespaces. O grupo novo não lê Secrets nem administra RBAC/cluster.
+Usar OIDC com roles separadas de publicação e deploy por repositório. Infra declara ECRs imutáveis das APIs, roles/trust policies, access entries EKS e RBAC nos namespaces. Manter os serviços fora do mapa que cria roles amplas de infraestrutura. O grupo de deploy OS atende fiap-os/fiap-frontend; os demais atendem somente seus namespaces. O grupo novo não lê Secrets nem administra RBAC/cluster.
 
 Publicar sha-<commit>, registrar digest e implantar somente por digest. Uma tag já existente é reutilizada; AccessDenied ou falha de rede interrompem a entrega. O deploy usa manifestos do commit atual e permite selecionar imagem de SHA anterior com CI aprovado, registrando os dois commits para recuperação consciente.
 

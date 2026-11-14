@@ -4,7 +4,7 @@ Atualizado em 2026-11-08. Esta página consolida o estado atual; os relatórios 
 
 Os testes locais desta integração estão registrados na [validação Mercado Pago](../operacao/validacao-mercado-pago.md): 49 testes Billing, 2 de contratos, 2 da imagem e 9 cenários distribuídos aprovados; cobertura Billing de 91,24%.
 
-OS, Execution e Billing estão implementados e integrados por Kafka, com bancos exclusivos. O fluxo de backend foi validado localmente até a entrega, com gateway HTTP apontado para simulador Mercado Pago, webhook assinado e compensação por recusa. O frontend foi adaptado para os três serviços, com proxy local, contratos novos e acompanhamento privado; o detalhe administrativo inclui o link do checkout. Build, smoke HTTP isolado e navegação local anteriores estão documentados nos relatórios históricos; o código e a automação exclusiva do monólito foram retirados do checkout. Tráfego AWS, compra externa, recursos antigos e retenção/migração de dados ainda exigem etapa operacional própria.
+OS, Execution e Billing estão implementados e integrados por Kafka, com bancos exclusivos. O fluxo de backend foi validado localmente até a entrega, com gateway HTTP apontado para simulador Mercado Pago, webhook assinado e compensação por recusa. O frontend foi adaptado para os três serviços, com proxy local, contratos novos e acompanhamento privado; o detalhe administrativo inclui o link do checkout. Build, smoke HTTP isolado e navegação local anteriores estão documentados nos relatórios históricos. Tráfego AWS, compra externa e retenção de dados ainda exigem validação operacional própria.
 
 ## Responsabilidades entregues
 
@@ -14,9 +14,9 @@ OS, Execution e Billing estão implementados e integrados por Kafka, com bancos 
 | Execution | Catálogo de serviços e peças/insumos, estoque, diagnóstico, snapshots do orçamento, execução, conclusão e devolução única de estoque no cancelamento. MongoDB exclusivo com transações. |
 | Billing | Uma cobrança por ordem, checkout hospedado Mercado Pago, confirmação por webhook assinado e consultas administrativas. PostgreSQL exclusivo; valor zero confirma localmente. |
 | Contratos e chassi | Contratos por produtor em NuGet; chassi e adaptador Kafka em repositório próprio. Nenhum serviço referencia o código-fonte, domínio ou banco dos demais. |
-| Frontend e retirada do monólito | Frontend e OS permanecem no repositório principal. Fonte/testes/Compose e deploy exclusivo do monólito foram removidos; manifests AWS antigos estão em `legacy/aws`, sem alteração de recursos ou dados remotos. |
+| Frontend | SPA React com acesso às três APIs por proxy e acompanhamento privado. Frontend e OS ficam no repositório principal. |
 
-O OS permanece no repositório principal, junto do frontend e documentação central. O código do monólito só permanece no histórico Git. Execution e Billing possuem repositórios próprios. A dependência de checkouts vizinhos no Compose serve apenas para construir as imagens locais; as bibliotecas entre serviços são consumidas por pacote versionado.
+O OS permanece no repositório principal, junto do frontend e documentação central. Execution e Billing possuem repositórios próprios. A dependência de checkouts vizinhos no Compose serve apenas para construir as imagens locais; as bibliotecas entre serviços são consumidas por pacote versionado.
 
 ## Fluxo implementado
 
@@ -37,16 +37,15 @@ flowchart LR
 
 Aprovar/cancelar retorna 202; o OS preserva o status operacional até a confirmação do Execution. Decisão repetida não republica; decisão oposta retorna conflito. O cancelamento pelo administrador ou cliente é permitido enquanto aguarda aprovação e antes de aprovar; depois disso, apenas a compensação por recusa de pagamento pode cancelar a ordem aprovada. O histórico da aprovação é preservado.
 
-O cliente pode consultar, aprovar e cancelar pelo link privado da ordem. Um administrador emite ou troca o token; apenas seu hash é persistido. O link vale até a próxima emissão, sem expiração automática neste incremento, e não depende de CPF nem da Lambda legada. A entrega é exclusiva do administrador após `Finalizada`: OS passa a `Entregue` (6), Execution permanece `Finalizada` (5) e a Saga continua `Concluida`. Não há nova cobrança ou evento de entrega. Consulte [acompanhamento e entrega](acompanhamento-e-entrega.md) e [Saga](saga-pagamento.md).
+O cliente pode consultar, aprovar e cancelar pelo link privado da ordem. Um administrador emite ou troca o token; apenas seu hash é persistido. O link vale até a próxima emissão, sem expiração automática neste incremento. A entrega é exclusiva do administrador após `Finalizada`: OS passa a `Entregue` (6), Execution permanece `Finalizada` (5) e a Saga continua `Concluida`. Não há nova cobrança ou evento de entrega. Consulte [acompanhamento e entrega](acompanhamento-e-entrega.md) e [Saga](saga-pagamento.md).
 
 ## Marcos e evidências
 
 | Marco | Estado |
 | --- | --- |
-| Extração OS e chassi | Implementada, com soluções, testes, imagens e persistência próprias. O [primeiro incremento](fase4-incremento1.md) é histórico. |
 | Execution e Kafka | Implementados, incluindo diagnóstico, orçamento, estoque e confirmação de transições. |
 | Billing e Saga no OS | Implementados com checkout Mercado Pago, webhook e compensação por recusa. Compra de teste externa ainda precisa de validação operacional. |
-| Autenticação no OS | Implementada: cadastro anônimo por decisão do projeto, login e JWT validado localmente pelas três APIs. Não há importação de usuários legados, refresh token ou revogação de JWT já emitido. |
+| Autenticação no OS | Implementada: cadastro anônimo por decisão do projeto, login e JWT validado localmente pelas três APIs. Não há refresh token ou revogação de JWT já emitido. |
 | Acompanhamento e entrega | Backend e frontend adaptados ao link privado e à entrega administrativa. |
 | Execução local | `docker compose up -d --build` na raiz do OS inicia frontend, três APIs, dois PostgreSQL, MongoDB replica set e Kafka. Scalar/OpenAPI em cada API. |
 | Validação backend | Última validação registrada: 265 testes OS sem imagem, 2 testes da imagem e 9 cenários distribuídos aprovados; cobertura OS de 90,9%. [Evidências](../operacao/validacao-ponta-a-ponta.md). |
@@ -74,9 +73,9 @@ Os candidatos locais são uma etapa explícita de desenvolvimento, sem referênc
 | Pacotes e CI | Publicar/confirmar Billing Messaging 0.1.0 e verificar restore limpo, build, testes, cobertura, imagem, OpenAPI e Sonar em cada repositório. O gate agregado `ci-required` já exige OS, frontend e Sonar; validar sua execução remota. |
 | Frontend | Validar o frontend na borda AWS após implantar as APIs e suas dependências. A integração local, contratos e smoke HTTP estão implementados. |
 | Gateway real | Implementado conforme RFC-019; validar credenciais, deploy e compra de teste. Novas tentativas após recusa, estornos e cancelamentos após aprovação ficam para incrementos posteriores. |
-| Infraestrutura e tráfego | Implantar APIs, bancos, Kafka, segredos, observabilidade e roteamento. A AWS/Lambda existente ainda atende ao legado. A adaptação local do frontend não comprova migração da borda. |
-| Dados | Usar bancos novos de demonstração. Não importar contas ou histórico automaticamente, reutilizar links legados ou inventar orçamento para ordens antigas. |
-| Retirada operacional do legado | Fonte, testes e automação exclusiva já retirados. Ainda é necessário inventariar dados/recursos, validar substitutos na AWS, trocar tráfego e retirar somente recursos exclusivos antigos. Nenhum banco, volume ou recurso remoto foi excluído. |
+| Infraestrutura e tráfego | Implantar APIs, bancos, Kafka, segredos, observabilidade e roteamento. A adaptação local do frontend não comprova migração da borda. |
+| Dados | Usar bancos novos de demonstração. Não importar contas ou histórico automaticamente nem inventar orçamento ausente. |
+| Inventário e retenção | Conferir estados, recursos AWS e política de dados antes de aplicar ou destruir. Validação local não comprova alteração de bancos, volumes ou recursos remotos. |
 
 ## Consistência e recuperação
 
@@ -86,7 +85,6 @@ Banco, Kafka e gateway não têm atomicidade distribuída. Uma publicação entr
 
 ## Documentos relacionados
 
-- [Retirada do monólito: código, automação e limites](retirada-monolito.md).
 
 - [Frontend migrado: contratos e configuração](migracao-frontend.md) e [verificação local](../operacao/validacao-frontend.md).
 - [OS Service e execução local](../operacao/os-service.md).
@@ -94,4 +92,4 @@ Banco, Kafka e gateway não têm atomicidade distribuída. Uma publicação entr
 - [Autenticação administrativa no OS](autenticacao-os.md).
 - [Acompanhamento e entrega](acompanhamento-e-entrega.md).
 - [Validação ponta a ponta](../operacao/validacao-ponta-a-ponta.md) e [validação Billing](../operacao/validacao-billing.md).
-- [Arquitetura do legado/AWS](README.md) e [histórico do primeiro incremento](fase4-incremento1.md).
+- [Arquitetura dos serviços e entrada AWS](README.md).

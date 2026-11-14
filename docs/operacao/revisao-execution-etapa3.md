@@ -81,6 +81,6 @@ O procedimento canônico está no [padrão de mensageria](../arquitetura/mensage
 
 A migration preserva ordens anteriores em Recebida. Seu Down restaura a constraint antiga que só aceita Recebida:
 não aplicar downgrade com estados novos presentes nem descartar datas/histórico sem procedimento de reconciliação.
-Não há migração de ordens do legado, entrega, Billing, pagamentos, frontend ou infraestrutura AWS nesta etapa.
+Entrega, Billing, pagamentos, frontend e infraestrutura AWS estão fora do escopo desta etapa.
 
 Decisões: [ADR-016](../ADRs/ADR-016-integracao-os-execution.md) e [RFC-009](../RFCs/RFC-009-integracao-os-execution.md).

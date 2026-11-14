@@ -57,6 +57,6 @@ OS.Application.Messaging 0.1.0 ainda não estava publicado e foi consumido como 
 sem referências de código-fonte entre repositórios. CI/Docker em clone limpo exigem a publicação desse contrato.
 
 Não houve execução remota de GitHub Actions/Sonar, criação de remote Execution ou infraestrutura AWS.
-A API OS e o legado não receberam mudanças funcionais nesta etapa.
+A API OS não recebeu mudanças funcionais nesta etapa.
 O fluxo distribuído com as duas APIs reais e os cenários BDD ainda será feito na etapa 3,
 junto da aprovação/cancelamento administrativos e projeção de estado/histórico no OS.

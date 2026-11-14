@@ -18,7 +18,7 @@ public class PagamentoSagaTests
   var recovered = OrdemServico.Rehydrate(order.Snapshot());
   Assert.Multiple(() => { Assert.That(recovered.IsSuccess,Is.True); Assert.That(recovered.Value!.Decisao,Is.EqualTo(DecisaoExecucao.Autorizada)); Assert.That(recovered.Value.Pagamento!.Etapa,Is.EqualTo(approved ? EtapaPagamento.Concluida : EtapaPagamento.Compensada)); });
  }
- [Test] public void LegacyBudgetCannotBeInvented()
+ [Test] public void AuthorizationRequiresRecordedBudget()
  {
   var order = OrdemServico.Create(Guid.NewGuid(),Guid.NewGuid(),"Motor falhando").Value!;
   order.RegistrarDiagnosticoIniciado(DateTime.UtcNow);order.RegistrarDiagnosticoConcluido(DateTime.UtcNow);

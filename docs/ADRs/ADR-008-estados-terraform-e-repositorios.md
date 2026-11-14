@@ -2,61 +2,29 @@
 
 - **Status:** Aceita
 - **Data:** 2026-08-23
-- **Responsáveis:** equipe do Tech Challenge
+- **Última revisão:** 2026-11-14
 - **Escopo:** organização da plataforma e infraestrutura como código
-- **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-10-31
 
 ## Contexto
 
-Aplicação, plataforma, banco e autorizador têm responsabilidades distintas. Seus recursos precisam ser criados e removidos na ordem das dependências.
+Aplicações, infraestrutura e bancos têm ciclos e permissões distintos. Provisionamento e destruição precisam respeitar as dependências entre recursos.
 
 ## Decisão
 
-| Repositório | Responsabilidade |
-| --- | --- |
-| `fiap-tech-challenge` | Aplicação, imagens, manifests e orquestração |
-| `fiap-tech-challenge-infra` | Bootstrap, rede/EKS/ECR, add-ons, observabilidade, gateway e infraestrutura serverless |
-| `fiap-tech-challenge-db` | RDS e segredo da conexão |
-| `fiap-tech-challenge-serverless` | Código, testes e deploy da Lambda Authorizer |
+Manter o repositório principal como entrada do ciclo, Infra como responsável pela plataforma compartilhada e DB como responsável por RDS e inicialização dos bancos. OS, Execution e Billing mantêm suas imagens, migrations e workloads; Chassis mantém os pacotes técnicos.
 
-A criação segue:
-
-```text
-bootstrap → aws-resources → database → kubernetes-addons
-→ kubernetes-configs → aplicações/Ingresses → api-gateway
-→ serverless → deploy do código da Lambda
-```
-
-Aplicações/Ingresses e deploy do código da Lambda são etapas de entrega, não estados Terraform. Os demais estágios têm chaves próprias no mesmo bucket S3, com criptografia e lockfile. Dependências são consumidas por outputs de `terraform_remote_state`.
+Bootstrap é administrativo e separado do ciclo cotidiano. O apply encadeia core → database → add-ons → configurações → messaging → inicialização dos bancos → APIs → frontend → gateway → verificações. Os estágios usam estados separados em S3 e outputs explícitos por `terraform_remote_state`.
 
 ## Alternativas consideradas
 
-- **Repositório e state únicos:** simplificariam coordenação, mas ampliariam planos e impacto de falhas.
-- **State por recurso:** criaria dependências demais para operar.
-- **Workspaces por componente:** confundiriam separação de ambientes com responsabilidades.
+Um único state ampliaria planos e impacto de falhas. State por recurso criaria dependências demais. Workspaces por componente confundiriam ambientes e responsabilidades.
 
 ## Consequências
 
-- Planos menores facilitam revisão, mas outputs e workflows acoplam os repositórios.
-- O bootstrap inicial exige criar o bucket antes de migrar seu próprio estado.
-- Consumir outputs por remote state requer acesso ao estado de origem; não é isolamento de segredos.
-- Chaves diferentes separam locks, mas não isolam armazenamento ou IAM: o bucket tem `force_destroy = true`, sem versionamento declarado, e as roles de infraestrutura são amplas.
-- Destruição remove serverless antes do gateway, Ingresses antes do controller e dependentes antes do banco/cluster.
-- Mudanças de outputs devem ser coordenadas com seus consumidores.
+Outputs e workflows exigem coordenação entre repositórios. Separar chaves de estado não isola automaticamente IAM ou dados sensíveis. A remoção deve respeitar os dependentes e conferir a exclusão efetiva dos recursos e volumes. Estados incompatíveis exigem conciliação e revisão do plano antes de aplicar.
 
-Reconsiderar quando a coordenação entre repositórios impedir mudanças seguras ou surgirem ambientes com ciclos independentes.
+## Evidências
 
-## Evidências e relações
-
-- [Orquestrador principal](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/.github/workflows/initialize-and-deploy.yml)
-- [Guia e ordem dos estados](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra)
-- [Backend do estado de banco](https://github.com/Maieru/fiap-tech-challenge-db/blob/main/infra/database/backend.tf)
-- [Workflows do banco](https://github.com/Maieru/fiap-tech-challenge-db/tree/main/.github/workflows)
-- [RFC-005 — Terraform e GitHub Actions com OIDC](../RFCs/RFC-005-terraform-e-github-actions-oidc.md)
-- [ADR-010 — Ambiente efêmero orientado a custo](ADR-010-ambiente-efemero-orientado-a-custo.md)
-- [Criação de gateway e serverless](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/.github/workflows/apply-edge-infrastructure.yml)
-
-## Evolução na Fase 4
-
-Esta decisão continua descrevendo o legado e a infraestrutura existente. A [ADR-011](ADR-011-extracao-incremental-os-monorepo.md) registra a introdução paralela do OS Service e o monorepo temporário, sem migrar o tráfego atual.
+- [Workflow principal](../../.github/workflows/manage-platform.yml).
+- [Guia operacional](../operacao/plataforma-aws.md).
+- [Plataforma AWS](ADR-024-plataforma-microsservicos-aws.md).

@@ -18,7 +18,7 @@ Logs e relatórios ficam em artifacts (ignorados pelo Git) de cada repositório.
 
 Sem publicação NuGet, execução remota de CI/Sonar ou deploy AWS nesta validação. OS.Application.Messaging 0.2.0 e Billing.Application.Messaging 0.1.0 estão preparados como candidatos; publicar contratos antes de exigir restore público dos consumidores. Restore local explícito e Docker aceitam nupkg candidatos sem referência ao código-fonte de outro serviço.
 
-A sequência persistir/publicar/commit não garante atomicidade entre banco, Kafka e gateway. Entrega incerta exige reconciliação conforme o padrão canônico. Sem Outbox, retry de aplicação, DLQ, estorno, nova tentativa comercial ou cancelamento administrativo após aprovação. Os bancos de demonstração podem começar vazios; não há cobrança retroativa nem migração de histórico legado.
+A sequência persistir/publicar/commit não garante atomicidade entre banco, Kafka e gateway. Entrega incerta exige reconciliação conforme o padrão canônico. Sem Outbox, retry de aplicação, DLQ, estorno, nova tentativa comercial ou cancelamento administrativo após aprovação. Os bancos de demonstração podem começar vazios; não há cobrança retroativa nem importação automática de histórico.
 
 ## Correções após revisão
 

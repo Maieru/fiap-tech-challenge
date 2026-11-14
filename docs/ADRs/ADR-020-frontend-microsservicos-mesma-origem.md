@@ -2,11 +2,12 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-02
+- **Última revisão:** 2026-11-14
 - **Escopo:** frontend, proxy, execução local e entrada em nuvem
 
 ## Contexto
 
-O frontend consumia contratos do monólito. OS, Execution e Billing possuem APIs versionadas, JWT compartilhado e transições assíncronas por Kafka. O frontend deve operar com API Gateway na nuvem e sem exigir um gateway local.
+OS, Execution e Billing possuem APIs versionadas, JWT compartilhado e transições assíncronas por Kafka. O frontend deve operar com API Gateway na nuvem e sem exigir um gateway local.
 
 ## Decisão
 
@@ -21,7 +22,7 @@ O acompanhamento usa um cliente HTTP separado, sem JWT ou logout administrativo 
 - Kong obrigatório localmente: acrescentaria serviço e configuração sem necessidade de plugins de gateway neste incremento.
 - Chamadas diretas do navegador a três portas: exigiria CORS em todas as APIs e diferenças desnecessárias entre local e nuvem.
 - BFF com agregação: acrescentaria serviço de negócio e implantação; a composição atual cabe na camada de serviços do frontend.
-- Manter endpoints legados como fallback: esconderia falhas de migração e misturaria dados/bancos de ambientes diferentes.
+- Usar contratos alternativos como fallback: esconderia falhas de integração e misturaria dados/bancos de ambientes diferentes.
 
 ## Consequências e evidências
 

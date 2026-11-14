@@ -2,48 +2,30 @@
 
 - **Status:** Aceita
 - **Data:** 2026-08-23
-- **Responsáveis:** equipe do Tech Challenge
-- **Escopo:** dados e persistência
-- **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-09-07
+- **Última revisão:** 2026-11-14
+- **Escopo:** dados relacionais de OS e Billing
 
 ## Contexto
 
-Clientes, veículos, estoque e ordens possuem relacionamentos e gravações que exigem integridade transacional.
+Cadastros, ordens, histórico e cobranças exigem integridade e transações locais. Execution mantém catálogo e execução em MongoDB conforme sua decisão própria.
 
 ## Decisão
 
-Usar PostgreSQL como banco operacional, acessado pelo backend com EF Core e Npgsql.
+Usar PostgreSQL com EF Core e Npgsql em OS e Billing. Cada serviço tem banco, usuário, credenciais e migrations próprios. Na AWS, DB provisiona RDS privado e criptografado em sub-redes de banco; a aplicação recebe sua conexão pelo mecanismo de segredos. O ambiente local usa PostgreSQL no Docker Compose.
 
-- Localmente, executar PostgreSQL em Docker Compose.
-- Na AWS, usar RDS em sub-redes de banco e guardar a conexão no Secrets Manager.
-- Restringir a porta 5432 aos security groups dos nós EKS e da Lambda Authorizer. A regra da Lambda pertence ao estado `serverless`.
-- Manter migrations com a aplicação e isolar persistência por repositórios, conforme a ADR-003.
-- O autorizador usa seu próprio contexto EF de leitura no mesmo banco.
+Restringir acesso de rede e privilégios ao necessário por serviço. Não realizar consultas ou compartilhamento de schemas entre OS e Billing. O modelo de persistência fica isolado por contratos e repositórios.
 
 ## Alternativas consideradas
 
-- **PostgreSQL autogerenciado:** transferiria manutenção do servidor para a equipe.
-- **Outro banco relacional:** exigiria revisar provider, tipos e migrations sem ganho demonstrado.
-- **NoSQL:** não simplificaria os relacionamentos e transações centrais.
+PostgreSQL autogerenciado transferiria manutenção à equipe. Outro banco relacional exigiria revisar provider e migrations. MongoDB atende a outro contexto e não substitui as transações relacionais destes serviços.
 
 ## Consequências
 
-- Local e AWS usam o mesmo motor, mas versões diferentes: PostgreSQL 16 no Compose e 18.3 no Terraform do RDS.
-- O schema e suas mudanças precisam atender à API e ao autorizador.
-- Migrations rodam no startup dos pods; a coordenação entre réplicas continua uma limitação operacional.
-- A indisponibilidade do banco afeta readiness e autorização das rotas na borda.
-- O RDS está marcado como `publicly_accessible = true`, embora o security group restrinja as origens. Essa configuração precisa ser revista para um ambiente durável.
-- Backups automáticos estão desabilitados e a destruição não cria snapshot final, conforme a ADR-010.
+Migrations devem ser compatíveis com rollout e concorrência entre pods. Indisponibilidade do banco afeta as operações e a readiness. A configuração do laboratório não mantém backup automático nem snapshot final no destroy; não oferece retenção durável de dados únicos.
 
-Reconsiderar por requisitos de disponibilidade, distribuição ou padrões de acesso que o modelo atual não atenda.
+## Evidências
 
-## Evidências e relações
-
-- [ER, relacionamentos e justificativa dos ajustes do modelo](../arquitetura/banco-de-dados.md)
-- [Registro do Npgsql](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/InfraestructureDependecyInjection.cs)
-- [Contexto EF Core](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/AppDbContext.cs)
-- [Infraestrutura do banco](https://github.com/Maieru/fiap-tech-challenge-db/tree/main/infra/database)
-- [ADR-003 — Persistência por repositórios](../ADRs/ADR-003-persistencia-por-repositorios.md)
-- [ADR-010 — Ambiente efêmero orientado a custo](../ADRs/ADR-010-ambiente-efemero-orientado-a-custo.md)
-- [Acesso do autorizador ao banco](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/infra/serverless/networking.tf)
+- [Registro Npgsql OS](../../src/FIAP.TechChallenge.OS.Infrastructure/InfrastructureDependencyInjection.cs).
+- [Contexto OS](../../src/FIAP.TechChallenge.OS.Infrastructure/Persistence/AppDbContext.cs).
+- [Dados dos serviços](../arquitetura/banco-de-dados.md).
+- [Guia AWS](../operacao/plataforma-aws.md).

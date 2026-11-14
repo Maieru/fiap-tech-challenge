@@ -5,7 +5,7 @@
 - **Responsáveis:** equipe do Tech Challenge
 - **Escopo:** infraestrutura como código e entrega contínua
 - **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-09-07
+- **Última revisão:** 2026-11-14
 
 ## Contexto
 
@@ -45,7 +45,7 @@ Reconsiderar por requisitos de aprovação, segregação de funções, GitOps ou
 ## Evidências e relações
 
 - [CI/CD atual e melhorias de homologação/produção](../operacao/ci-cd.md)
-- [Orquestrador de implantação](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/.github/workflows/initialize-and-deploy.yml)
+- [Orquestrador de implantação](../../.github/workflows/manage-platform.yml)
 - [Guia da infraestrutura](https://github.com/Maieru/fiap-tech-challenge-infra/tree/main/infra)
 - [Workflow Terraform reutilizável](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/.github/workflows/terraform-stage.yml)
 - [Configuração OIDC](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/infra/bootstrap/github-auth.tf)
