@@ -6,7 +6,7 @@
 
 ## Contexto
 
-O fluxo distribuído terminava na finalização da execução. A entrega e o acompanhamento pelo cliente ainda dependiam do legado. A migração do frontend foi cancelada; esta entrega cobre as APIs. O cliente deve consultar, aprovar e cancelar antes da aprovação por link privado, conforme decisão do projeto.
+O ciclo da ordem exige entrega administrativa e acompanhamento privado pelo cliente. Esta decisão define os contratos das APIs. O cliente deve consultar, aprovar e cancelar antes da aprovação por link privado, conforme decisão do projeto.
 
 Esse é o contexto do incremento das APIs. A migração posterior do frontend foi implementada e verificada localmente na [ADR-020](ADR-020-frontend-microsservicos-mesma-origem.md); seus resultados estão na [verificação do frontend](../operacao/validacao-frontend.md).
 

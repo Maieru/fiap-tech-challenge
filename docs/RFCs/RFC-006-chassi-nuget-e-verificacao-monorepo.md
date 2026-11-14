@@ -1,51 +1,30 @@
-# RFC-006 — Chassi NuGet e verificação independente no monorepo
+# RFC-006 — Chassi NuGet e verificação dos componentes
 
 - **Status:** Aceita
 - **Data:** 2026-10-31
-- **Última revisão:** 2026-11-01
-- **Escopo:** infraestrutura de aplicação e qualidade do primeiro incremento
-
-A organização atual do chassi é definida pela [ADR-013](../ADRs/ADR-013-chassi-em-repositorio-proprio.md): biblioteca e automação específicas ficam em repositório independente. A decisão de distribuir recursos técnicos por NuGet permanece vigente.
-
-A organização das soluções e do CI descrita neste incremento foi atualizada pela [RFC-014](RFC-014-solucoes-ci-sem-monolito.md): as soluções ativas contêm somente OS, e o gate agrega OS/frontend/Sonar. O texto abaixo preserva a evolução anterior.
+- **Última revisão:** 2026-11-14
+- **Escopo:** dependências técnicas, soluções e CI
 
 ## Contexto
 
-Os serviços precisam de observabilidade, correlação, tratamento de falhas e probes consistentes. A equipe escolheu distribuir esses recursos como pacote NuGet público, preservando a propriedade local das regras de negócio. A base anterior já tinha NUnit, Coverlet e testes HTTP, mas usava EF InMemory e não impunha cobertura mínima no CI.
-
-## Alternativas consideradas
-
-- Copiar configurações por serviço: fácil de iniciar, com divergência de comportamento.
-- Compartilhar projetos por referência: vincula builds ao layout do monorepo.
-- Chassi completo com broker, persistência e Saga: antecipa decisões de incrementos ainda não implementados.
-- Pacote técnico mínimo com consumidores reais: explicita compatibilidade e permite atualizações independentes.
+Os serviços precisam compartilhar recursos técnicos sem compartilhar regras de negócio, domínio ou banco. A validação deve acompanhar o código de cada componente.
 
 ## Decisão
 
-Publicar `Maieru.FiapTechChallenge.Chassis`, .NET 10/MIT, por versões imutáveis no NuGet.org e GitHub OIDC Trusted Publishing. Inicialmente inclui telemetria, correlação HTTP, exceções técnicas, saúde extensível e envelope genérico. Cada consumidor fixa uma versão pública. A preparação de candidatos fica restrita à validação interna do repositório do chassi.
+Distribuir o chassi técnico e o adaptador Kafka em pacotes NuGet do repositório Chassis. Fixar versões explícitas em `PackageReference`. Contratos de eventos pertencem a seus produtores e são distribuídos em pacotes separados.
 
-Preservar NUnit/Moq. Acrescentar PostgreSQL real/Testcontainers e BDD Reqnroll, mantendo os testes existentes. Medir pelo menos 80% de cobertura de linhas separadamente para legado, chassi e OS; excluir apenas testes e código gerado. Usar SonarQube Cloud e check agregado obrigatório nos PRs. Credenciais ausentes ou análise reprovada não são tratadas como sucesso.
+`Backend.slnx` reúne os nove projetos OS. O CI principal verifica backend e frontend; Chassis, Execution e Billing mantêm seus próprios builds, testes e publicação. As soluções organizam projetos por componente e testes.
 
-## Consequências
+Preservar NUnit/Moq para testes unitários e PostgreSQL/Kafka reais em suítes de integração isoladas. Usar BDD Reqnroll nos fluxos apropriados. A cobertura exige pelo menos 80% de linhas por componente, consolidada por ReportGenerator; Sonar e `ci-required` mantêm os gates de qualidade. A categoria `ContainerImage` identifica testes comportamentais da imagem.
 
-Builds dos serviços consumidores restauram versões públicas fixadas. A aplicação de exemplo no repositório do chassi valida o `.nupkg`, não uma referência de projeto. Testes de integração dos serviços exigem Docker. A publicação de novas versões depende da configuração da conta NuGet; a análise depende do projeto Sonar. As versões consumidas atualmente já estão publicadas, conforme o [guia de dependências](../operacao/monorepo-ci.md).
+## Alternativas consideradas
 
-Foram fixadas versões corrigidas de Microsoft.OpenApi (2.7.5) e SSH.NET (2026.0.0, somente nas dependências de teste) após avisos reais da restauração. As atualizações permanecem cobertas pela regressão.
+Copiar bibliotecas entre repositórios criaria divergências. Compartilhar projetos de negócio pelo chassi romperia a autonomia. Compensar cobertura entre serviços esconderia componentes sem verificação suficiente.
 
-## Evidências
+## Consequências e evidências
 
-- [Operação do CI e publicação](../operacao/monorepo-ci.md).
-- [Resultados e limitações](../operacao/evidencias-fase4-incremento1.md).
-- [Biblioteca, testes, consumidor e publicação em repositório próprio](https://github.com/Maieru/fiap-tech-challenge-chassis).
+Pacotes candidatos podem ser validados localmente, mas build com feed local não comprova publicação ou restore em runner limpo. Credenciais ausentes e quality gate reprovado não são sucesso.
 
-## Organização da automação
-
-Build, teste e cobertura são declarados nos workflows e Actions locais em `.github`. O principal verifica legado e OS; o repositório do chassi verifica biblioteca, adaptador Kafka, testes e exemplo e publica os pacotes. O OS possui solução própria com contratos e testes. A orquestração fica nos workflows e Actions locais; ReportGenerator 5.5.12 substitui a agregação própria de cobertura, mantendo o gate de 80% por componente. A validação comportamental da imagem usa NUnit/Testcontainers, categoria `ContainerImage`.
-
-O inventário CSV foi substituído pela tabela de responsabilidades no guia de arquitetura. A mudança de agregador pode alterar percentuais por tratamento de linhas compartilhadas/geradas; os relatórios anteriores permanecem como evidências históricas, sem atribuir a diferença a novos testes.
-
-As soluções usam agrupamentos visuais por componente e pastas próprias para testes. `Backend.slnx` reúne os 18 projetos de legado e OS, incluindo os contratos de mensageria e seus testes; a solução original com Docker Compose também inclui a suíte PostgreSQL legada. O README raiz concentra o mapa de soluções e cada componente possui seu guia de desenvolvimento.
-
-A análise Sonar fica no workflow reutilizável `sonarqube.yml`, chamado após os testes do monorepo e incluído no check `ci-required`. Segue o modelo .NET do Sonar com runner Windows, Java 21, checkout completo e caches. A versão do scanner permanece fixada no manifesto de ferramentas. Os testes PostgreSQL continuam em Linux; o Sonar consome cobertura OpenCover com caminhos ajustados ao checkout Windows e restaura o chassi público. Organização/projeto públicos ficam no workflow, e somente `SONAR_TOKEN` exige secret. O repositório do chassi tem análise independente.
-
-Os passos de teste usam PowerShell 7, build prévio, `--no-build`, `--no-restore`, resultados TRX e verificação explícita do código de saída. Uma coleta gera os formatos Cobertura e OpenCover para atender, respectivamente, o gate por componente e a análise Sonar.
+- [CI e dependências](../operacao/monorepo-ci.md).
+- [Soluções e CI](RFC-014-solucoes-e-ci.md).
+- [Chassi independente](../ADRs/ADR-013-chassi-em-repositorio-proprio.md).

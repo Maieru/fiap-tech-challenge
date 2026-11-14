@@ -2,44 +2,30 @@
 
 - **Status:** Aceita
 - **Data:** 2026-08-23
-- **Responsáveis:** equipe do Tech Challenge
-- **Escopo:** integração entre frontend e backend
-- **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-09-07
+- **Última revisão:** 2026-11-14
+- **Escopo:** integração entre frontend e APIs
 
 ## Contexto
 
-A SPA precisa consultar e alterar dados da oficina com resposta imediata. Não há broker de mensagens no fluxo de negócio.
+A SPA consulta e altera dados por contratos HTTP. A coordenação entre serviços também inclui operações assíncronas por Kafka.
 
 ## Decisão
 
-Usar HTTP/JSON síncrono sob `/api`, com recursos CRUD e ações como `iniciar-diagnostico` e `aprovar-execucao`.
+Usar HTTP/JSON nos prefixos `/api/os/v1`, `/api/execution/v1` e `/api/billing/v1`. Controllers traduzem `Result<T>` para status e respostas HTTP. Chamadas administrativas enviam JWT Bearer; o acompanhamento público usa o token privado da ordem validado pelo OS.
 
-- A SPA usa Axios, timeout de 20 segundos e JWT Bearer nas chamadas autenticadas.
-- Controllers traduzem `Result<T>` para HTTP pelo mapeamento compartilhado.
-- API Gateway e ALB encaminham as chamadas; algumas rotas também usam autorização no gateway, conforme a ADR-005.
-- Novos erros de negócio usam `ErrorCode` e o mapeamento comum.
+Operações que aguardam confirmação por evento retornam `202 Accepted`. O frontend consulta o estado até a confirmação. Kafka transporta os contratos entre os serviços, conforme a ADR-014.
 
 ## Alternativas consideradas
 
-- **GraphQL ou gRPC:** exigiriam outro contrato sem necessidade atual.
-- **Mensageria:** acrescentaria consistência eventual a operações que precisam de resposta imediata.
-- **Frontend acessando o banco:** contornaria regras e controles da API.
+GraphQL ou gRPC acrescentariam outro contrato para a SPA. Acesso direto ao banco contornaria regras e controles das APIs. Mensageria é adequada à coordenação entre serviços, mas não substitui as consultas HTTP do navegador.
 
 ## Consequências
 
-- O contrato é simples para navegadores e ferramentas HTTP.
-- Cliente, API e dependências precisam estar disponíveis durante a chamada.
-- Notificações ainda são enviadas durante a requisição; não há entrega assíncrona durável.
-- Erros de model binding e exceções não tratadas não usam necessariamente o envelope de `Result<T>`.
-- Retentativas de comandos exigem idempotência; o contrato ainda não tem versão no caminho.
-
-Reconsiderar com consumidores externos, operações longas ou necessidade de eventos duráveis.
+A API e suas dependências precisam estar disponíveis durante a chamada. Confirmação HTTP não garante a conclusão de uma Saga. Retentativas de escrita exigem regras próprias de idempotência; timeout pode ocorrer após a gravação.
 
 ## Evidências e relações
 
-- [Controllers da API](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.API/Controllers)
-- [Mapeamento de resultados para HTTP](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.API/Extensions/ResultExtensions.cs)
-- [Cliente HTTP do frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/src/services/api.ts)
-- [Configuração da API](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.API/Program.cs)
-- [ADR-005 — Topologia de entrada na AWS](ADR-005-topologia-de-entrada-na-aws.md)
+- [Controllers OS](../../src/FIAP.TechChallenge.OS.API/Controllers).
+- [Mapeamento de resultados](../../src/FIAP.TechChallenge.OS.API/Extensions/ResultExtensions.cs).
+- [Cliente HTTP do frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/src/services/api.ts).
+- [Contratos de mensagens](ADR-014-contratos-mensageria.md).

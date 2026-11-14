@@ -5,7 +5,7 @@
 - **Responsáveis:** equipe do Tech Challenge
 - **Escopo:** observabilidade
 - **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-11-02
+- **Última revisão:** 2026-11-14
 
 ## Contexto
 
@@ -46,7 +46,7 @@ Reconsiderar por custo, volume, retenção, disponibilidade ou requisitos de pri
 
 ## Evidências e relações
 
-- [Instrumentação do backend](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Observability/OpenTelemetryConfiguration.cs)
+- [Instrumentação do backend](../../src/FIAP.TechChallenge.OS.API/Program.cs)
 - [Instrumentação do frontend](../../src/FIAP.TechChallenge.Fase1.Frontend/src/observability/telemetry.ts)
 - [Verificação local do frontend e dos logs](../operacao/validacao-frontend.md)
 - [Configuração local do Collector](../../src/ObservabilityConfig/otel-collector-config.yaml)

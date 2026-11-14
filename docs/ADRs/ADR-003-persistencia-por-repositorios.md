@@ -2,44 +2,30 @@
 
 - **Status:** Aceita
 - **Data:** 2026-08-23
-- **Responsáveis:** equipe do Tech Challenge
+- **Última revisão:** 2026-11-14
 - **Escopo:** aplicação e persistência
-- **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-09-07
 
 ## Contexto
 
-O domínio deve ficar independente do EF Core. Operações que gravam em vários repositórios precisam manter consistência no mesmo PostgreSQL.
+As regras precisam permanecer independentes do EF Core e do driver MongoDB. Cada serviço coordena suas gravações no próprio banco.
 
 ## Decisão
 
-- Definir interfaces de persistência em `Domain/Interfaces` e implementá-las na Infrastructure.
-- Separar entidades de domínio e de persistência com mappers explícitos.
-- Expor operações específicas, sem `IQueryable` ou tipos do EF nas interfaces.
-- Cada repositório chama `SaveChangesAsync`; fluxos com múltiplas gravações devem coordenar uma transação.
-- Propagar `CancellationToken` e usar consultas sem tracking quando não houver atualização da instância.
+Definir contratos de persistência no núcleo e implementá-los em Infrastructure. Usar mappers explícitos quando houver modelos distintos de domínio e persistência. Não expor `IQueryable` ou tipos concretos de persistência nas interfaces de negócio.
+
+Casos de uso coordenam transações locais pelas abstrações de unidade de trabalho. Propagar `CancellationToken` em operações assíncronas. OS e Billing usam PostgreSQL; Execution usa MongoDB com suporte a transações.
 
 ## Alternativas consideradas
 
-- **DbContext na Application ou Active Record:** acoplariam regras e casos de uso à persistência.
-- **Repositório genérico:** esconderia consultas específicas em uma abstração ampla.
-- **Eventos distribuídos:** adicionariam complexidade a gravações no mesmo banco.
+DbContext na Application acoplaria os casos de uso à persistência. Um repositório genérico esconderia consultas específicas. Transações distribuídas ampliariam a coordenação entre bancos independentes.
 
 ## Consequências
 
-- O núcleo permanece testável sem EF Core, ao custo de interfaces, entidades e mappers adicionais.
-- `CriarOrdemServicoCompleta`, `AdicionarPecaInsumoOrdemServico` e `CancelarOrdemServico` usam `TransactionScope` assíncrono.
-- `CriarOrdemServicoComClienteEVeiculo` não abre transação própria: a chamada direta pode deixar gravações parciais. Essa lacuna precisa ser corrigida ou coberta por um escopo externo explícito.
-- A transação cobre o banco, não notificações ou outros recursos externos. Não há outbox nem garantia geral de idempotência ou controle de concorrência.
-
-Reconsiderar com múltiplos bancos ou quando uma unidade de trabalho explícita simplificar a coordenação das gravações.
+O núcleo permanece testável sem persistência concreta. Transações locais não tornam atômicos banco, Kafka e gateway de pagamento. Entrega incerta exige reconciliação; os limites de publicação estão documentados no padrão de mensageria e na Saga.
 
 ## Evidências e relações
 
-- [Contratos de domínio](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Domain/Interfaces)
-- [Repositórios EF Core](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/Repositories)
-- [Entidades de persistência](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/Entities)
-- [Mappers](https://github.com/Maieru/fiap-tech-challenge/tree/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Infrastructure/Persistence/Mappers)
-- [Caso de uso transacional composto](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Application/UseCases/OrdensServico/CriarOrdemServicoCompleta/CriarOrdemServicoCompletaUseCase.cs)
-- [Fluxo composto sem transação própria](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/src/FIAP.TechChallenge.Fase1.Application/UseCases/OrdensServico/CriarOrdemServicoComClienteEVeiculo/CriarOrdemServicoComClienteEVeiculoUseCase.cs)
-- [RFC-002 — PostgreSQL no Amazon RDS](../RFCs/RFC-002-postgresql-no-amazon-rds.md)
+- [Contratos de domínio](../../src/FIAP.TechChallenge.OS.Domain/Interfaces).
+- [Repositórios OS](../../src/FIAP.TechChallenge.OS.Infrastructure/Persistence/Repositories).
+- [Unidade de trabalho](../../src/FIAP.TechChallenge.OS.Application/Abstractions/IUnitOfWork.cs).
+- [Mensageria](../arquitetura/mensageria.md) e [Saga](../arquitetura/saga-pagamento.md).

@@ -1,6 +1,6 @@
 # FIAP Tech Challenge — Gestão de Oficina Mecânica
 
-> Operação AWS atual: ciclo completo centralizado em `manage-platform.yml` no repositório principal. Bancos gerenciados (RDS/DocumentDB), Kafka no EKS, segredos e migrations são provisionados pelo fluxo. Instruções antigas de ações manuais/pré-requisitos avulsos abaixo são históricas; seguir o [guia operacional](https://github.com/Maieru/fiap-tech-challenge/blob/main/docs/operacao/plataforma-aws.md). A aplicação remota ainda exige publicação coordenada, transição e bootstrap.
+> O ciclo AWS é centralizado em `manage-platform.yml`: RDS para OS/Billing, MongoDB e Kafka no EKS, segredos, migrations, publicação e deploy por digest. Consulte o [guia operacional](docs/operacao/plataforma-aws.md) para bootstrap, variables/secrets, ativação e destruição diária do laboratório.
 
 Sistema para administrar clientes, veículos e o ciclo das ordens de serviço: diagnóstico, orçamento, aprovação, pagamento, execução e entrega.
 
@@ -16,11 +16,13 @@ Este repositório é o ponto de entrada do projeto: reúne o serviço de Ordens 
 - [Estrutura do repositório](#estrutura-do-repositório)
 - [Documentação](#documentação)
 - [Execução local integrada](#subir-os-execution-e-billing)
+- [Pagamentos no ambiente local](#pagamentos-no-ambiente-local)
 - [Autenticação e documentação HTTP](#autenticação-e-documentação-http)
 - [Build, testes e CI](#build-testes-e-ci)
 - [Observabilidade](#observabilidade)
 - [Infraestrutura e Kubernetes](#infraestrutura-e-kubernetes)
 - [Estado da entrega](#estado-da-entrega)
+- [Diagnóstico rápido](#diagnóstico-rápido)
 - [Objetivos do projeto](#objetivos-do-projeto)
 
 ## Inventário dos repositórios
@@ -29,11 +31,11 @@ Este repositório é o ponto de entrada do projeto: reúne o serviço de Ordens 
 | --- | --- | --- |
 | [**fiap-tech-challenge**](https://github.com/Maieru/fiap-tech-challenge) | OS: clientes, veículos, ordens, histórico, autenticação e acompanhamento privado. Também contém o frontend e a documentação central. | .NET, PostgreSQL, Kafka, React e TypeScript |
 | [**fiap-tech-challenge-execution**](https://github.com/Maieru/fiap-tech-challenge-execution) | Catálogo de serviços e peças, estoque, diagnóstico, orçamento e execução. Contratos de eventos e testes distribuídos. | .NET, MongoDB e Kafka |
-| [**fiap-tech-challenge-billing**](https://github.com/Maieru/fiap-tech-challenge-billing) | Cobranças e resultados de pagamento para a Saga coordenada pelo OS. O gateway atual é mockado. | .NET, PostgreSQL e Kafka |
+| [**fiap-tech-challenge-billing**](https://github.com/Maieru/fiap-tech-challenge-billing) | Cobranças e resultados de pagamento para a Saga coordenada pelo OS. Integra checkout hospedado e webhook assinado do Mercado Pago. | .NET, PostgreSQL e Kafka |
 | [**fiap-tech-challenge-chassis**](https://github.com/Maieru/fiap-tech-challenge-chassis) | Bibliotecas técnicas de observabilidade, correlação, exceções, health checks e publicação Kafka, distribuídas por NuGet. | .NET, OpenTelemetry e NuGet |
-| [**fiap-tech-challenge-infra**](https://github.com/Maieru/fiap-tech-challenge-infra) | Plataforma AWS: rede, EKS, ECR, API Gateway, infraestrutura da Lambda, add-ons, segredos e observabilidade. | Terraform, AWS, Kubernetes e Helm |
-| [**fiap-tech-challenge-db**](https://github.com/Maieru/fiap-tech-challenge-db) | Provisionamento do PostgreSQL no Amazon RDS e credenciais no Secrets Manager. | Terraform, RDS e Secrets Manager |
-| [**fiap-tech-challenge-serverless**](https://github.com/Maieru/fiap-tech-challenge-serverless) | Código, testes e publicação da Lambda Authorizer do acesso legado às ordens. O acompanhamento privado atual é validado pelo OS. | .NET e AWS Lambda |
+| [**fiap-tech-challenge-infra**](https://github.com/Maieru/fiap-tech-challenge-infra) | Plataforma AWS: rede, EKS, ECR, API Gateway, Kafka/MongoDB, add-ons, segredos e observabilidade. | Terraform, AWS, Kubernetes e Helm |
+| [**fiap-tech-challenge-db**](https://github.com/Maieru/fiap-tech-challenge-db) | RDS para OS/Billing, credenciais e certificados dos bancos e inicialização de usuários/grants. | Terraform, RDS e Secrets Manager |
+| [**fiap-tech-challenge-serverless**](https://github.com/Maieru/fiap-tech-challenge-serverless) | Código e testes do autorizador Lambda por CPF. O ciclo dos microsserviços usa autorização privada no OS. | .NET e AWS Lambda |
 
 OS, Execution e Billing possuem bancos próprios e se integram por eventos Kafka. Os contratos de eventos e o chassi são consumidos como pacotes NuGet; cada serviço mantém suas regras de negócio e persistência.
 
@@ -66,7 +68,7 @@ flowchart LR
     OS <--> Kafka[Kafka]
     Execution <--> Kafka
     Billing <--> Kafka
-    Billing --> Gateway[Gateway de pagamento mockado]
+    Billing --> Gateway[Mercado Pago: checkout e webhook]
 ```
 
 No OS, as responsabilidades são separadas em camadas:
@@ -119,7 +121,6 @@ O status operacional é preservado enquanto uma decisão está pendente. A aprov
 | Ambiente integrado local e OS isolado | [compose.yaml](compose.yaml) e [compose.os.yaml](compose.os.yaml) |
 | Arquitetura, operação e decisões | [docs](docs/README.md) |
 | Kubernetes do frontend | [k8s](k8s/README.md) |
-| Referência dos manifests AWS antigos | [legacy/aws](legacy/aws/README.md) |
 
 ```text
 .
@@ -131,12 +132,10 @@ O status operacional é preservado enquanto uma decisão está pendente. A aprov
 ├── .github/                        # workflows e verificações
 ├── docs/                           # arquitetura, operação, RFCs e ADRs
 ├── k8s/frontend/                   # configuração para implantação futura
-├── legacy/aws/                     # referência dos manifests antigos
 └── src/
     ├── FIAP.TechChallenge.OS.*/    # camadas, contratos e testes do OS
     ├── FIAP.TechChallenge.Fase1.Frontend/
-    ├── ObservabilityConfig/
-    └── TechChallengeFase1.slnx     # alias da solução OS para Visual Studio
+    └── ObservabilityConfig/
 ```
 
 Os repositórios Execution, Billing e Chassis mantêm suas próprias soluções, testes e pipelines. Abra [Backend.slnx](Backend.slnx) para trabalhar no backend deste repositório. Os diretórios `artifacts`, `bin` e `obj` são gerados localmente.
@@ -155,9 +154,7 @@ Os repositórios Execution, Billing e Chassis mantêm suas próprias soluções,
 
 ## Subir OS, Execution e Billing
 
-Requer Docker com Compose e containers Linux, com as portas 5173 e 8081–8083 disponíveis. O Compose constrói as imagens e inicia os bancos e o Kafka. Mantenha estes três checkouts lado a lado:
-
-Para preparar uma pasta de trabalho nova, clone os repositórios com os nomes usados pelo Compose:
+Requer Docker com Compose e containers Linux, acesso aos registries/NuGet durante o build e portas 5173, 8081–8083, 27018 e 19093 disponíveis. Para comandos pelo host, use .NET SDK 10, PowerShell 7 e Node.js 22.12+ compatível com Vite 8. O Compose constrói as imagens e inicia os bancos e o Kafka. Mantenha estes três checkouts lado a lado. Para preparar uma pasta de trabalho nova, clone os repositórios com os nomes usados pelo Compose:
 
 ```powershell
 git clone https://github.com/Maieru/fiap-tech-challenge.git FiapTechChallengeFase1
@@ -193,7 +190,7 @@ docker compose up -d --build
 | API Execution — Scalar | [localhost:8082/scalar/v1](http://localhost:8082/scalar/v1) |
 | API Billing — Scalar | [localhost:8083/scalar/v1](http://localhost:8083/scalar/v1) |
 
-Cadastre um usuário na tela de login. Os bancos e usuários do monólito não são importados automaticamente. O ambiente local funciona sem API Gateway. Para encerrar preservando os volumes, execute `docker compose down`.
+Cadastre um usuário na tela de login. O ambiente local funciona sem API Gateway. Para encerrar preservando os volumes, execute `docker compose down`.
 
 Comandos de acompanhamento, na mesma pasta:
 
@@ -226,15 +223,30 @@ As ferramentas `dotnet ef` também exigem a variável de conexão; não carregam
 
 ### Desenvolver o frontend com Vite
 
-Requer Node.js 22.12+ ou versão posterior compatível. Com as três APIs iniciadas nas portas locais indicadas:
+Requer Node.js 22.12+ ou versão posterior compatível. Com as três APIs iniciadas, pare apenas o serviço frontend do Compose se precisar liberar a porta 5173 para Vite. No diretório abaixo, copie o `.env.example` do frontend para `.env` em um checkout novo:
 
 ```powershell
 cd src/FIAP.TechChallenge.Fase1.Frontend
+Copy-Item .env.example .env
 npm ci --ignore-scripts
 npm run dev
 ```
 
 Vite encaminha os prefixos `/api/os/v1`, `/api/execution/v1` e `/api/billing/v1` às APIs. Na imagem Docker, Nginx faz esse encaminhamento. Os destinos podem ser configurados para serviços locais ou um gateway separado; veja o [guia do frontend](src/FIAP.TechChallenge.Fase1.Frontend/README.md).
+
+## Pagamentos no ambiente local
+
+Billing usa Mercado Pago para valores positivos; valor zero é confirmado sem chamada externa. O Compose principal permite iniciar a aplicação sem credenciais do provedor, mas não repassa essas variáveis ao Billing por padrão.
+
+Para habilitar cobranças positivas, acrescente ao .env da raiz MERCADO_PAGO_ACCESS_TOKEN e MERCADO_PAGO_WEBHOOK_SECRET de teste. Inicie a stack combinando o Compose principal com o complemento que repassa essas credenciais:
+
+```powershell
+docker compose -f compose.yaml -f ../FiapTechChallengeExecution/compose.integrated.yaml up -d --build
+```
+
+Use essa mesma combinação de arquivos nos comandos ps, logs e down desse ambiente. A URL HTTPS pública do webhook deve alcançar POST /api/billing/v1/webhooks/mercadopago; loopback não recebe notificações externas. Aprovar orçamento abre a cobrança, mas a execução só é liberada após confirmação validada. O retorno do navegador não confirma pagamento. Consulte o [README Billing](https://github.com/Maieru/fiap-tech-challenge-billing#mercado-pago-e-webhooks) para o contrato.
+
+Para validar automaticamente o ciclo distribuído sem compra externa, use os testes do Execution: eles simulam o provedor HTTP e enviam webhook assinado, com bancos e Kafka reais em ambiente descartável.
 
 ## Autenticação e documentação HTTP
 
@@ -244,7 +256,7 @@ O OS emite o JWT administrativo, aceito pelas três APIs:
 2. Autentique em `POST /api/os/v1/usuarios/login`.
 3. Envie `Authorization: Bearer <token>` nas chamadas administrativas.
 
-Não há usuário ou senha padrão. O cadastro administrativo permanece anônimo por decisão do projeto. O cliente acessa somente a ordem autorizada pelo link privado emitido pelo administrador; o OS valida seu token e persiste apenas o hash. A Lambda Authorizer legada não participa desse fluxo. Consulte os [limites de autenticação](docs/arquitetura/autenticacao-os.md).
+Não há usuário ou senha padrão. O cadastro administrativo permanece anônimo por decisão do projeto. O cliente acessa somente a ordem autorizada pelo link privado emitido pelo administrador; o OS valida seu token e persiste apenas o hash. Consulte os [limites de autenticação](docs/arquitetura/autenticacao-os.md).
 
 Scalar fica em `/scalar/v1` e OpenAPI em `/openapi/v1.json` em cada API, nos ambientes Development e Testing. Chamadas administrativas realizadas pelo Scalar também exigem JWT. O OS expõe `/api/os/v1/health/live` e `/api/os/v1/health/ready`; a readiness verifica suas dependências.
 
@@ -290,19 +302,31 @@ Habilite a exportação dos serviços desejados conforme o [guia de observabilid
 
 ## Infraestrutura e Kubernetes
 
-A plataforma AWS é mantida nos repositórios Infra, DB e Serverless do inventário. Eles separam rede/plataforma, RDS e código da Lambda. Terraform, estados remotos, OIDC, EKS, ECR, API Gateway e segredos fazem parte dessa infraestrutura.
+A plataforma AWS dos microsserviços é mantida por Infra e DB. O workflow principal coordena esses repositórios e a entrega das APIs/frontend, com estados remotos, OIDC, EKS, ECR, API Gateway e segredos. Serverless é um componente independente e não faz parte desse ciclo.
 
 A árvore ativa contém [OS](k8s/os/README.md) e frontend; Execution e Billing mantêm seus manifestos nos próprios repositórios. Cada API usa Service ClusterIP em HTTP 8080, HPA de 1 a 3 réplicas, credencial exclusiva de banco e OpenTelemetry habilitado. HTTPS permanece na entrada pública; o frontend não exige Secret de CA interna. Bancos, Kafka, imagens, segredos/IAM e migrations prévias são pré-requisitos do [guia de implantação](k8s/README.md).
 
-Os manifests do backend antigo ficam em `legacy/aws` como referência. Os workflows exclusivos de deploy do monólito foram removidos; o CI atual não implanta automaticamente os microsserviços na AWS. A ordem de provisionamento, migração de tráfego, validação do gateway e retirada dos recursos antigos deve seguir os [guias de CI/CD](docs/operacao/ci-cd.md) e de [retirada do monólito](docs/arquitetura/retirada-monolito.md).
-
-As Actions manuais [publish-image e deploy-eks](scripts/delivery/README.md) permitem publicar OS/frontend no ECR e aplicar seus manifestos no EKS. Execution e Billing têm os mesmos workflows em seus repositórios, com roles OIDC próprias, CI aprovado e deploy por digest. O Infra declara os ECRs, identidades e RBAC necessários; seus applies e a configuração das variáveis precisam ser concluídos antes de usar as Actions.
+[publish-image e deploy-eks](scripts/delivery/README.md) são workflows reutilizáveis, sem disparo manual independente, chamados pelo `manage-platform.yml`. O ciclo central exige CI aprovado, seleciona SHA por repositório, publica imagens e aplica manifestos por digest. A entrega executa migrations OS/Billing em Jobs antes do rollout. Bootstrap e variables/secrets precisam estar configurados antes de ativar `PLATFORM_ENABLED=true`; o agendamento às 03:00 UTC (00:00 em São Paulo) destrói dados e recursos operacionais.
 
 ## Estado da entrega
 
-Os três serviços e o frontend estão integrados e possuem testes e builds próprios. O código do monólito foi retirado deste checkout; sua recuperação está descrita no [guia de retirada](docs/arquitetura/retirada-monolito.md).
+Os três serviços e o frontend estão integrados e possuem testes e builds próprios.
 
-A implantação dos microsserviços na AWS, a migração de tráfego e dados e a retirada dos recursos legados são etapas operacionais próprias. Os pré-requisitos e limites atuais estão no [estado da migração](docs/arquitetura/estado-da-migracao.md).
+A implantação dos microsserviços na AWS, o roteamento e a retenção de dados exigem validação operacional própria. Os pré-requisitos e limites atuais estão no [estado da migração](docs/arquitetura/estado-da-migracao.md).
+
+## Diagnóstico rápido
+
+| Sintoma | Conferência |
+| --- | --- |
+| Porta ocupada | Evite stacks isoladas e integradas simultâneas; confira docker compose ps -a e os mapeamentos do Compose |
+| API não inicia | Confira senha/volume do banco, chave JWT com 32 bytes UTF-8 e logs do serviço |
+| HTTP 401 administrativo | Cadastre/login no OS e use issuer, audience e chave idênticos nas APIs |
+| Execution retorna 404 logo após abertura | Aguarde a projeção Kafka; se persistir, confira consumidor, tópicos e dependências |
+| Cobrança positiva não avança | Confira credenciais repassadas, checkout e webhook; apenas aprovação da ordem não libera execução |
+| Consumer encerrou | Corrija a causa e reinicie o mesmo grupo; preserve offsets, envelope e chave |
+| Lint global falha | npm run lint:ci é o escopo do CI; npm run lint também verifica arquivos com pendências conhecidas |
+
+O .env do Compose não é carregado automaticamente por dotnet run ou ferramentas EF. Logs e diagnósticos não devem expor tokens privados, senhas ou chaves.
 
 ## Objetivos do projeto
 

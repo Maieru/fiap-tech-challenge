@@ -1,6 +1,6 @@
 # CI do monorepo e dependências
 
-Este repositório contém o OS Service e o frontend integrado aos microsserviços. O código e a automação exclusiva do monólito foram retirados; ver [escopo da retirada](../arquitetura/retirada-monolito.md). O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui biblioteca, testes, exemplo, CI/Sonar e publicação NuGet em repositório próprio.
+Este repositório contém o OS Service e o frontend integrado aos microsserviços. O [chassi técnico](https://github.com/Maieru/fiap-tech-challenge-chassis) possui biblioteca, testes, exemplo, CI/Sonar e publicação NuGet em repositório próprio.
 
 O job Verify delivery tooling executa também `node --test scripts/platform/gateway-readiness.test.mjs`. Os testes usam servidor HTTP local real para simular 503 após readiness positiva, recorrência de falha, indisponibilidade persistente e timeout. Verificam que o gate usa somente GET sem token e rejeita uma rota protegida que retorne 200 ou readiness com HTML. O smoke só inicia escritas após três rodadas estáveis; o requisito de HTTP 401 e os testes de autenticação permanecem estritos.
 
@@ -15,7 +15,6 @@ Os cenários de timeout usam relógio e pausa de polling controlados, mantendo H
 | Solução | Conteúdo |
 | --- | --- |
 | `Backend.slnx` | OS, contratos e testes: 9 projetos |
-| `src/TechChallengeFase1.slnx` | Alias Visual Studio com os mesmos nove projetos OS |
 
 ## Dependências entre repositórios
 
@@ -50,19 +49,19 @@ Para um contrato Execution candidato, permanece disponível `scripts/Restore-OsL
 
 ## Como a automação funciona
 
-`monorepo-ci.yml` responde a pushes em `main`, PRs abertos/atualizados/reabertos e execução manual. Os jobs Linux verificam OS e frontend; a entrada legada da matriz foi removida. Os passos PowerShell usam build prévio, `--no-build`, `--no-restore`, resultados TRX e propagação de `$LASTEXITCODE`. Uma coleta XPlat gera Cobertura e OpenCover.
+`monorepo-ci.yml` responde a pushes em `main`, PRs abertos/atualizados/reabertos e execução manual. Os jobs Linux verificam OS e frontend. Os passos PowerShell usam build prévio, `--no-build`, `--no-restore`, resultados TRX e propagação de `$LASTEXITCODE`. Uma coleta XPlat gera Cobertura e OpenCover.
 
 O job independente `frontend` usa Node 22 e executa `npm ci --ignore-scripts`, os nove testes Node/Vite, `npm run lint:ci`, build TypeScript/Vite e build da imagem Nginx. O script de lint usa o ESLint instalado pelo lockfile, sem instalação sob demanda, e verifica serviços, tipos, páginas de ordens, observabilidade, CardTitle, AdminLayout e configuração Vite. O lint está limitado a esse escopo porque o lint global mantém falhas anteriores; não representa aprovação de todas as telas. O smoke real com APIs/Kafka/bancos isolados é local e não é executado por esse job. Resultados e comandos estão na [verificação do frontend](validacao-frontend.md) e no [README](../../src/FIAP.TechChallenge.Fase1.Frontend/README.md). A existência do job não comprova execução remota aprovada.
 
-A Action local `.github/actions/coverage` usa ReportGenerator 5.5.12 e exige pelo menos 80% de cobertura de linhas em cada componente, sem compensação entre eles. O artefato `verification-os` contém os resultados backend; não há job nem artefato legado. O job OS também constrói a imagem e executa `OsImageSmokeTests` contra containers reais.
+A Action local `.github/actions/coverage` usa ReportGenerator 5.5.12 e exige pelo menos 80% de cobertura de linhas em cada componente, sem compensação entre eles. O artefato `verification-os` contém os resultados backend. O job OS também constrói a imagem e executa `OsImageSmokeTests` contra containers reais.
 
 Após os testes, `sonarqube.yml` usa Windows, .NET 10, Java 21 Zulu, checkout completo e caches. A versão do scanner está fixada em `.config/dotnet-tools.json`. Ele importa os relatórios OpenCover dos jobs Linux, ajusta os caminhos ao checkout Windows, compila `Backend.slnx` entre `begin`/`end` e aguarda o quality gate. O pacote do chassi é restaurado do NuGet.org, como qualquer outra dependência.
 
-O check agregado `ci-required` exige sucesso de `frontend`, `component` (OS) e `quality` (Sonar), inclusive se algum deles falhar ou for ignorado. Os workflows exclusivos de criação/build/deploy do monólito foram removidos. A nova implantação AWS exige automação e provisionamento próprios; os [manifests frontend](../../k8s/README.md) não provisionam os serviços de negócio. O workflow de destruição agendada existente permanece inalterado.
+O check agregado `ci-required` exige sucesso de `frontend`, `component` (OS) e `quality` (Sonar), inclusive se algum deles falhar ou for ignorado. A nova implantação AWS exige automação e provisionamento próprios; os [manifests frontend](../../k8s/README.md) não provisionam os serviços de negócio. O workflow de destruição agendada existente permanece inalterado.
 
 ## SonarQube Cloud do principal
 
-A análise mantém `sonar.scanner.scanAll=true` para analisar as linguagens de infraestrutura além do C#. Por solicitação da equipe, `src/FIAP.TechChallenge.Fase1.Frontend/**` está excluído de fontes e testes do Sonar, incluindo TypeScript, testes, Dockerfile e Nginx dessa pasta. Os arquivos **/*.mjs de automação ficam fora do Sonar, conforme a decisão da equipe; seus testes e verificações de sintaxe permanecem no job delivery. Os manifests Kubernetes e workflows continuam no escopo. As demais exclusões abrangem os manifests não implantáveis em `legacy/**` e arquivos gerados (`artifacts`, migrations, feature gerada, dependências e saída de build). A exclusão terá efeito na próxima análise CI que usar esta configuração.
+A análise mantém `sonar.scanner.scanAll=true` para analisar as linguagens de infraestrutura além do C#. Por solicitação da equipe, `src/FIAP.TechChallenge.Fase1.Frontend/**` está excluído de fontes e testes do Sonar, incluindo TypeScript, testes, Dockerfile e Nginx dessa pasta. Os arquivos **/*.mjs de automação ficam fora do Sonar, conforme a decisão da equipe; seus testes e verificações de sintaxe permanecem no job delivery. Os manifests Kubernetes e workflows continuam no escopo. As demais exclusões abrangem arquivos gerados (`artifacts`, migrations, feature gerada, dependências e saída de build). A exclusão terá efeito na próxima análise CI que usar esta configuração.
 
 O job frontend instala pelo lockfile sem lifecycle scripts e executa também o teste isolado de Nginx sem root e validação TLS. Actions de build, análise e publicação estão fixadas em SHAs completos, conferidos nos repositórios oficiais; atualizações exigem revisar o novo commit. O job que publica a imagem frontend recebe `id-token: write` somente em seu próprio escopo. A destruição agendada preexistente permanece fora desta alteração.
 
@@ -94,7 +93,7 @@ $env:OS_TEST_IMAGE = 'fiap-os:local'
 dotnet test src/FIAP.TechChallenge.OS.Integration.Tests/FIAP.TechChallenge.OS.Integration.Tests.csproj -c Release --no-build --no-restore --filter 'TestCategory=ContainerImage'
 ```
 
-Os relatórios do primeiro incremento são históricos; a mudança do agregador de cobertura para ReportGenerator pode alterar percentuais sem representar aumento de cobertura. Consulte as [evidências e limitações](evidencias-fase4-incremento1.md) e a [ADR da separação do chassi](../ADRs/ADR-013-chassi-em-repositorio-proprio.md).
+A cobertura é consolidada pelo ReportGenerator. Comparações entre ferramentas ou versões do agregador precisam considerar diferenças no cálculo; consulte a [decisão sobre o chassi](../ADRs/ADR-013-chassi-em-repositorio-proprio.md) para a organização dos componentes.
 
 ## Correções de qualidade dos PRs 30 e Execution 4
 

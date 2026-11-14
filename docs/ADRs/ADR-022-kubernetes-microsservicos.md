@@ -2,15 +2,16 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-02
+- **Última revisão:** 2026-11-14
 - **Escopo:** OS, Execution, Billing, frontend e infraestrutura compartilhada
 
 ## Contexto
 
-O frontend migrado já roteia os três prefixos de API, mas seus upstreams exigiam TLS interno ainda não habilitado nas APIs. Os serviços têm bancos independentes, consumidores Kafka e instrumentação OpenTelemetry. É necessário preparar implantação independente sem recriar o monólito.
+O frontend migrado já roteia os três prefixos de API, mas seus upstreams exigiam TLS interno ainda não habilitado nas APIs. Os serviços têm bancos independentes, consumidores Kafka e instrumentação OpenTelemetry. É necessário preparar a implantação independente de cada serviço.
 
 ## Decisão
 
-Cada repositório mantém seus manifestos de aplicação; Infra mantém namespaces, SecretStores e observabilidade. OS usa `k8s/os`, Execution e Billing usam `k8s`. A pasta vazia `k8s/backend` do OS é retirada; o inventário em `legacy/aws/k8s/backend` é preservado.
+Cada repositório mantém seus manifestos de aplicação; Infra mantém namespaces, SecretStores e observabilidade. OS usa `k8s/os`, Execution e Billing usam `k8s`.
 
 A entrada pública mantém HTTPS no API Gateway. ALB/Nginx e os Services internos usam HTTP; os Services são ClusterIP em 8080 e não ganham exposição pública própria. Esta decisão substitui o contrato preparado de HTTPS interno em 8443. A rede privada não criptografa esses trechos; essa limitação é aceita para o laboratório. A migração futura para TLS exigirá certificados e confiança entre os componentes, sem desativar validação de certificados no Nginx.
 

@@ -2,11 +2,12 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-02
+- **Última revisão:** 2026-11-14
 - **Escopo:** integração React/Vite/Nginx com OS, Execution e Billing
 
 ## Contexto
 
-Uma base HTTP única e os DTOs do monólito não atendiam às rotas e respostas dos serviços extraídos.
+O frontend precisa tratar as rotas e respostas específicas das três APIs versionadas.
 
 ## Decisão
 

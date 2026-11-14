@@ -138,7 +138,7 @@ Os consumidores exigem a presença de `valorTotal` no diagnóstico e de `valor` 
 3. Em entrega incerta, comparar estados confirmados e mensagens Kafka antes de reenviar. Um evento órfão não pode ser tratado como uma transação automaticamente desfeita em todos os serviços.
 4. Corrigir a causa e reiniciar o consumidor no mesmo grupo. Reenvio técnico deve preservar envelope e chave originais. Não avançar offsets ou devolver estoque manualmente sem uma reconciliação explícita.
 
-Os novos serviços podem usar dados novos de demonstração. Ordens antigas sem referência e total de orçamento não iniciam pagamento automaticamente. Não existe cobrança retroativa ou importação do histórico legado neste incremento.
+Os novos serviços podem usar dados novos de demonstração. Ordens antigas sem referência e total de orçamento não iniciam pagamento automaticamente. Não há cobrança retroativa nem importação automática de histórico entre bancos.
 
 ## Código e verificações
 

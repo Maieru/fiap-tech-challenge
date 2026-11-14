@@ -1,5 +1,5 @@
 # API Gateway -> VPC Link -> ALB -> Nginx -> microsserviços.
-# Prefixos específicos precedem o Ingress legado /api (group.order 10).
+# Os três prefixos versionados usam prioridade 5 no grupo de Ingress.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

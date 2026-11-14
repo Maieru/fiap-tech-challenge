@@ -5,7 +5,7 @@
 - **Responsáveis:** equipe do Tech Challenge
 - **Escopo:** operação e durabilidade
 - **Natureza:** formalização retrospectiva
-- **Última revisão:** 2026-09-07
+- **Última revisão:** 2026-11-14
 
 ## Contexto
 
@@ -14,7 +14,7 @@ O projeto acadêmico precisa reduzir custos quando não está em demonstração.
 ## Decisão
 
 - Agendar a destruição diária às `03:00 UTC` (meia-noite em São Paulo), sujeita a atrasos do GitHub Actions.
-- Remover serverless, API Gateway, Ingresses/ALB, configurações e add-ons Kubernetes; depois destruir RDS e remover EKS.
+- Remover gateway e workloads, excluir Kafka/MongoDB e seus volumes, retirar configurações, bancos, add-ons e core conforme as dependências do workflow central.
 - Preservar bootstrap, estados e recursos compartilhados conforme os módulos para permitir reconstrução.
 - Usar dados de demonstração recriáveis. O RDS está configurado com `backup_retention_period = 0` e `skip_final_snapshot = true`.
 
@@ -31,7 +31,7 @@ Nomes de workflows contendo `production` não alteram essa classificação.
 - O ambiente fica indisponível até nova implantação e os dados do RDS são perdidos.
 - Reconstruções exercitam a automação, mas podem demorar ou falhar.
 - Telemetria ainda em memória pode ser perdida; dados já enviados ao New Relic seguem a retenção desse serviço.
-- Criação e destruição não compartilham uma trava única de execução; há risco de sobreposição.
+- O workflow central serializa as operações de plataforma; execuções externas devem respeitar a mesma coordenação.
 - A repetição da destruição ainda pode falhar quando data sources dependem de recursos já removidos.
 - Demonstrações exigem implantação e seed prévios; o ambiente não deve conter dados únicos ou de usuários reais.
 
@@ -39,9 +39,9 @@ Reconsiderar antes de uso contínuo ou com dados reais, definindo disponibilidad
 
 ## Evidências e relações
 
-- [Workflow agendado de destruição](../../.github/workflows/destroy-expensive-infrastructure.yml)
-- [Ordem de criação](https://github.com/Maieru/fiap-tech-challenge/blob/067aef498eb1fcf7104bf678915ad3d7058ba089/.github/workflows/initialize-and-deploy.yml)
-- [Destruição da infraestrutura Kubernetes](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/.github/workflows/destroy-kubernetes-infrastructure.yml)
+- [Workflow agendado de destruição](../../.github/workflows/manage-platform.yml)
+- [Ordem de criação](../../.github/workflows/manage-platform.yml)
+- [Destruição da infraestrutura Kubernetes](https://github.com/Maieru/fiap-tech-challenge-infra/blob/main/.github/workflows/terraform-stage.yml)
 - [Configuração atual do RDS](https://github.com/Maieru/fiap-tech-challenge-db/blob/main/infra/database/rds.tf)
 - [RFC-001 — Escolha da AWS](../RFCs/RFC-001-escolha-da-nuvem-aws.md)
 - [RFC-002 — PostgreSQL no RDS](../RFCs/RFC-002-postgresql-no-amazon-rds.md)

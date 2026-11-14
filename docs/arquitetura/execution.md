@@ -12,7 +12,6 @@ com aprovação/cancelamento administrativos ou do cliente pendentes até as con
 | OS | Clientes, veículos, usuários/JWT, abertura/consulta, decisão administrativa ou do cliente, Saga, projeção Kafka e entrega |
 | Billing | Cobrança por ordem com gateway mockado e eventos de confirmação/recusa |
 | Execution | Catálogo de serviços e peças/insumos, estoque, diagnóstico, snapshots e execução |
-| Legado | Continua funcionando com banco, frontend e rotas existentes |
 
 ```mermaid
 flowchart LR
@@ -26,9 +25,9 @@ flowchart LR
     ContratosOS[OS.Application.Messaging NuGet] -.-> Consumer
 ```
 
-Não há referências ao código-fonte nem acesso ao banco do OS/legado.
+Não há referências ao código-fonte nem acesso aos bancos dos demais serviços.
 Cliente e veículo são somente identificadores recebidos na mensagem de abertura.
-O agregado novo usa as regras e snapshots de itens extraídos do legado; catálogo e testes foram reaproveitados com namespaces próprios.
+O agregado mantém as invariantes de execução e snapshots de itens; catálogo e testes pertencem ao domínio do Execution.
 
 ## Fluxo implementado
 
@@ -70,7 +69,7 @@ Os testes não usam volumes de desenvolvimento, autenticação substituta ou moc
 Os nove cenários distribuídos registrados com as três APIs reais estão em Distributed.slnx no Execution, separados da solução padrão.
 O workflow distribuído é manual e recebe imagens publicadas; não faz parte da execução automática de toda validação isolada.
 O [histórico de validação](../operacao/validacao-execution.md) preserva as evidências de cada entrega.
-Billing com mock e Saga no OS estão implementados. O frontend foi adaptado aos três serviços e verificado localmente, incluindo catálogo/estoque e operações do Execution. O código do monólito já foi retirado. Gateway de pagamento real, deploy dos novos serviços e retirada operacional dos recursos/dados legados permanecem pendentes, conforme o [estado da migração](estado-da-migracao.md). O [guia do frontend](migracao-frontend.md) descreve contratos, proxies e limites; a [verificação local](../operacao/validacao-frontend.md) registra os resultados.
+Billing com mock e Saga no OS estão implementados. O frontend foi adaptado aos três serviços e verificado localmente, incluindo catálogo/estoque e operações do Execution. Implantação dos serviços, compra externa e retenção de dados exigem validação operacional, conforme o [estado da migração](estado-da-migracao.md). O [guia do frontend](migracao-frontend.md) descreve contratos, proxies e limites; a [verificação local](../operacao/validacao-frontend.md) registra os resultados.
 
 Decisões: [ADR-015](../ADRs/ADR-015-execution-mongodb.md), [RFC-008](../RFCs/RFC-008-execution-mongodb-kafka.md),
 [ADR-016](../ADRs/ADR-016-integracao-os-execution.md) e [RFC-009](../RFCs/RFC-009-integracao-os-execution.md).

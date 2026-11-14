@@ -15,7 +15,7 @@ O Execution possui Git local independente, sem remote e sem commits.
 - CI, publicação por tags/OIDC, exemplo consumidor NuGet, testes de compatibilidade e documentação de decisões.
 - Guia canônico de publicação direta com rollback limitado, consumidores com switch e parada em erro.
 
-O código de negócio OS/legado não foi modificado. As soluções passaram a incluir os projetos de contratos e seus testes.
+O código de negócio OS não foi modificado. As soluções passaram a incluir os projetos de contratos e seus testes.
 
 ## Evidências locais
 

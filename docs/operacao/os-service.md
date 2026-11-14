@@ -1,13 +1,13 @@
 # OS Service — integração com Execution e Billing
 
 API independente para clientes, veículos, usuários/JWT, abertura e consulta de ordens, decisões administrativas ou do cliente, Saga de pagamento e entrega.
-Publica as entradas do Execution e projeta suas confirmações por Kafka. Os nove projetos ficam diretamente em `src`; o monólito foi retirado do checkout.
+Publica as entradas do Execution e projeta suas confirmações por Kafka. Os nove projetos ficam diretamente em `src`.
 
 ## Executar
 
 Para subir **frontend, OS, Execution, Billing e dependências**, execute `docker compose up -d --build` na raiz do repositório OS. Consulte o [roteiro integrado](../../README.md#subir-os-execution-e-billing). O arquivo `compose.os.yaml`, também na raiz, atende ao ambiente isolado do OS.
 
-A solução `Backend.slnx`, na raiz do repositório, reúne os nove projetos do serviço, contratos e testes. `src/TechChallengeFase1.slnx` é um alias para o Visual Studio com os mesmos projetos.
+A solução `Backend.slnx`, na raiz do repositório, reúne os nove projetos do serviço, contratos e testes. Abra essa mesma solução no Visual Studio.
 
 ## Contratos de mensageria
 
@@ -72,7 +72,7 @@ O volume `fiap-os_os_postgres_data` pertence apenas ao serviço. `docker compose
 
 ## Autenticação
 
-Endpoints administrativos exigem `Authorization: Bearer <JWT>`. O OS emite o token em `POST /api/os/v1/usuarios/login`, com usuários cadastrados em seu próprio PostgreSQL. Os três serviços usam os mesmos issuer, audience e chave; Execution e Billing validam o JWT localmente. Cadastro/login são anônimos por escolha do projeto. A stack não depende do monólito para autenticar; a Lambda e o fluxo de acesso do cliente à ordem continuam separados.
+Endpoints administrativos exigem `Authorization: Bearer <JWT>`. O OS emite o token em `POST /api/os/v1/usuarios/login`, com usuários cadastrados em seu próprio PostgreSQL. Os três serviços usam os mesmos issuer, audience e chave; Execution e Billing validam o JWT localmente. Cadastro/login são anônimos por escolha do projeto. O acesso do cliente à ordem usa um token privado validado pelo OS, separado do JWT administrativo.
 
 Issuer e audience usam a seção Jwt de IConfiguration. A chave simétrica vem explicitamente de Jwt__SigningKey,
 com pelo menos 32 bytes UTF-8, e é registrada como singleton e injetada nas opções de validação JWT.
@@ -152,7 +152,7 @@ A integração Kafka, o Execution/MongoDB e o BDD distribuído estão implementa
 [ADR-016](../ADRs/ADR-016-integracao-os-execution.md),
 [RFC-009](../RFCs/RFC-009-integracao-os-execution.md) e
 [evidências](revisao-execution-etapa3.md).
-O [estado da migração](../arquitetura/estado-da-migracao.md) distingue os fluxos já implementados (Billing mockado, autenticação, frontend e retirada do código antigo) das pendências de gateway de pagamento real, infraestrutura e retirada operacional dos recursos/dados legados. Não há requisito de importar o histórico legado para os novos bancos de demonstração.
+O [estado da aplicação](../arquitetura/estado-da-migracao.md) distingue os fluxos implementados das pendências de implantação, compra externa e retenção de dados. Os bancos de demonstração não importam histórico automaticamente.
 
 ## Billing e Saga de pagamento
 

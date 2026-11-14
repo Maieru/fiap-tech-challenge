@@ -72,7 +72,7 @@ Dois novos cenários verificam consulta do orçamento de R$ 140,55, aprovação 
 
 Os 265 testes OS sem imagem passaram (136 domínio, 66 aplicação, 4 contratos e 59 integração). Dois testes da imagem também passaram. A integração HTTP verificou rotação, token de outra ordem, hash persistido, ausência de campos internos na resposta, JWT para emissão/entrega e entrega concorrente com histórico único.
 
-Artefatos locais: OS `artifacts/customer-delivery/` e `artifacts/customer-delivery-image/`; Execution `artifacts/customer-delivery-distributed/` e `artifacts/customer-delivery-distributed.log`. O [guia de acompanhamento e entrega](../arquitetura/acompanhamento-e-entrega.md) descreve o contrato e os limites. Na execução registrada nesta seção, o frontend ainda usava o legado.
+Artefatos locais: OS `artifacts/customer-delivery/` e `artifacts/customer-delivery-image/`; Execution `artifacts/customer-delivery-distributed/` e `artifacts/customer-delivery-distributed.log`. O [guia de acompanhamento e entrega](../arquitetura/acompanhamento-e-entrega.md) descreve o contrato e os limites. Esta execução verificou o backend; o frontend tem validação própria.
 
 Revalidação da imagem final após incluir os schemas de resposta no OpenAPI: **9/9 cenários distribuídos aprovados**, em aproximadamente 54 segundos. A suíte OS com coleta de cobertura manteve **265/265 testes aprovados**. ReportGenerator 5.5.12 consolidou **90,9% de linhas cobertas**, acima do gate de 80%; relatórios em `artifacts/customer-delivery-coverage-summary/`. A stack local recebeu a nova imagem OS e aplicou a migration; readiness das três APIs e Scalar OS responderam 200. A especificação final inclui schemas de acompanhamento, decisão do cliente e entrega, exportada em `artifacts/os-openapi.json`.
 

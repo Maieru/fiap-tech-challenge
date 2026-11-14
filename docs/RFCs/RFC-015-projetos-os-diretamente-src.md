@@ -2,11 +2,12 @@
 
 - **Status:** Aceita
 - **Data:** 2026-11-02
+- **Última revisão:** 2026-11-14
 - **Escopo:** organização física, soluções, Docker, Compose, CI e documentação
 
 ## Contexto
 
-Após retirar o monólito, este repositório contém somente o backend OS e o frontend. O agrupamento físico `src/Services/OrdensServico` deixou de separar múltiplos serviços e acrescentava níveis aos comandos, links e builds. Execution e Billing já possuem repositórios independentes.
+Este repositório contém o backend OS e o frontend. O agrupamento físico `src/Services/OrdensServico` deixou de separar múltiplos serviços e acrescentava níveis aos comandos, links e builds. Execution e Billing já possuem repositórios independentes.
 
 ## Decisão
 
@@ -17,6 +18,10 @@ Usar `Backend.slnx` na raiz como solução canônica. Manter `src/TechChallengeF
 Mover o Dockerfile OS para a raiz e usar contexto de build na raiz tanto no Compose integrado quanto no isolado. O Compose isolado passa a `compose.os.yaml`, preservando projeto `fiap-os`, portas e nomes de volumes. Usa o `.env` da raiz, sem sobrescrever credenciais existentes. Durante a validação do arquivo isolado foram encontrados dois comandos de criação de tópicos fora do bloco de comandos; foram recolocados em `kafka-init`, que inicializa os quatro tópicos necessários.
 
 O guia específico do OS passa a `docs/operacao/os-service.md`. Workflows de testes/imagem/publicação de contratos, scripts de restore e links locais usam os caminhos novos. A instrução de build OS no README do Execution também é atualizada. URLs de commits históricos preservam os caminhos existentes naquela versão.
+
+### Atualização de manutenção — 2026-11-14
+
+O alias `src/TechChallengeFase1.slnx` foi removido por duplicar os nove projetos de `Backend.slnx`. Use a solução da raiz tanto no CLI quanto no Visual Studio. Os projetos e seus caminhos permanecem os mesmos; as descrições e evidências anteriores registram a organização existente na época.
 
 ## Alternativas consideradas
 
@@ -41,4 +46,4 @@ Resultados locais em 2026-11-02:
 
 TRX, cobertura, pacote local e cópias do cache/solução antiga ficam em `artifacts/project-layout`, ignorado pelo Git. Não foram repetidos os cenários distribuídos, porque namespaces, contratos e código dos serviços não mudaram; os testes de integração e da imagem exercitam os pontos afetados pelo layout. CI remoto, publicação e deploy não foram executados.
 
-Esta mudança não implanta serviços, altera dados/volumes ou publica pacotes. As decisões de [retirada do monólito](../ADRs/ADR-021-retirada-codigo-monolito.md), [CI sem monólito](RFC-014-solucoes-ci-sem-monolito.md) e [proxies do frontend](RFC-013-proxy-frontend-microsservicos.md) permanecem; esta RFC atualiza apenas a organização física e seus pontos de entrada.
+Esta mudança não implanta serviços, altera dados/volumes ou publica pacotes. As decisões de [soluções e CI](RFC-014-solucoes-e-ci.md) e [proxies do frontend](RFC-013-proxy-frontend-microsservicos.md) permanecem; esta RFC atualiza apenas a organização física e seus pontos de entrada.
